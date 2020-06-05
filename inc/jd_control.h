@@ -84,15 +84,6 @@
 // typically the same as JD_REG_CTRL_DEVICE_CLASS; the bootloader will respond to that code
 #define JD_REG_CTRL_BL_DEVICE_CLASS 0x184
 
-// main.c
-void led_set(int state);
-void led_blink(int us);
-void pwr_pin_enable(int en);
-
-// jdapp.c
-void app_process(void);
-void app_init_services(void);
-
 // txq.c
 void txq_init(void);
 void txq_flush(void);
@@ -105,7 +96,4 @@ static inline void txq_push_event(srv_t *srv, uint32_t eventid) {
 
 void ctrl_process(srv_t *_state);
 void ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt);
-void app_handle_packet(jd_packet_t *pkt);
-void app_process_frame(void);
-
 void dump_pkt(jd_packet_t *pkt, const char *msg);
