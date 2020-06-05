@@ -1,4 +1,4 @@
-#include "jdsimple.h"
+#include "jd_protocol.h"
 
 #define MAX_SERV 32
 
