@@ -84,7 +84,6 @@
 // typically the same as JD_REG_CTRL_DEVICE_CLASS; the bootloader will respond to that code
 #define JD_REG_CTRL_BL_DEVICE_CLASS 0x184
 
-// txq.c
 void txq_init(void);
 void txq_flush(void);
 int txq_is_idle(void);
