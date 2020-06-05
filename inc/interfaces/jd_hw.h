@@ -1,6 +1,10 @@
 #pragma once
 
+// io
 void log_pin_set(int line, int v);
+void led_set(int state);
+void led_blink(int us);
+void power_pin_enable(int en);
 
 void jd_panic(void);
 void target_enable_irq(void);
