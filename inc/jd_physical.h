@@ -50,19 +50,7 @@ struct _jd_frame_t {
 } __attribute__((__packed__, aligned(4)));
 typedef struct _jd_frame_t jd_frame_t;
 
-// Required by jdlow.c
 
-
-// the protocol is:
-// app calls jd_packet_ready()
-// JD stack calls app_pull_frame() when it's ready to send
-// JD stack calls app_frame_sent() when the send is done
-jd_frame_t *app_pull_frame(void);
-void app_frame_sent(jd_frame_t *frame);
-void app_queue_annouce(void);
-int app_handle_frame(jd_frame_t *frame);
-
-// Provided jdlow.c
 void jd_init(void);
 void jd_packet_ready(void);
 void jd_compute_crc(jd_frame_t *frame);
@@ -72,10 +60,6 @@ void jd_rx_completed(int dataLeft);
 void jd_line_falling(void);
 int jd_is_running(void);
 int jd_is_busy(void);
-int jd_shift_frame(jd_frame_t *frame);
-void jd_reset_frame(jd_frame_t *frame);
-void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service_cmd,
-                       unsigned service_size);
 
 typedef struct {
     uint32_t bus_state;

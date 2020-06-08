@@ -29,16 +29,17 @@ void jd_send_event_ext(srv_t *srv, uint32_t eventid, uint32_t arg) {
     if (eventid >> 16)
         jd_panic();
     uint32_t data[] = {eventid, arg};
-    txq_push(state->service_number, JD_CMD_EVENT, data, 8);
+    jd_send(state->service_number, JD_CMD_EVENT, data, 8);
 }
 
-// TODO: understand usage
-jd_frame_t *app_pull_frame(void) {
+// bridge between phys and queue imp, phys calls this to get the next frame.
+jd_frame_t *jd_tx_get_frame(void) {
     isSending = true;
     return &sendFrame[bufferPtr ^ 1];
 }
-// TODO: understand usage
-void app_frame_sent(jd_frame_t *pkt) {
+
+// bridge between phys and queue imp, marks as sent.
+void jd_tx_frame_sent(jd_frame_t *pkt) {
     isSending = false;
 }
 

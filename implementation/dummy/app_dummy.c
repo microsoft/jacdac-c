@@ -36,7 +36,7 @@ void app_init_services() {
     memcpy(services, tmp, sizeof(void *) * num_services);
 }
 
-void app_queue_annouce() {
+void app_send_control() {
     alloc_stack_check();
 
     uint32_t *dst =
@@ -45,24 +45,6 @@ void app_queue_annouce() {
         return;
     for (int i = 0; i < num_services; ++i)
         dst[i] = services[i]->vt->service_class;
-
-#if 0
-    static uint32_t pulsesample;
-    static uint32_t pulse = 850 * 1000;
-
-    if (should_sample(&pulsesample, 15 * 1000 * 1000)) {
-        pwr_pin_enable(1);
-        target_wait_us(pulse);
-        pwr_pin_enable(0);
-        jdcon_warn("P: %d t=%ds", pulse, now / 1000000);
-        pulse = (pulse * 9) / 10;
-        #if 1
-        if(pulse<1000)
-        pulse=1000;
-        #endif
-    }
-#endif
-
 }
 
 static void handle_ctrl_tick(jd_packet_t *pkt) {
