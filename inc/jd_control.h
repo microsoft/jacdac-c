@@ -1,31 +1,14 @@
 #pragma once
 
-#include "jdprofile.h"
-
-#include "jdlow.h"
-#include "host.h"
-#include "lib.h"
-
-// 255 minus size of the serial header, rounded down to 4
-#define JD_SERIAL_PAYLOAD_SIZE 236
-#define JD_SERIAL_FULL_HEADER_SIZE 16
+#include "jd_config.h"
+#include "jd_physical.h"
+#include "jd_services.h"
 
 #define JD_SERVICE_CLASS_CTRL 0x00000000
 
 #define JD_SERVICE_NUMBER_CTRL 0x00
 #define JD_SERVICE_NUMBER_MASK 0x3f
 #define JD_SERVICE_NUMBER_CRC_ACK 0x3f
-
-// the COMMAND flag signifies that the device_identifier is the recipent
-// (i.e., it's a command for the peripheral); the bit clear means device_identifier is the source
-// (i.e., it's a report from peripheral or a broadcast message)
-#define JD_FRAME_FLAG_COMMAND 0x01
-// an ACK should be issued with CRC of this package upon reception
-#define JD_FRAME_FLAG_ACK_REQUESTED 0x02
-// the device_identifier contains target service class number
-#define JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS 0x04
-
-#define JD_FRAME_SIZE(pkt) ((pkt)->size + 12)
 
 // Registers 0x001-0x07f - r/w common to all services
 // Registers 0x080-0x0ff - r/w defined per-service
@@ -84,15 +67,7 @@
 // typically the same as JD_REG_CTRL_DEVICE_CLASS; the bootloader will respond to that code
 #define JD_REG_CTRL_BL_DEVICE_CLASS 0x184
 
-void txq_init(void);
-void txq_flush(void);
-int txq_is_idle(void);
-void *txq_push(unsigned service_num, unsigned service_cmd, const void *data, unsigned service_size);
-void txq_push_event_ex(srv_t *srv, uint32_t eventid, uint32_t arg);
-static inline void txq_push_event(srv_t *srv, uint32_t eventid) {
-    txq_push_event_ex(srv, eventid, 0);
-}
-
-void ctrl_process(srv_t *_state);
-void ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt);
+void jd_ctrl_init(void);
+void jd_ctrl_process(srv_t *_state);
+void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt);
 void dump_pkt(jd_packet_t *pkt, const char *msg);

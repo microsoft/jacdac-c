@@ -1,6 +1,8 @@
 #pragma once
 
 #include "jd_service_classes.h"
+#include "jd_physical.h"
+#include "jd_config.h"
 
 #define PKT_UNHANDLED 0
 #define PKT_HANDLED_RO 1

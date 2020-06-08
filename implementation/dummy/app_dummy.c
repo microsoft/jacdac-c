@@ -36,11 +36,11 @@ void app_init_services() {
     memcpy(services, tmp, sizeof(void *) * num_services);
 }
 
-void app_send_control() {
+void app_announce_services() {
     alloc_stack_check();
 
     uint32_t *dst =
-        txq_push(JD_SERVICE_NUMBER_CTRL, JD_CMD_ADVERTISEMENT_DATA, NULL, num_services * 4);
+        jd_send(JD_SERVICE_NUMBER_CTRL, JD_CMD_ADVERTISEMENT_DATA, NULL, num_services * 4);
     if (!dst)
         return;
     for (int i = 0; i < num_services; ++i)

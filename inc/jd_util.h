@@ -1,6 +1,7 @@
 #pragma once
 
-// Provided jdutil.c
+#include "jd_config.h"
+
 uint32_t jd_random_around(uint32_t v);
 uint32_t jd_random(void);
 void jd_seed_random(uint32_t s);

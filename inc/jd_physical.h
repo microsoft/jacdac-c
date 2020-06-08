@@ -1,8 +1,7 @@
 #ifndef __JDPROTOCOL_H
 #define __JDPROTOCOL_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "jd_config.h"
 
 #ifdef __cplusplus
 extern "C" {

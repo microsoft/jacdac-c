@@ -1,5 +1,9 @@
 #pragma once
 
+#include "jd_physical.h"
+
+extern const char app_dev_class_name[];
+
 // io
 void log_pin_set(int line, int v);
 void led_set(int state);
@@ -10,6 +14,7 @@ void jd_panic(void);
 void target_enable_irq(void);
 void target_disable_irq(void);
 void target_wait_us(uint32_t n);
+void target_reset(void);
 
 void tim_init(void);
 uint64_t tim_get_micros(void);
