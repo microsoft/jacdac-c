@@ -20,5 +20,3 @@ int uart_start_tx(const void *data, uint32_t numbytes);
 void uart_start_rx(void *data, uint32_t maxbytes);
 void uart_disable(void);
 int uart_wait_high(void);
-
-void log_pin_set(int line, int v);

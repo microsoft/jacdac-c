@@ -1,18 +1,18 @@
-#include "jdsimple.h"
+#include "jd_protocol.h"
 
 static jd_frame_t *sendFrame;
 static uint8_t bufferPtr, isSending;
 
-int txq_is_idle() {
+int jd_tx_is_idle() {
     return !isSending && sendFrame[bufferPtr].size == 0;
 }
 
-void txq_init(void) {
+void jd_tx_init(void) {
     if (!sendFrame)
         sendFrame = alloc(sizeof(jd_frame_t) * 2);
 }
 
-void *txq_push(unsigned service_num, unsigned service_cmd, const void *data,
+void *jd_send(unsigned service_num, unsigned service_cmd, const void *data,
                unsigned service_size) {
     void *trg = jd_push_in_frame(&sendFrame[bufferPtr], service_num, service_cmd, service_size);
     if (!trg) {
@@ -24,7 +24,7 @@ void *txq_push(unsigned service_num, unsigned service_cmd, const void *data,
     return trg;
 }
 
-void txq_push_event_ex(srv_t *srv, uint32_t eventid, uint32_t arg) {
+void jd_send_event_ext(srv_t *srv, uint32_t eventid, uint32_t arg) {
     srv_common_t *state = (srv_common_t *)srv;
     if (eventid >> 16)
         jd_panic();
@@ -32,16 +32,17 @@ void txq_push_event_ex(srv_t *srv, uint32_t eventid, uint32_t arg) {
     txq_push(state->service_number, JD_CMD_EVENT, data, 8);
 }
 
+// TODO: understand usage
 jd_frame_t *app_pull_frame(void) {
     isSending = true;
     return &sendFrame[bufferPtr ^ 1];
 }
-
+// TODO: understand usage
 void app_frame_sent(jd_frame_t *pkt) {
     isSending = false;
 }
 
-void txq_flush() {
+void jd_tx_flush() {
     if (isSending)
         return;
     if (sendFrame[bufferPtr].size == 0)
