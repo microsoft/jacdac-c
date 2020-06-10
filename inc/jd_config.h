@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+// #define JD_DEBUG_MODE
+
 // 255 minus size of the serial header, rounded down to 4
 #define JD_SERIAL_PAYLOAD_SIZE 236
 #define JD_SERIAL_FULL_HEADER_SIZE 16
@@ -22,10 +24,17 @@
 //#define LOG(msg, ...) DMESG("JD: " msg, ##__VA_ARGS__)
 #define LOG(...) ((void)0)
 
-#define ERROR(msg, ...)                                                                            \
-    do {                                                                                           \
-        signal_error();                                                                            \
-        LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                    \
+#ifdef JD_DEBUG_MODE
+#define ERROR(msg, ...)                                                                         \
+    do {                                                                                        \
+        jd_debug_signal_error();                                                                \
+        LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
     } while (0)
+#else
+#define ERROR(msg, ...)                                                                         \
+    do {                                                                                        \
+        LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
+    } while (0)
+#endif
 
 #endif

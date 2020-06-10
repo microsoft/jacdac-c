@@ -4,8 +4,13 @@
 
 extern uint32_t now;
 
+#ifdef JD_DEBUG_MODE
+void jd_debug_signal_error(int v);
+void jd_debug_signal_write(int v);
+void jd_debug_signal_read(int v);
+#endif
+
 // io
-void log_pin_set(int line, int v);
 void led_set(int state);
 void led_blink(int us);
 void power_pin_enable(int en);
