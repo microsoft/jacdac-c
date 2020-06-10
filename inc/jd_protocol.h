@@ -9,7 +9,7 @@
 #include "interfaces/jd_rx.h"
 #include "interfaces/jd_hw.h"
 #include "interfaces/jd_alloc.h"
-#include "interfaces/jd_routing.h"
+
 #include "interfaces/jd_sensors.h"
 
 void jd_init(void);
