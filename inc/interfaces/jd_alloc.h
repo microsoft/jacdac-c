@@ -2,6 +2,8 @@
 #define __JD_ALLOC_H
 
 #include "jd_config.h"
+
+// This file outlines the APIs for allocator implementations.
 // Allocator implementations are only required if an app or transmission/reception requires dynamic allocation
 // Implementors can map these APIs onto custom malloc/free implementations
 // A dummy implementation can be optionally compiled in, and specific function overriden (implementation/dummy/alloc.c)

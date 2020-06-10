@@ -2,7 +2,7 @@
 #include "jd_physical.h"
 #include "jd_util.h"
 #include "interfaces/jd_hw.h"
-#include "interfaces/jd_app.h"
+#include "interfaces/jd_routing.h"
 #include "interfaces/jd_tx.h"
 
 #define LOGUNC __attribute__((noinline, long_call, section(".data")))

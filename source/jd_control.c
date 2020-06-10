@@ -3,7 +3,7 @@
 #include "jd_io.h"
 #include "interfaces/jd_tx.h"
 #include "interfaces/jd_hw.h"
-#include "interfaces/jd_app.h"
+#include "interfaces/jd_routing.h"
 #include "jd_util.h"
 
 // do not use _state parameter in this file - it can be NULL in bootloader mode

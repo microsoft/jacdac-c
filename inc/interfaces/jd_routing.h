@@ -1,7 +1,12 @@
 #pragma once
 
+// This file specifies the
+
 extern const char app_dev_class_name[];
 
+/**
+ *
+ **/
 void app_process(void);
 void app_init_services(void);
 void app_handle_packet(jd_packet_t *pkt);
