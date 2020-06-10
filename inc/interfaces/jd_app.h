@@ -1,22 +1,6 @@
 #pragma once
 
-#ifdef BL
-#define DEVICE_CLASS(dev_class, dev_class_name)                                                    \
-    struct bl_info_block __attribute__((section(".devinfo"), used)) bl_info = {                    \
-        .devinfo =                                                                                 \
-            {                                                                                      \
-                .magic = DEV_INFO_MAGIC,                                                           \
-                .device_id = 0xffffffffffffffffULL,                                                \
-                .device_class = dev_class,                                                         \
-            },                                                                                     \
-        .random_seed0 = 0xffffffff,                                                                \
-        .random_seed1 = 0xffffffff,                                                                \
-        .reserved0 = 0xffffffff,                                                                   \
-        .reserved1 = 0xffffffff,                                                                   \
-    };
-#else
-#define DEVICE_CLASS(dev_class, dev_class_name) const char app_dev_class_name[] = dev_class_name;
-#endif
+extern const char app_dev_class_name[];
 
 void app_process(void);
 void app_init_services(void);

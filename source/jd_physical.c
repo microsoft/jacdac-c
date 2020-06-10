@@ -1,17 +1,11 @@
-#include "jdlow.h"
+#include "jd_config.h"
+#include "jd_physical.h"
+#include "jd_util.h"
+#include "interfaces/jd_hw.h"
+#include "interfaces/jd_app.h"
+#include "interfaces/jd_tx.h"
 
-#include <string.h>
-
-//#define LOG(msg, ...) DMESG("JD: " msg, ##__VA_ARGS__)
-#define LOG(...) ((void)0)
-
-#define ERROR(msg, ...)                                                                            \
-    do {                                                                                           \
-        signal_error();                                                                            \
-        DMESG("JD-ERROR: " msg, ##__VA_ARGS__);                                                    \
-    } while (0)
-
-#define RAM_FUNC __attribute__((noinline, long_call, section(".data")))
+#define LOGUNC __attribute__((noinline, long_call, section(".data")))
 
 #define JD_STATUS_RX_ACTIVE 0x01
 #define JD_STATUS_TX_ACTIVE 0x02
@@ -57,17 +51,9 @@ static void check_announce(void) {
     if (tim_get_micros() > nextAnnounce) {
         // pulse_log_pin();
         if (nextAnnounce)
-            app_queue_annouce();
+            app_announce_services();
         nextAnnounce = tim_get_micros() + 499000 + (jd_random() & 0x7ff);
     }
-}
-
-void jd_init(void) {
-    DMESG("JD: init");
-    tim_init();
-    set_tick_timer(0);
-    uart_init();
-    check_announce();
 }
 
 int jd_is_running(void) {
@@ -85,7 +71,7 @@ static void tx_done(void) {
 
 void jd_tx_completed(int errCode) {
     LOG("tx done: %d", errCode);
-    app_frame_sent(txFrame);
+    jd_tx_frame_sent(txFrame);
     txFrame = NULL;
     tx_done();
 }
@@ -111,7 +97,7 @@ static void flush_tx_queue(void) {
 
     txPending = 0;
     if (!txFrame) {
-        txFrame = app_pull_frame();
+        txFrame = jd_tx_get_frame();
         if (!txFrame) {
             tx_done();
             return;

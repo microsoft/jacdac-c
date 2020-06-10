@@ -1,4 +1,5 @@
-#include "jdlow.h"
+#include "jd_util.h"
+#include "interfaces/jd_hw.h"
 
 #define ALIGN(x) (((x) + 3) & ~3)
 
@@ -11,6 +12,14 @@ uint32_t jd_hash_fnv1a(const void *data, unsigned len) {
     while (len--)
         h = (h ^ *d++) * 0x1000193;
     return h;
+}
+
+__attribute__((weak)) void jd_panic(void) {
+    hw_panic();
+}
+
+__attribute__((weak)) uint64_t jd_device_id(void) {
+    return hw_device_id();
 }
 
 void jd_seed_random(uint32_t s) {
@@ -68,7 +77,7 @@ int jd_shift_frame(jd_frame_t *frame) {
         if (ptr >= psize)
             return 0; // End-of-frame
         if (ptr <= oldsz) {
-            DMESG("invalid super-frame %d %d", ptr, oldsz);
+            LOG("invalid super-frame %d %d", ptr, oldsz);
             return 0; // don't let it go back, must be some corruption
         }
     } else {
@@ -81,7 +90,7 @@ int jd_shift_frame(jd_frame_t *frame) {
     uint8_t *src = &frame->data[ptr];
     int newsz = *src + 4;
     if (ptr + newsz > psize) {
-        DMESG("invalid super-frame %d %d %d", ptr, newsz, psize);
+        LOG("invalid super-frame %d %d %d", ptr, newsz, psize);
         return 0;
     }
     uint32_t *dst = (uint32_t *)frame->data;
@@ -117,4 +126,18 @@ void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service
     *dst++ = service_cmd >> 8;
     frame->size += ALIGN(service_size + 4);
     return dst;
+}
+
+
+bool jd_should_sample(uint32_t *sample, uint32_t period) {
+    if (in_future(*sample))
+        return false;
+
+    *sample += period;
+
+    if (!in_future(*sample))
+        // we lost some samples
+        *sample = now + period;
+
+    return true;
 }

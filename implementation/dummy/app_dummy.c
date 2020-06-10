@@ -12,11 +12,11 @@ struct srv_state {
     SRV_COMMON;
 };
 
-srv_t *srv_alloc(const srv_vt_t *vt) {
+srv_t *allocate_service(const srv_vt_t *vt) {
     // always allocate instances idx - it should be stable when we disable some services
     if (num_services >= MAX_SERV)
         jd_panic();
-    srv_t *r = alloc(vt->state_size);
+    srv_t *r = jd_alloc(vt->state_size);
     r->vt = vt;
     r->service_number = num_services;
     services[num_services++] = r;
@@ -32,7 +32,7 @@ void app_init_services() {
     ctrl_init();
     jdcon_init();
     init_services();
-    services = alloc(sizeof(void *) * num_services);
+    services = jd_alloc(sizeof(void *) * num_services);
     memcpy(services, tmp, sizeof(void *) * num_services);
 }
 
@@ -94,7 +94,7 @@ void app_handle_packet(jd_packet_t *pkt) {
 void app_process() {
     app_process_frame();
 
-    if (should_sample(&lastDisconnectBlink, 250000)) {
+    if (jd_should_sample(&lastDisconnectBlink, 250000)) {
         if (in_past(lastMax + 2000000)) {
             led_blink(5000);
         }
@@ -104,10 +104,10 @@ void app_process() {
         services[i]->vt->process(services[i]);
     }
 
-    txq_flush();
+    jd_tx_flush();
 }
 
 void dump_pkt(jd_packet_t *pkt, const char *msg) {
-    DMESG("pkt[%s]; s#=%d sz=%d %x", msg, pkt->service_number, pkt->service_size,
+    LOG("pkt[%s]; s#=%d sz=%d %x", msg, pkt->service_number, pkt->service_size,
           pkt->service_command);
 }

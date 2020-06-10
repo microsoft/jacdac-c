@@ -9,14 +9,14 @@ int jd_tx_is_idle() {
 
 void jd_tx_init(void) {
     if (!sendFrame)
-        sendFrame = alloc(sizeof(jd_frame_t) * 2);
+        sendFrame = (jd_frame_t *)jd_alloc(sizeof(jd_frame_t) * 2);
 }
 
 void *jd_send(unsigned service_num, unsigned service_cmd, const void *data,
                unsigned service_size) {
     void *trg = jd_push_in_frame(&sendFrame[bufferPtr], service_num, service_cmd, service_size);
     if (!trg) {
-        DMESG("send overflow!");
+        LOG("send overflow!");
         return NULL;
     }
     if (data)
@@ -48,7 +48,7 @@ void jd_tx_flush() {
         return;
     if (sendFrame[bufferPtr].size == 0)
         return;
-    sendFrame[bufferPtr].device_identifier = device_id();
+    sendFrame[bufferPtr].device_identifier = jd_device_id();
     jd_compute_crc(&sendFrame[bufferPtr]);
     bufferPtr ^= 1;
     jd_packet_ready();

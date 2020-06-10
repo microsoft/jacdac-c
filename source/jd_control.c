@@ -4,6 +4,7 @@
 #include "interfaces/jd_tx.h"
 #include "interfaces/jd_hw.h"
 #include "interfaces/jd_app.h"
+#include "jd_util.h"
 
 // do not use _state parameter in this file - it can be NULL in bootloader mode
 
@@ -17,7 +18,7 @@ static uint32_t nextblink;
 static void identify(void) {
     if (!id_counter)
         return;
-    if (!should_sample(&nextblink, 150000))
+    if (!jd_should_sample(&nextblink, 150000))
         return;
 
     id_counter--;
@@ -51,8 +52,7 @@ void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt) {
         break;
 
     case (JD_CMD_GET_REG | JD_REG_CTRL_DEVICE_DESCRIPTION):
-        jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_get_device_class_name(),
-                 strlen(app_get_device_class_name()));
+        jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_dev_class_name, strlen(app_dev_class_name));
         break;
 
     case (JD_CMD_GET_REG | JD_REG_CTRL_DEVICE_CLASS):

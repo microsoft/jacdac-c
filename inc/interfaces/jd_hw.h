@@ -2,7 +2,7 @@
 
 #include "jd_physical.h"
 
-extern const char app_dev_class_name[];
+extern uint32_t now;
 
 // io
 void log_pin_set(int line, int v);
@@ -10,7 +10,6 @@ void led_set(int state);
 void led_blink(int us);
 void power_pin_enable(int en);
 
-void jd_panic(void);
 void target_enable_irq(void);
 void target_disable_irq(void);
 void target_wait_us(uint32_t n);
@@ -25,3 +24,6 @@ int uart_start_tx(const void *data, uint32_t numbytes);
 void uart_start_rx(void *data, uint32_t maxbytes);
 void uart_disable(void);
 int uart_wait_high(void);
+
+uint64_t hw_device_id(void);
+void hw_panic(void);

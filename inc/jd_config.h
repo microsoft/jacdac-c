@@ -19,4 +19,13 @@
 #define JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS 0x04
 #define JD_FRAME_SIZE(pkt) ((pkt)->size + 12)
 
+//#define LOG(msg, ...) DMESG("JD: " msg, ##__VA_ARGS__)
+#define LOG(...) ((void)0)
+
+#define ERROR(msg, ...)                                                                            \
+    do {                                                                                           \
+        signal_error();                                                                            \
+        LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                    \
+    } while (0)
+
 #endif

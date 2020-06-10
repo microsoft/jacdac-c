@@ -1,5 +1,7 @@
 #pragma once
 
+#include "jd_services.h"
+
 void jd_tx_init(void);
 void jd_tx_flush(void);
 int jd_tx_is_idle(void);

@@ -61,8 +61,8 @@ struct srv_state_common {
 
 typedef struct srv_state_common srv_common_t;
 
-srv_t *srv_alloc(const srv_vt_t *vt);
-int srv_handle_reg(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
+srv_t *allocate_service(const srv_vt_t *vt);
+int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
 
 #define SRV_DEF(id, service_cls)                                                                   \
     static const srv_vt_t id##_vt = {                                                              \
@@ -73,7 +73,7 @@ int srv_handle_reg(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
     }
 
 #define SRV_ALLOC(id)                                                                              \
-    srv_t *state = srv_alloc(&id##_vt);                                                            \
+    srv_t *state = allocate_service(&id##_vt);                                                            \
     (void)state;
 
 #define SENSOR_COMMON                                                                              \
