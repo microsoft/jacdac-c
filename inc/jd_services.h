@@ -67,15 +67,40 @@ srv_t *jd_allocate_service(const srv_vt_t *vt);
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
 
 /**
- *
+ * called by jd_init();
  **/
 void jd_services_init(void);
+
+/**
+ * Should be called each time delta by the application
+ **/
 void jd_services_tick(void);
-void jd_services_handle_packet(jd_packet_t *pkt);
+
+/**
+ * invoked by jd_services_tick.
+ *
+ * Obtains packets using jd_rx_get_frame, unpacks them, and passes them to
+ * jd_services_handle_packet for delivery to services.
+ **/
 void jd_services_process_frame(void);
+
+/**
+ * invoked by jd_services_process_frame.
+ *
+ * Handles the routing of packets to services.
+ **/
+void jd_services_handle_packet(jd_packet_t *pkt);
+
+/**
+ * Invoked at various points in jacdac-c.
+ *
+ * Announces services on the bus.
+ **/
 void jd_services_announce(void);
 
-// TODO: remove/factor out
+/**
+ * TODO: work out if this is required, or if we can write it out...
+ **/
 uint32_t app_get_device_class(void);
 
 #define SRV_DEF(id, service_cls)                                                                   \
