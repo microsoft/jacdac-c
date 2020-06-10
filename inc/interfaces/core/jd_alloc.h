@@ -23,9 +23,7 @@ void* jd_alloc(uint32_t size);
  **/
 void jd_free(void* ptr);
 
-/**
- * Called by applications to check that the stack has not collided with the heap.
- **/
 void jd_alloc_collision_check(void);
+void *jd_alloc_emergency_area(uint32_t size);
 
 #endif

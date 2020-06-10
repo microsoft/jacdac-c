@@ -1,6 +1,6 @@
-#include "interfaces/jd_alloc.h"
+#include "interfaces/core/jd_alloc.h"
 #include "jd_util.h"
-#include "interfaces/jd_hw.h"
+#include "interfaces/core/jd_hw.h"
 
 __attribute__((weak)) void jd_alloc_collision_check(void) {
 }

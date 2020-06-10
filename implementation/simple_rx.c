@@ -1,5 +1,5 @@
 #include "jd_config.h"
-#include "interfaces/jd_rx.h"
+#include "interfaces/core/jd_rx.h"
 
 static jd_frame_t *frameToHandle;
 

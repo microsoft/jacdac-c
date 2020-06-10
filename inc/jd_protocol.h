@@ -5,11 +5,11 @@
 #include "jd_services.h"
 #include "jd_util.h"
 #include "jd_io.h"
-#include "interfaces/jd_tx.h"
-#include "interfaces/jd_rx.h"
-#include "interfaces/jd_hw.h"
-#include "interfaces/jd_alloc.h"
+#include "interfaces/core/jd_tx.h"
+#include "interfaces/core/jd_rx.h"
+#include "interfaces/core/jd_hw.h"
+#include "interfaces/core/jd_alloc.h"
 
-#include "interfaces/jd_sensors.h"
+#include "interfaces/optional/jd_sensors.h"
 
 void jd_init(void);

@@ -1,6 +1,6 @@
-#include "interfaces/jd_alloc.h"
+#include "interfaces/core/jd_alloc.h"
 #include "jd_util.h"
-#include "interfaces/jd_hw.h"
+#include "interfaces/core/jd_hw.h"
 
 #define STACK_SIZE 512
 #define STACK_BASE ((uint32_t)&_estack)

@@ -1,10 +1,10 @@
 #include "jd_config.h"
 #include "jd_physical.h"
 #include "jd_util.h"
-#include "interfaces/jd_hw.h"
+#include "interfaces/core/jd_hw.h"
 
-#include "interfaces/jd_tx.h"
-#include "interfaces/jd_rx.h"
+#include "interfaces/core/jd_tx.h"
+#include "interfaces/core/jd_rx.h"
 
 #define LOGUNC __attribute__((noinline, long_call, section(".data")))
 

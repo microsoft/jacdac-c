@@ -1,5 +1,5 @@
 #include "jd_io.h"
-#include "interfaces/jd_hw.h"
+#include "interfaces/core/jd_hw.h"
 
 void jd_led_set(int state)
 {

@@ -1,5 +1,5 @@
 #include "jd_util.h"
-#include "interfaces/jd_hw.h"
+#include "interfaces/core/jd_hw.h"
 
 #define ALIGN(x) (((x) + 3) & ~3)
 
