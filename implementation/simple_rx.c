@@ -6,7 +6,9 @@ void jd_rx_init(void) {
 int jd_rx_frame_received(jd_frame_t *frame) {
     if (frameToHandle)
         return -1;
+
     frameToHandle = frame;
+
     return 0;
 }
 
