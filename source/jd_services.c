@@ -153,7 +153,7 @@ void jd_services_init() {
 }
 
 void jd_services_announce() {
-    jd_alloc_stack_check();
+    jd_alloc_collision_check();
 
     uint32_t *dst =
         jd_send(JD_SERVICE_NUMBER_CTRL, JD_CMD_ADVERTISEMENT_DATA, NULL, num_services * 4);
