@@ -12,7 +12,7 @@ struct srv_state {
     SRV_COMMON;
 };
 
-srv_t *allocate_service(const srv_vt_t *vt) {
+srv_t *jd_allocate_service(const srv_vt_t *vt) {
     // always allocate instances idx - it should be stable when we disable some services
     if (num_services >= MAX_SERV)
         jd_panic();
@@ -24,19 +24,19 @@ srv_t *allocate_service(const srv_vt_t *vt) {
     return r;
 }
 
-void app_init_services() {
+void jd_services_init() {
     srv_t *tmp[MAX_SERV + 1];
     uint16_t hashes[MAX_SERV];
     tmp[MAX_SERV] = (srv_t *)hashes; // avoid global variable
     services = tmp;
     ctrl_init();
     jdcon_init();
-    init_services();
+    app_init_services();
     services = jd_alloc(sizeof(void *) * num_services);
     memcpy(services, tmp, sizeof(void *) * num_services);
 }
 
-void app_announce_services() {
+void jd_services_announce() {
     alloc_stack_check();
 
     uint32_t *dst =
@@ -63,14 +63,14 @@ static void handle_ctrl_tick(jd_packet_t *pkt) {
     }
 }
 
-void app_handle_packet(jd_packet_t *pkt) {
+void jd_services_handle_packet(jd_packet_t *pkt) {
     if (!(pkt->flags & JD_FRAME_FLAG_COMMAND)) {
         if (pkt->service_number == 0)
             handle_ctrl_tick(pkt);
         return;
     }
 
-    bool matched_devid = pkt->device_identifier == device_id();
+    bool matched_devid = pkt->device_identifier == jd_device_id();
 
     if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) {
         for (int i = 0; i < num_services; ++i) {
@@ -91,8 +91,8 @@ void app_handle_packet(jd_packet_t *pkt) {
     }
 }
 
-void app_process() {
-    app_process_frame();
+void jd_services_tick() {
+    jd_services_process_frame();
 
     if (jd_should_sample(&lastDisconnectBlink, 250000)) {
         if (in_past(lastMax + 2000000)) {

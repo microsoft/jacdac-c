@@ -61,8 +61,22 @@ struct srv_state_common {
 
 typedef struct srv_state_common srv_common_t;
 
-srv_t *allocate_service(const srv_vt_t *vt);
+extern const char app_dev_class_name[];
+
+srv_t *jd_allocate_service(const srv_vt_t *vt);
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
+
+/**
+ *
+ **/
+void jd_services_init(void);
+void jd_services_tick(void);
+void jd_services_handle_packet(jd_packet_t *pkt);
+void jd_services_process_frame(void);
+void jd_services_announce(void);
+
+// TODO: remove/factor out
+uint32_t app_get_device_class(void);
 
 #define SRV_DEF(id, service_cls)                                                                   \
     static const srv_vt_t id##_vt = {                                                              \
@@ -73,19 +87,6 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
     }
 
 #define SRV_ALLOC(id)                                                                              \
-    srv_t *state = allocate_service(&id##_vt);                                                            \
+    srv_t *state = jd_allocate_service(&id##_vt);                                                            \
     (void)state;
 
-#define SENSOR_COMMON                                                                              \
-    SRV_COMMON;                                                                                    \
-    uint8_t is_streaming : 1;                                                                      \
-    uint8_t got_query : 1;                                                                         \
-    uint32_t streaming_interval;                                                                   \
-    uint32_t next_streaming
-#define REG_SENSOR_BASE REG_BYTES(JD_REG_PADDING, 16)
-
-int sensor_handle_packet(srv_t *state, jd_packet_t *pkt);
-int sensor_should_stream(srv_t *state);
-int sensor_handle_packet_simple(srv_t *state, jd_packet_t *pkt, const void *sample,
-                                uint32_t sample_size);
-void sensor_process_simple(srv_t *state, const void *sample, uint32_t sample_size);

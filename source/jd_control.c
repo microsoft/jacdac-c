@@ -38,7 +38,7 @@ void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt) {
 
     switch (pkt->service_command) {
     case JD_CMD_ADVERTISEMENT_DATA:
-        app_announce_services();
+        jd_services_announce();
         break;
 
     case JD_CMD_CTRL_IDENTIFY:

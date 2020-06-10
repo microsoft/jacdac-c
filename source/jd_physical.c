@@ -4,6 +4,7 @@
 #include "interfaces/jd_hw.h"
 #include "interfaces/jd_routing.h"
 #include "interfaces/jd_tx.h"
+#include "interfaces/jd_rx.h"
 
 #define LOGUNC __attribute__((noinline, long_call, section(".data")))
 
@@ -32,7 +33,7 @@ static void check_announce(void) {
     if (tim_get_micros() > nextAnnounce) {
         // pulse_log_pin();
         if (nextAnnounce)
-            app_announce_services();
+            jd_services_announce();
         nextAnnounce = tim_get_micros() + 499000 + (jd_random() & 0x7ff);
     }
 }

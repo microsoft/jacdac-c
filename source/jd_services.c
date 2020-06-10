@@ -2,7 +2,22 @@
 #include "jd_control.h"
 #include "jd_util.h"
 #include "interfaces/jd_tx.h"
+#include "interfaces/jd_rx.h"
 #include "interfaces/jd_hw.h"
+#include "interfaces/jd_app.h"
+#include "interfaces/jd_alloc.h"
+
+#define MAX_SERV 32
+
+static srv_t **services;
+static uint8_t num_services;
+
+static uint64_t maxId;
+static uint32_t lastMax, lastDisconnectBlink;
+
+struct srv_state {
+    SRV_COMMON;
+};
 
 
 #define REG_IS_SIGNED(r) ((r) <= 4 && !((r)&1))
@@ -96,4 +111,119 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
     }
 
     return 0;
+}
+
+void jd_services_process_frame() {
+    jd_frame_t* frameToHandle = jd_rx_get_frame();
+
+    if (frameToHandle) {
+        if (frameToHandle->flags & JD_FRAME_FLAG_ACK_REQUESTED &&
+            frameToHandle->flags & JD_FRAME_FLAG_COMMAND &&
+            frameToHandle->device_identifier == jd_device_id())
+            jd_send(JD_SERVICE_NUMBER_CRC_ACK, frameToHandle->crc, NULL, 0);
+
+        for (;;) {
+            jd_services_handle_packet((jd_packet_t *)frameToHandle);
+            if (!jd_shift_frame(frameToHandle))
+                break;
+        }
+    }
+}
+
+srv_t *jd_allocate_service(const srv_vt_t *vt) {
+    // always allocate instances idx - it should be stable when we disable some services
+    if (num_services >= MAX_SERV)
+        jd_panic();
+    srv_t *r = jd_alloc(vt->state_size);
+    r->vt = vt;
+    r->service_number = num_services;
+    services[num_services++] = r;
+
+    return r;
+}
+
+void jd_services_init() {
+    srv_t *tmp[MAX_SERV + 1];
+    uint16_t hashes[MAX_SERV];
+    tmp[MAX_SERV] = (srv_t *)hashes; // avoid global variable
+    services = tmp;
+    app_init_services();
+    services = jd_alloc(sizeof(void *) * num_services);
+    memcpy(services, tmp, sizeof(void *) * num_services);
+}
+
+void jd_services_announce() {
+    jd_alloc_stack_check();
+
+    uint32_t *dst =
+        jd_send(JD_SERVICE_NUMBER_CTRL, JD_CMD_ADVERTISEMENT_DATA, NULL, num_services * 4);
+    if (!dst)
+        return;
+    for (int i = 0; i < num_services; ++i)
+        dst[i] = services[i]->vt->service_class;
+}
+
+static void handle_ctrl_tick(jd_packet_t *pkt) {
+    if (pkt->service_command == JD_CMD_ADVERTISEMENT_DATA) {
+        // if we have not seen maxId for 1.1s, find a new maxId
+        if (pkt->device_identifier < maxId && in_past(lastMax + 1100000)) {
+            maxId = pkt->device_identifier;
+        }
+
+        // maxId? blink!
+        if (pkt->device_identifier >= maxId) {
+            maxId = pkt->device_identifier;
+            lastMax = now;
+            led_blink(50);
+        }
+    }
+}
+
+void jd_services_handle_packet(jd_packet_t *pkt) {
+    if (!(pkt->flags & JD_FRAME_FLAG_COMMAND)) {
+        if (pkt->service_number == 0)
+            handle_ctrl_tick(pkt);
+        return;
+    }
+
+    bool matched_devid = pkt->device_identifier == jd_device_id();
+
+    if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) {
+        for (int i = 0; i < num_services; ++i) {
+            if (pkt->device_identifier == services[i]->vt->service_class) {
+                pkt->service_number = i;
+                matched_devid = true;
+                break;
+            }
+        }
+    }
+
+    if (!matched_devid)
+        return;
+
+    if (pkt->service_number < num_services) {
+        srv_t *s = services[pkt->service_number];
+        s->vt->handle_pkt(s, pkt);
+    }
+}
+
+void jd_services_tick() {
+    jd_services_process_frame();
+
+    if (jd_should_sample(&lastDisconnectBlink, 250000)) {
+        if (in_past(lastMax + 2000000)) {
+            led_blink(5000);
+        }
+    }
+
+    for (int i = 0; i < num_services; ++i) {
+        services[i]->vt->process(services[i]);
+    }
+
+    jd_tx_flush();
+}
+
+void dump_pkt(jd_packet_t *pkt, const char *msg) {
+    LOG("pkt[%s]; s#=%d sz=%d %x", msg, pkt->service_number, pkt->service_size,
+          pkt->service_command);
 }

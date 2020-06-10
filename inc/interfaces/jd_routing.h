@@ -8,10 +8,9 @@ extern const char app_dev_class_name[];
 /**
  *
  **/
-void app_process(void);
-void app_init_services(void);
-void app_handle_packet(jd_packet_t *pkt);
-void app_process_frame(void);
-void app_announce_services(void);
-const char* app_get_device_class_name(void);
+void jd_services_tick(void);
+void jd_services_init(void);
+void jd_services_handle_packet(jd_packet_t *pkt);
+void jd_services_process_frame(void);
+void jd_services_announce(void);
 uint32_t app_get_device_class(void);
