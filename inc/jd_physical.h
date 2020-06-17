@@ -50,7 +50,6 @@ struct _jd_frame_t {
 typedef struct _jd_frame_t jd_frame_t;
 
 
-void jd_init(void);
 void jd_packet_ready(void);
 void jd_compute_crc(jd_frame_t *frame);
 // these are to be called by uart implementation
