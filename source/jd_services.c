@@ -147,9 +147,9 @@ void jd_services_init() {
     uint16_t hashes[MAX_SERV];
     tmp[MAX_SERV] = (srv_t *)hashes; // avoid global variable
     services = tmp;
-    app_init_services();
-    services = jd_alloc(sizeof(void *) * num_services);
-    memcpy(services, tmp, sizeof(void *) * num_services);
+    services = jd_alloc(sizeof(void *) * MAX_SERV);
+    memcpy(services, tmp, sizeof(void *) * MAX_SERV);
+    num_services = 0;
 }
 
 void jd_services_announce() {
