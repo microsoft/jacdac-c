@@ -9,6 +9,7 @@
 #include "interfaces/core/jd_rx.h"
 #include "interfaces/core/jd_hw.h"
 #include "interfaces/core/jd_alloc.h"
+#include "interfaces/core/jd_app.h"
 
 #include "interfaces/optional/jd_sensors.h"
 
