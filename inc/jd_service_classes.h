@@ -1,4 +1,3 @@
-
 #pragma once
 
 #define JD_SERVICE_CLASS_LOGGER 0x12dc1fca
@@ -35,6 +34,7 @@
 #define JD_SERVICE_CLASS_ARCADE_CONTROLS 0x1deaa06e
 #define JD_SERVICE_CLASS_POWER 0x1fa4c95a
 #define JD_SERVICE_CLASS_SLIDER 0x1f274746
+#define JD_SERVICE_CLASS_MOTOR 0x17004cd8
 
 // to generate a new class number, head to https://microsoft.github.io/uf2/patcher/
 // click link at the bottom and replace first digit with '1'
