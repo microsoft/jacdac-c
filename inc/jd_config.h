@@ -1,6 +1,8 @@
 #ifndef JD_CONFIG_H
 #define JD_CONFIG_H
 
+#include "jd_user_config.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -35,6 +37,10 @@
     do {                                                                                        \
         LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
     } while (0)
+#endif
+
+#ifndef JD_CONFIG_TEMPERATURE
+#define JD_CONFIG_TEMPERATURE       0
 #endif
 
 #endif

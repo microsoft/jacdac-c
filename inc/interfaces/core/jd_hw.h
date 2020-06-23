@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jd_physical.h"
+#include "jd_config.h"
 
 extern uint32_t now;
 
@@ -29,6 +30,10 @@ int uart_start_tx(const void *data, uint32_t numbytes);
 void uart_start_rx(void *data, uint32_t maxbytes);
 void uart_disable(void);
 int uart_wait_high(void);
+
+#if JD_CONFIG_TEMPERATURE == 1
+uint16_t adc_read_temp(void);
+#endif
 
 uint64_t hw_device_id(void);
 void hw_panic(void);
