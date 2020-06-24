@@ -11,6 +11,4 @@
 #include "interfaces/core/jd_alloc.h"
 #include "interfaces/core/jd_app.h"
 
-#include "interfaces/optional/jd_sensors.h"
-
 void jd_init(void);
