@@ -1,8 +1,8 @@
 #include "jd_control.h"
 #include "jd_services.h"
 #include "jd_io.h"
-#include "interfaces/core/jd_tx.h"
-#include "interfaces/core/jd_hw.h"
+#include "interfaces/jd_tx.h"
+#include "interfaces/jd_hw.h"
 
 #include "jd_util.h"
 

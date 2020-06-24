@@ -1,5 +1,5 @@
 #include "jd_config.h"
-#include "interfaces/core/jd_rx.h"
+#include "interfaces/jd_rx.h"
 
 __attribute__((weak)) void jd_rx_init(void) {
 }

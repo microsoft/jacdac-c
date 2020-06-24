@@ -21,6 +21,8 @@ void target_disable_irq(void);
 void target_wait_us(uint32_t n);
 void target_reset(void);
 
+extern uint16_t tim_max_sleep;
+extern uint8_t cpu_mhz;
 void tim_init(void);
 uint64_t tim_get_micros(void);
 void tim_set_timer(int delta, cb_t cb);
