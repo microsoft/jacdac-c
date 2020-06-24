@@ -53,6 +53,10 @@ void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt) {
         jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_dev_class_name, strlen(app_dev_class_name));
         break;
 
+    case (JD_CMD_GET_REG | JD_REG_CTRL_FIRMWARE_VERSION):
+        jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_fw_version, strlen(app_fw_version));
+        break;
+
     case (JD_CMD_GET_REG | JD_REG_CTRL_DEVICE_CLASS):
         send_value(pkt, app_get_device_class());
         break;

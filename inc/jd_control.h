@@ -65,6 +65,8 @@
 // 0x183 was light level reading - removed
 // typically the same as JD_REG_CTRL_DEVICE_CLASS; the bootloader will respond to that code
 #define JD_REG_CTRL_BL_DEVICE_CLASS 0x184
+// a string describing firmware version; typically semver
+#define JD_REG_CTRL_FIRMWARE_VERSION 0x185
 
 void jd_ctrl_init(void);
 void jd_ctrl_process(srv_t *_state);
