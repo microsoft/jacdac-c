@@ -1,4 +1,5 @@
 #include "jd_protocol.h"
+#include "interfaces/jd_sensor.h"
 
 REG_DEFINITION(                         //
     sensor_regs,                        //

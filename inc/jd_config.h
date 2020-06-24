@@ -24,7 +24,9 @@
 #define JD_FRAME_SIZE(pkt) ((pkt)->size + 12)
 
 //#define LOG(msg, ...) DMESG("JD: " msg, ##__VA_ARGS__)
+#ifndef LOG
 #define LOG(...) ((void)0)
+#endif
 
 #ifdef JD_DEBUG_MODE
 #define ERROR(msg, ...)                                                                         \

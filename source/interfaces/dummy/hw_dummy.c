@@ -1,4 +1,4 @@
-#include "interfaces/core/jd_hw.h"
+#include "interfaces/jd_hw.h"
 #include "jd_util.h"
 
 __attribute__((weak)) void hw_panic(void) {
