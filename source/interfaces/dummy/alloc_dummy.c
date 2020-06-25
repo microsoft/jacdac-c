@@ -2,7 +2,7 @@
 #include "jd_util.h"
 #include "interfaces/jd_hw.h"
 
-__attribute__((weak)) void jd_alloc_collision_check(void) {
+__attribute__((weak)) void jd_alloc_stack_check(void) {
 }
 
 __attribute__((weak)) void jd_alloc_init(void) {

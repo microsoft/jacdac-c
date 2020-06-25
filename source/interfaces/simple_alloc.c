@@ -14,7 +14,7 @@ extern uint32_t _estack;
 static uint32_t *aptr;
 static uint16_t maxStack;
 
-void jd_alloc_collision_check(void) {
+void jd_alloc_stack_check(void) {
     uint32_t *ptr = (uint32_t *)(STACK_BASE - STACK_SIZE);
     while (ptr < (uint32_t *)STACK_BASE) {
         if (*ptr != 0x33333333)
@@ -36,11 +36,11 @@ void jd_alloc_init(void) {
     jd_seed_random(jd_hash_fnv1a((void *)HEAP_BASE,  sz));
     memset((void *)HEAP_BASE, 0x33, sz);
 
-    jd_alloc_collision_check();
+    jd_alloc_stack_check();
 }
 
 void *jd_alloc(uint32_t size) {
-    jd_alloc_collision_check();
+    jd_alloc_stack_check();
     size = (size + 3) >> 2;
     void *r = aptr;
     aptr += size;

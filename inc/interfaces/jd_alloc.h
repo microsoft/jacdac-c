@@ -23,7 +23,7 @@ void* jd_alloc(uint32_t size);
  **/
 void jd_free(void* ptr);
 
-void jd_alloc_collision_check(void);
+void jd_alloc_stack_check(void);
 void *jd_alloc_emergency_area(uint32_t size);
 
 #endif
