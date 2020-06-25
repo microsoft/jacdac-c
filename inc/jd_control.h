@@ -67,6 +67,8 @@
 #define JD_REG_CTRL_BL_DEVICE_CLASS 0x184
 // a string describing firmware version; typically semver
 #define JD_REG_CTRL_FIRMWARE_VERSION 0x185
+// number of microseconds since boot, 64 bit
+#define JD_REG_CTRL_MICROS_SINCE_BOOT 0x186
 
 void jd_ctrl_init(void);
 void jd_ctrl_process(srv_t *_state);

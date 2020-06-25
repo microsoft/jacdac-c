@@ -50,11 +50,13 @@ void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt) {
         break;
 
     case (JD_CMD_GET_REG | JD_REG_CTRL_DEVICE_DESCRIPTION):
-        jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_dev_class_name, strlen(app_dev_class_name));
+        jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_dev_class_name,
+                strlen(app_dev_class_name));
         break;
 
     case (JD_CMD_GET_REG | JD_REG_CTRL_FIRMWARE_VERSION):
-        jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_fw_version, strlen(app_fw_version));
+        jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_fw_version,
+                strlen(app_fw_version));
         break;
 
     case (JD_CMD_GET_REG | JD_REG_CTRL_DEVICE_CLASS):
@@ -64,6 +66,12 @@ void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt) {
     case (JD_CMD_GET_REG | JD_REG_CTRL_BL_DEVICE_CLASS):
         send_value(pkt, app_get_device_class());
         break;
+
+    case (JD_CMD_GET_REG | JD_REG_CTRL_MICROS_SINCE_BOOT): {
+        uint64_t t = tim_get_micros();
+        jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, &t, sizeof(t));
+        break;
+    }
 
 #if JD_CONFIG_TEMPERATURE == 1
     case (JD_CMD_GET_REG | JD_REG_CTRL_TEMPERATURE):
