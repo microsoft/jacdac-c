@@ -10,7 +10,7 @@
 #define MAX_SERV 32
 
 static srv_t **services;
-static uint8_t num_services;
+static uint8_t num_services, reset_counter;
 
 static uint64_t maxId;
 static uint32_t lastMax, lastDisconnectBlink;
@@ -18,7 +18,6 @@ static uint32_t lastMax, lastDisconnectBlink;
 struct srv_state {
     SRV_COMMON;
 };
-
 
 #define REG_IS_SIGNED(r) ((r) <= 4 && !((r)&1))
 static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1};
@@ -114,7 +113,7 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
 }
 
 void jd_services_process_frame() {
-    jd_frame_t* frameToHandle = jd_rx_get_frame();
+    jd_frame_t *frameToHandle = jd_rx_get_frame();
 
     if (frameToHandle) {
         if (frameToHandle->flags & JD_FRAME_FLAG_ACK_REQUESTED &&
@@ -163,6 +162,9 @@ void jd_services_announce() {
         return;
     for (int i = 0; i < num_services; ++i)
         dst[i] = services[i]->vt->service_class;
+    if (reset_counter < 0xf)
+        reset_counter++;
+    dst[0] = reset_counter | JD_ADVERTISEMENT_0_ACK_SUPPORTED;
 }
 
 static void handle_ctrl_tick(jd_packet_t *pkt) {
@@ -227,5 +229,5 @@ void jd_services_tick() {
 
 void dump_pkt(jd_packet_t *pkt, const char *msg) {
     LOG("pkt[%s]; s#=%d sz=%d %x", msg, pkt->service_number, pkt->service_size,
-          pkt->service_command);
+        pkt->service_command);
 }

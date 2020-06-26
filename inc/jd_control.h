@@ -10,6 +10,9 @@
 #define JD_SERVICE_NUMBER_MASK 0x3f
 #define JD_SERVICE_NUMBER_CRC_ACK 0x3f
 
+#define JD_ADVERTISEMENT_0_COUNTER_MASK 0x0000000F
+#define JD_ADVERTISEMENT_0_ACK_SUPPORTED 0x00000100
+
 // Registers 0x001-0x07f - r/w common to all services
 // Registers 0x080-0x0ff - r/w defined per-service
 // Registers 0x100-0x17f - r/o common to all services
