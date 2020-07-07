@@ -35,7 +35,7 @@ void touch_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &state->reading, sizeof(state->reading));
 }
 
-SRV_DEF(touch, JD_SERVICE_CLASS_BUTTON);
+SRV_DEF(touch, JD_SERVICE_CLASS_TOUCHBUTTON);
 
 void touch_init(uint8_t pin) {
     SRV_ALLOC(touch);

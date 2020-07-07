@@ -17,5 +17,6 @@ void gamepad_init(uint8_t num_pins, const uint8_t *pins, const uint8_t *ledPins)
 void power_init(uint8_t pre_sense, uint8_t gnd_sense, uint8_t overload, uint8_t pulse);
 void slider_init(uint8_t pinL, uint8_t pinM, uint8_t pinH);
 void motor_init(uint8_t pin1, uint8_t pin2, uint8_t pin_nsleep);
+void multitouch_init(const uint8_t *pins);
 
 #endif
