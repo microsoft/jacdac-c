@@ -147,7 +147,11 @@ void jd_services_init() {
     uint16_t hashes[MAX_SERV];
     tmp[MAX_SERV] = (srv_t *)hashes; // avoid global variable
     services = tmp;
+
     jd_ctrl_init();
+#ifdef JD_CONSOLE
+    jdcon_init();
+#endif
     app_init_services();
     services = jd_alloc(sizeof(void *) * MAX_SERV);
     memcpy(services, tmp, sizeof(void *) * MAX_SERV);
