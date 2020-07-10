@@ -7,6 +7,9 @@
 #define PWM_BITS 9
 #define SERVO_PERIOD (1 << PWM_BITS)
 
+#define LOG JD_LOG
+// #define LOG JD_NOLOG
+
 typedef struct channel {
     uint8_t pin;
     uint8_t pwm_pin;

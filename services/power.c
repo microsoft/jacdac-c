@@ -3,14 +3,15 @@
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_adc.h"
 
+#define LOG JD_LOG
+// #define LOG JD_NOLOG
+
 #define CHECK_PERIOD 1000 // how often to probe the ADC, in us
 #define OVERLOAD_MS 1000  // how long to shut down the power for after overload, in ms
 
 // calibrate readings
 #define MA_SCALE 1890
 #define MV_SCALE 419
-
-
 
 // both in ms
 #define PWR_REG_KEEP_ON_PULSE_DURATION 0x80
@@ -158,7 +159,7 @@ void power_process(srv_t *state) {
         state->battery_voltage = (state->sum_pre * MV_SCALE) / (256 * state->nsum);
 
         LOG("%dmV %dmA %s", state->battery_voltage, state->curr_power,
-              state->pwr_on ? "ON" : "OFF");
+            state->pwr_on ? "ON" : "OFF");
 
         state->nsum = 0;
         state->sum_gnd = 0;

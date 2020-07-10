@@ -23,26 +23,25 @@
 #define JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS 0x04
 #define JD_FRAME_SIZE(pkt) ((pkt)->size + 12)
 
-//#define LOG(msg, ...) DMESG("JD: " msg, ##__VA_ARGS__)
-#ifndef LOG
-#define LOG(...) ((void)0)
-#endif
+#define JD_NOLOG(...) ((void)0)
+
+// LOG(...) to be defined in particular .c files as either JD_LOG or JD_NOLOG
 
 #ifdef JD_DEBUG_MODE
-#define ERROR(msg, ...)                                                                         \
-    do {                                                                                        \
-        jd_debug_signal_error();                                                                \
-        LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
+#define ERROR(msg, ...)                                                                            \
+    do {                                                                                           \
+        jd_debug_signal_error();                                                                   \
+        JD_LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
     } while (0)
 #else
-#define ERROR(msg, ...)                                                                         \
-    do {                                                                                        \
-        LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
+#define ERROR(msg, ...)                                                                            \
+    do {                                                                                           \
+        JD_LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
     } while (0)
 #endif
 
 #ifndef JD_CONFIG_TEMPERATURE
-#define JD_CONFIG_TEMPERATURE       0
+#define JD_CONFIG_TEMPERATURE 0
 #endif
 
 #endif

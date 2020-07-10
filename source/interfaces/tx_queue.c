@@ -16,7 +16,7 @@ void *jd_send(unsigned service_num, unsigned service_cmd, const void *data,
                unsigned service_size) {
     void *trg = jd_push_in_frame(&sendFrame[bufferPtr], service_num, service_cmd, service_size);
     if (!trg) {
-        LOG("send overflow!");
+        JD_LOG("send overflow!");
         return NULL;
     }
     if (data)

@@ -233,7 +233,7 @@ void acc_process(srv_t *state) {
     static int cnt;
     if(cnt++>50){
         cnt=0;
-        LOG("%d %d %d", sample.x, sample.y, sample.z);
+        // JD_LOG("%d %d %d", sample.x, sample.y, sample.z);
     }
 
     process_events(state);

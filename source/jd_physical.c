@@ -6,7 +6,9 @@
 #include "interfaces/jd_tx.h"
 #include "interfaces/jd_rx.h"
 
-#define LOGUNC __attribute__((noinline, long_call, section(".data")))
+// Enabling logging can cause delays and dropped packets!
+// #define LOG JD_LOG
+#define LOG JD_NOLOG
 
 #define JD_STATUS_RX_ACTIVE 0x01
 #define JD_STATUS_TX_ACTIVE 0x02
