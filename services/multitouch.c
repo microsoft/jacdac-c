@@ -4,29 +4,36 @@
 #include "interfaces/jd_adc.h"
 #include "interfaces/jd_console.h"
 
+#define PIN_LOG 0
+
 #define EVT_DOWN 1
 #define EVT_UP 2
 #define EVT_CLICK 3
 #define EVT_LONG_CLICK 4
 
 #define PRESS_THRESHOLD 70
-#define PRESS_TICKS 3
+#define PRESS_TICKS 2
 
-#define SAMPLING_US 1000
-#define SAMPLE_WINDOW 19
+#define SAMPLING_US 500
+#define SAMPLE_WINDOW 7
 
 #define BASELINE_SAMPLES 20
 #define BASELINE_SUPER_SAMPLES 10
 #define BASELINE_FREQ (1000000 / BASELINE_SAMPLES)
 
-#define SWIPE_DURATION_MIN 10
-#define SWIPE_DURATION_MAX 500
 #define SWIPE_DELTA_MIN 10
-#define SWIPE_DELTA_MAX 500
+#define SWIPE_DELTA_MAX 150
+
+#if PIN_LOG
+#include "pinnames.h"
+#define LOG_SW PA_10
+const uint8_t logpins[] = {PA_5, PA_6, PA_7, PA_9};
+#endif
 
 typedef struct pin_desc {
     uint8_t pin;
     int8_t ticks_pressed;
+    uint32_t start_debounced;
     uint32_t start_press;
     uint32_t end_press;
     uint16_t reading;
@@ -92,34 +99,35 @@ static uint16_t read_pin_avg(uint8_t pin) {
 
 static void detect_swipe(srv_t *state) {
     int delta = 0;
+    for (int i = 1; i < state->numpins; ++i) {
+        pin_t *p = &state->pins[i];
+        pin_t *p0 = &state->pins[i - 1];
+        if (p->start_debounced == 0 || p0->start_debounced == 0)
+            return;
+
+        int d0 = p->start_debounced - p0->start_debounced;
+        if (d0 < 0) {
+            if (delta > 0)
+                return;
+            delta = -1;
+            d0 = -d0;
+        } else {
+            if (delta < 0)
+                return;
+            delta = 1;
+        }
+        if (!(SWIPE_DELTA_MIN <= d0 && d0 <= SWIPE_DELTA_MAX))
+            return;
+    }
+
+#if PIN_LOG
+    pin_pulse(LOG_SW, 1);
+#endif
     for (int i = 0; i < state->numpins; ++i) {
         pin_t *p = &state->pins[i];
-        uint32_t duration = p->end_press - p->start_press;
-        if (!(SWIPE_DURATION_MIN <= duration && duration <= SWIPE_DURATION_MAX)) {
-            jdcon_log("d[%d]: %d", i, duration);
-            return;
-        }
-        if (i > 0) {
-            pin_t *p0 = &state->pins[i - 1];
-            int d0 = p->start_press - p0->start_press;
-            int d1 = p->end_press - p0->end_press;
-            jdcon_log("d0 %d %d", d0, d1);
-            if (d0 < 0) {
-                if (d1 > 0 || delta > 0)
-                    return;
-                delta = -1;
-                d0 = -d0;
-                d1 = -d1;
-            } else {
-                if (d1 < 0 || delta < 0)
-                    return;
-                delta = 1;
-            }
-            if (!(SWIPE_DELTA_MIN <= d0 && d0 <= SWIPE_DELTA_MAX) ||
-                !(SWIPE_DELTA_MIN <= d1 && d1 <= SWIPE_DELTA_MAX))
-                return;
-        }
+        p->start_debounced = 0;
     }
+
     jdcon_warn("swp %d", delta);
 }
 
@@ -144,13 +152,18 @@ static void update(srv_t *state) {
             p->ticks_pressed = 0;
 
         bool is_pressed = p->ticks_pressed >= PRESS_TICKS;
+#if PIN_LOG
+        pin_set(logpins[i], is_pressed);
+#endif
         if (is_pressed != was_pressed) {
             if (is_pressed) {
                 p->start_press = now_ms;
+                if (now_ms - p->start_debounced > 500)
+                    p->start_debounced = p->start_press;
+                detect_swipe(state);
             } else {
                 p->end_press = now_ms;
                 jdcon_log("press p%d %dms", i, now_ms - p->start_press);
-                detect_swipe(state);
             }
         }
     }
@@ -213,7 +226,12 @@ void multitouch_init(const uint8_t *pins) {
     for (int i = 0; i < state->numpins; ++i) {
         state->pins[i].pin = pins[i];
         pin_setup_input(pins[i], 0);
+#if PIN_LOG
+        pin_setup_output(logpins[i]);
+        pin_setup_output(LOG_SW);
+#endif
     }
+
 
     state->streaming_interval = 50;
 
