@@ -5,11 +5,15 @@
 #include "interfaces/jd_console.h"
 
 #define PIN_LOG 0
+#define CON_LOG 0
 
 #define EVT_DOWN 1
 #define EVT_UP 2
 #define EVT_CLICK 3
 #define EVT_LONG_CLICK 4
+
+#define EVT_SWIPE_POS 0x10
+#define EVT_SWIPE_NEG 0x11
 
 #define PRESS_THRESHOLD 70
 #define PRESS_TICKS 2
@@ -98,6 +102,9 @@ static uint16_t read_pin_avg(uint8_t pin) {
 }
 
 static void detect_swipe(srv_t *state) {
+    if (state->numpins < 3)
+        return;
+
     int delta = 0;
     for (int i = 1; i < state->numpins; ++i) {
         pin_t *p = &state->pins[i];
@@ -128,7 +135,14 @@ static void detect_swipe(srv_t *state) {
         p->start_debounced = 0;
     }
 
+    if (delta > 0)
+        jd_send_event(state, EVT_SWIPE_POS);
+    else
+        jd_send_event(state, EVT_SWIPE_NEG);
+
+#if CON_LOG
     jdcon_warn("swp %d", delta);
+#endif
 }
 
 static void update(srv_t *state) {
@@ -157,13 +171,17 @@ static void update(srv_t *state) {
 #endif
         if (is_pressed != was_pressed) {
             if (is_pressed) {
+                jd_send_event_ext(state, EVT_DOWN, i);
                 p->start_press = now_ms;
                 if (now_ms - p->start_debounced > 500)
                     p->start_debounced = p->start_press;
                 detect_swipe(state);
             } else {
                 p->end_press = now_ms;
+                jd_send_event_ext(state, EVT_UP, i);
+#if CON_LOG
                 jdcon_log("press p%d %dms", i, now_ms - p->start_press);
+#endif
             }
         }
     }
@@ -178,8 +196,10 @@ static void update_baseline(srv_t *state) {
         uint16_t tmp = add_sample(p->baseline_samples, BASELINE_SAMPLES, p->reading);
         if (state->num_baseline_samples == 0) {
             p->baseline = add_sample(p->baseline_super_samples, BASELINE_SUPER_SAMPLES, tmp);
+#if CON_LOG
             if (i == 1)
                 jdcon_log("re-calib: %d %d", state->pins[0].baseline, state->pins[1].baseline);
+#endif
         }
     }
 }
@@ -231,7 +251,6 @@ void multitouch_init(const uint8_t *pins) {
         pin_setup_output(LOG_SW);
 #endif
     }
-
 
     state->streaming_interval = 50;
 
