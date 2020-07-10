@@ -5,7 +5,11 @@
 #include "interfaces/jd_console.h"
 
 #define PIN_LOG 0
+#ifdef JD_CONSOLE
+#define CON_LOG 1
+#else
 #define CON_LOG 0
+#endif
 
 #define EVT_DOWN 1
 #define EVT_UP 2
