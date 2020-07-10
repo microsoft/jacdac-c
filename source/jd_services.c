@@ -7,6 +7,9 @@
 #include "interfaces/jd_app.h"
 #include "interfaces/jd_alloc.h"
 
+// #define LOG JD_LOG
+#define LOG JD_NOLOG
+
 #define MAX_SERV 32
 
 static srv_t **services;

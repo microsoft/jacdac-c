@@ -77,7 +77,7 @@ int jd_shift_frame(jd_frame_t *frame) {
         if (ptr >= psize)
             return 0; // End-of-frame
         if (ptr <= oldsz) {
-            LOG("invalid super-frame %d %d", ptr, oldsz);
+            JD_LOG("invalid super-frame %d %d", ptr, oldsz);
             return 0; // don't let it go back, must be some corruption
         }
     } else {
@@ -90,7 +90,7 @@ int jd_shift_frame(jd_frame_t *frame) {
     uint8_t *src = &frame->data[ptr];
     int newsz = *src + 4;
     if (ptr + newsz > psize) {
-        LOG("invalid super-frame %d %d %d", ptr, newsz, psize);
+        JD_LOG("invalid super-frame %d %d %d", ptr, newsz, psize);
         return 0;
     }
     uint32_t *dst = (uint32_t *)frame->data;

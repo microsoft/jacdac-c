@@ -23,11 +23,11 @@ void jd_alloc_stack_check(void) {
     }
     int sz = STACK_BASE - (uint32_t)ptr;
     if (sz > maxStack)
-        LOG("used stack: %d", maxStack = sz);
+        JD_LOG("used stack: %d", maxStack = sz);
 }
 
 void jd_alloc_init(void) {
-    LOG("space: %d", HEAP_END - HEAP_BASE);
+    JD_LOG("space: %d", HEAP_END - HEAP_BASE);
 
     aptr = (uint32_t *)HEAP_BASE;
     int p = 0;

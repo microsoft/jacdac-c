@@ -14,8 +14,8 @@
 
 #define LIGHT_CMD_RUN 0x81
 
-// #define LOG DMESG
-// #define LOG NOLOG
+// #define LOG JD_LOG
+#define LOG JD_NOLOG
 
 /*
 
@@ -581,6 +581,7 @@ static void handle_run_cmd(srv_t *state, jd_packet_t *pkt) {
 }
 
 void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
+    LOG("cmd: %x", pkt->service_command);
     switch (pkt->service_command) {
     case LIGHT_CMD_RUN:
         handle_run_cmd(state, pkt);
@@ -598,16 +599,4 @@ void light_init(void) {
     state->intensity = DEFAULT_INTENSITY;
     state->numpixels = DEFAULT_NUMPIXELS;
     state->maxpower = DEFAULT_MAXPOWER;
-
-#if 0
-    state->maxpower = 20;
-
-    state->numpixels = 14;
-    state->intensity = 0xff;
-    state->color = 0x00ff00;
-    state->duration = 100;
-
-    sync_config(state);
-    start_animation(state, 2);
-#endif
 }
