@@ -213,7 +213,8 @@ static void process_events(srv_t *state) {
         if (state->currentGesture != state->lastGesture &&
             state->sigma >= ACCELEROMETER_GESTURE_DAMPING) {
             state->lastGesture = state->currentGesture;
-            jd_send_event(state, state->lastGesture);
+            if (state->lastGesture != ACCELEROMETER_EVT_NONE)
+                jd_send_event(state, state->lastGesture);
         }
     }
 }
@@ -229,12 +230,6 @@ void acc_process(srv_t *state) {
 #endif
 
     acc_hw_get(&sample.x);
-
-    static int cnt;
-    if(cnt++>50){
-        cnt=0;
-        // JD_LOG("%d %d %d", sample.x, sample.y, sample.z);
-    }
 
     process_events(state);
 
