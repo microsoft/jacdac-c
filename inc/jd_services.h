@@ -79,12 +79,22 @@ void jd_services_init(void);
 void jd_services_tick(void);
 
 /**
- * invoked by jd_services_tick.
+ * Can be implemented by the user to get a callback on each packet.
+ */
+void jd_app_handle_packet(jd_packet_t *pkt);
+
+/**
+ * Can be implemented by the user to get a callback on each command directed to current device.
+ */
+void jd_app_handle_command(jd_packet_t *pkt);
+
+/**
+ * Should be called by the user, right before jd_services_tick()
  *
- * Obtains packets using jd_rx_get_frame, unpacks them, and passes them to
+ * Unpacks frames into packets, and passes them to
  * jd_services_handle_packet for delivery to services.
  **/
-void jd_services_process_frame(void);
+void jd_services_process_frame(jd_frame_t *frame);
 
 /**
  * invoked by jd_services_process_frame.
