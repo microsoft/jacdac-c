@@ -12,7 +12,7 @@ void jd_tx_init(void) {
         sendFrame = (jd_frame_t *)jd_alloc(sizeof(jd_frame_t) * 2);
 }
 
-void *jd_send(unsigned service_num, unsigned service_cmd, const void *data,
+void jd_send(unsigned service_num, unsigned service_cmd, const void *data,
                unsigned service_size) {
     void *trg = jd_push_in_frame(&sendFrame[bufferPtr], service_num, service_cmd, service_size);
     if (!trg) {

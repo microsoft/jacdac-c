@@ -7,8 +7,7 @@ __attribute__((weak)) int jd_tx_is_idle(void) {
 __attribute__((weak)) void jd_tx_init(void) {
 }
 
-__attribute__((weak)) void *jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsigned service_size) {
-    return NULL;
+__attribute__((weak)) void jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsigned service_size) {
 }
 
 __attribute__((weak)) void jd_send_event_ext(srv_t *srv, uint32_t eventid, uint32_t arg) {
