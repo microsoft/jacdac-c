@@ -49,12 +49,12 @@ struct _jd_frame_t {
 } __attribute__((__packed__, aligned(4)));
 typedef struct _jd_frame_t jd_frame_t;
 
-struct _jd_stream_cmd_t {
+struct _jd_pipe_cmd_t {
     uint64_t device_identifier;
     uint16_t port_num;
     uint16_t reserved;
 }  __attribute__((__packed__, aligned(4)));
-typedef struct _jd_stream_cmd_t jd_stream_cmd_t;
+typedef struct _jd_pipe_cmd_t jd_pipe_cmd_t;
 
 void jd_packet_ready(void);
 void jd_compute_crc(jd_frame_t *frame);
