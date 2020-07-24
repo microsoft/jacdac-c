@@ -245,3 +245,8 @@ void jd_packet_ready(void) {
         set_tick_timer(0);
     target_enable_irq();
 }
+
+void _jd_phys_start(void)
+{
+    set_tick_timer(0);
+}
