@@ -32,6 +32,8 @@ int uart_start_tx(const void *data, uint32_t numbytes);
 void uart_start_rx(void *data, uint32_t maxbytes);
 void uart_disable(void);
 int uart_wait_high(void);
+// make sure data from UART is flushed to RAM (often no-op)
+void uart_flush_rx(void);
 
 #if JD_CONFIG_TEMPERATURE == 1
 uint16_t adc_read_temp(void);
