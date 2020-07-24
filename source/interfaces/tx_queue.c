@@ -17,11 +17,10 @@ void jd_send(unsigned service_num, unsigned service_cmd, const void *data,
     void *trg = jd_push_in_frame(&sendFrame[bufferPtr], service_num, service_cmd, service_size);
     if (!trg) {
         JD_LOG("send overflow!");
-        return NULL;
+        return;
     }
     if (data)
         memcpy(trg, data, service_size);
-    return trg;
 }
 
 void jd_send_event_ext(srv_t *srv, uint32_t eventid, uint32_t arg) {
