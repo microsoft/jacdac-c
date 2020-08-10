@@ -2,6 +2,10 @@
 #include "interfaces/jd_accel.h"
 #include "interfaces/jd_sensor.h"
 
+#ifdef PIN_ACC_INT
+#include "lib.h"
+#endif
+
 // shake/gesture detection based on
 // https://github.com/lancaster-university/codal-core/blob/master/source/driver-models/Accelerometer.cpp
 
