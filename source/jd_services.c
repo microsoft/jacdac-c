@@ -116,10 +116,6 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
 }
 
 void jd_services_process_frame(jd_frame_t *frame) {
-#ifdef JD_SERVICES_PROCESS_FRAME_PRE
-    JD_SERVICES_PROCESS_FRAME_PRE(frame);
-#endif
-
     if (!frame)
         return;
 

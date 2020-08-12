@@ -7,12 +7,18 @@ void jd_rx_init(void) {
 }
 
 int jd_rx_frame_received(jd_frame_t *frame) {
-    if (frameToHandle)
-        return -1;
+#ifdef JD_SERVICES_PROCESS_FRAME_PRE
+    JD_SERVICES_PROCESS_FRAME_PRE(frame);
+#endif
+    if (!frame)
+        return 0;
 
+    int ret = frameToHandle ? -1 : 0;
+
+    // always takes latest frame - the old one might just get overwritten
     frameToHandle = frame;
 
-    return 0;
+    return ret;
 }
 
 jd_frame_t* jd_rx_get_frame(void) {

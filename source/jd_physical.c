@@ -198,10 +198,6 @@ void jd_rx_completed(int dataLeft) {
     LOG("rx cmpl");
     jd_frame_t *frame = rxFrame;
 
-    if (rxFrame == &_rxBuffer[0])
-        rxFrame = &_rxBuffer[1];
-    else
-        rxFrame = &_rxBuffer[0];
 
 #ifdef JD_DEBUG_MODE
     jd_debug_signal_read(0);
@@ -230,6 +226,13 @@ void jd_rx_completed(int dataLeft) {
     }
 
     jd_diagnostics.packets_received++;
+
+    // only swap frames just before we're about to process
+    // no reason to swap frames that are dropped above
+    if (rxFrame == &_rxBuffer[0])
+        rxFrame = &_rxBuffer[1];
+    else
+        rxFrame = &_rxBuffer[0];
 
     // pulse1();
     int err = jd_rx_frame_received(frame);
