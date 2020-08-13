@@ -65,6 +65,8 @@
 #define JD_CMD_CTRL_IDENTIFY 0x81
 // reset device
 #define JD_CMD_CTRL_RESET 0x82
+// this is currently only used by the m:b shield (for spoofing)
+#define JD_REG_CTRL_SELF_NAME 0x80
 // identifies the type of hardware (eg., ACME Corp. Servo X-42 Rev C)
 #define JD_REG_CTRL_DEVICE_DESCRIPTION 0x180
 // a numeric code for the string above; used to mark firmware images
