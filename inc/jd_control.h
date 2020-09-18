@@ -31,7 +31,7 @@
 // the primary value of actuator (eg. servo angle)
 #define JD_REG_VALUE 0x02
 // enable/disable streaming
-#define JD_REG_IS_STREAMING 0x03
+#define JD_REG_STREAMING_SAMPLES 0x03
 // streaming interval in miliseconds
 #define JD_REG_STREAMING_INTERVAL 0x04
 // for analog sensors

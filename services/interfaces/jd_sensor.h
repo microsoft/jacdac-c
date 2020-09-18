@@ -5,7 +5,7 @@
 
 #define SENSOR_COMMON                                                                              \
     SRV_COMMON;                                                                                    \
-    uint8_t is_streaming : 1;                                                                      \
+    uint8_t streaming_samples;                                                                     \
     uint8_t got_query : 1;                                                                         \
     uint32_t streaming_interval;                                                                   \
     uint32_t next_streaming

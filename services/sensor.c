@@ -4,9 +4,9 @@
 REG_DEFINITION(                         //
     sensor_regs,                        //
     REG_SRV_BASE,                       //
-    REG_BIT(JD_REG_IS_STREAMING),       //
+    REG_U8(JD_REG_STREAMING_SAMPLES),   //
     REG_U32(JD_REG_STREAMING_INTERVAL), //
-    REG_U32(JD_REG_PADDING),            // next_streaming not accesible
+    REG_U32(JD_REG_PADDING),            // next_streaming not accessible
 );
 
 struct srv_state {
@@ -16,8 +16,8 @@ struct srv_state {
 int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
     int r = service_handle_register(state, pkt, sensor_regs);
     switch (r) {
-    case JD_REG_IS_STREAMING:
-        if (state->is_streaming) {
+    case JD_REG_STREAMING_SAMPLES:
+        if (state->streaming_samples) {
             if (state->streaming_interval == 0)
                 state->streaming_interval = 100;
             state->next_streaming = now;
@@ -53,7 +53,11 @@ int sensor_handle_packet_simple(srv_t *state, jd_packet_t *pkt, const void *samp
 }
 
 int sensor_should_stream(srv_t *state) {
-    if (!state->is_streaming)
+    if (!state->streaming_samples)
         return false;
-    return jd_should_sample(&state->next_streaming, state->streaming_interval * 1000);
+    if (jd_should_sample(&state->next_streaming, state->streaming_interval * 1000)) {
+        state->streaming_samples--;
+        return true;
+    }
+    return false;
 }
