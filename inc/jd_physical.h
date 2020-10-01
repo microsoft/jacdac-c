@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #ifndef __JDPROTOCOL_H
 #define __JDPROTOCOL_H
 

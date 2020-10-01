@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #include "jd_protocol.h"
 
 __attribute__((weak)) int jd_tx_is_idle(void) {

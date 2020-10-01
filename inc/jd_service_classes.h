@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #pragma once
 
 #define JD_SERVICE_CLASS_LOGGER 0x12dc1fca

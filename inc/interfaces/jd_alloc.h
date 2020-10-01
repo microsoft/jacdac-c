@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #ifndef __JD_ALLOC_H
 #define __JD_ALLOC_H
 

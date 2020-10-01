@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #include "interfaces/jd_alloc.h"
 #include "jd_util.h"
 #include "interfaces/jd_hw.h"

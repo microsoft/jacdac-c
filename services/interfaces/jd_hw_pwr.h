@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 void pwr_enter_pll(void);
 void pwr_leave_pll(void);
 bool pwr_in_pll(void);

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #include "jd_service_classes.h"
 #include "jd_physical.h"
 #include "jd_config.h"

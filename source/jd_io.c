@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #include "jd_io.h"
 #include "interfaces/jd_hw.h"
 

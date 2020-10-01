@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #include "jd_protocol.h"
 
 void _jd_phys_start(void);

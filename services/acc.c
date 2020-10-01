@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #include "jd_protocol.h"
 #include "interfaces/jd_accel.h"
 #include "interfaces/jd_sensor.h"

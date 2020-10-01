@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #ifndef JD_CONFIG_H
 #define JD_CONFIG_H
 

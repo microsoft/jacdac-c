@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #include "jd_protocol.h"
 
 static jd_frame_t *sendFrame;

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #include "jd_control.h"
 #include "jd_services.h"
 #include "jd_io.h"

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 #ifndef __JD_SERVICE_INIT_H
 #define __JD_SERVICE_INIT_H
 
