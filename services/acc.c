@@ -76,6 +76,9 @@ struct srv_state {
     uint32_t nextSample;
     struct Point sample;
     struct ShakeHistory shake;
+    // avg
+    unsigned midSample, lastSample, lastSend;
+    int sx, sy, sz;
 };
 
 #define sample state->sample
@@ -224,20 +227,68 @@ static void process_events(srv_t *state) {
 }
 
 void acc_process(srv_t *state) {
-#ifdef PIN_ACC_INT
-    if (!got_acc_int)
-        return;
-    got_acc_int = 0;
-#else
+#ifndef PIN_ACC_INT
     if (!jd_should_sample(&state->nextSample, SAMPLING_PERIOD))
         return;
-#endif
-
     acc_hw_get(&sample.x);
-
     process_events(state);
+    sensor_process_simple(state, &sample, sizeof(sample));
+#else
+    if (got_acc_int) {
+        uint32_t now = tim_get_micros();
+
+        struct Point newSample;
+        acc_hw_get(&newSample.x);
+
+        uint32_t d = now - state->lastSample;
+        state->sx += (int)d * (newSample.x + sample.x) >> 1;
+        state->sy += (int)d * (newSample.y + sample.y) >> 1;
+        state->sz += (int)d * (newSample.z + sample.z) >> 1;
+
+        if (state->midSample) {
+            d = state->midSample - state->lastSample;
+            state->sx += (int)d * sample.x;
+            state->sy += (int)d * sample.y;
+            state->sz += (int)d * sample.z;
+            state->midSample = 0;
+        }
+
+        sample = newSample;
+
+        state->lastSample = now;
+
+        process_events(state);
+        got_acc_int = 0;
+    }
+
+    if (sensor_should_stream(state)) {
+        uint32_t d;
+
+        if (state->midSample) {
+            d = now - state->midSample;
+        } else {
+            state->midSample = now;
+            d = now - state->lastSample;
+        }
+
+        state->sx += (int)d * sample.x;
+        state->sy += (int)d * sample.y;
+        state->sz += (int)d * sample.z;
+
+        if (state->lastSend) {
+            struct Point s;
+            d = now - state->lastSend;
+            s.x = state->sx / d;
+            s.y = state->sy / d;
+            s.z = state->sz / d;
+            jd_send(state->service_number, JD_CMD_GET_REG | JD_REG_READING, &s, sizeof(s));
+        }
+
+        state->lastSend = now;
+    }
 
     sensor_process_simple(state, &sample, sizeof(sample));
+#endif
 }
 
 void acc_handle_packet(srv_t *state, jd_packet_t *pkt) {
