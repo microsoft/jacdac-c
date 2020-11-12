@@ -149,9 +149,7 @@ srv_t *jd_allocate_service(const srv_vt_t *vt) {
 
 void jd_services_init() {
     num_services = 0;
-    srv_t *tmp[MAX_SERV + 1];
-    uint16_t hashes[MAX_SERV];
-    tmp[MAX_SERV] = (srv_t *)hashes; // avoid global variable
+    srv_t *tmp[MAX_SERV];
     services = tmp;
 
     jd_ctrl_init();
@@ -159,8 +157,8 @@ void jd_services_init() {
     jdcon_init();
 #endif
     app_init_services();
-    services = jd_alloc(sizeof(void *) * MAX_SERV);
-    memcpy(services, tmp, sizeof(void *) * MAX_SERV);
+    services = jd_alloc(sizeof(void *) * num_services);
+    memcpy(services, tmp, sizeof(void *) * num_services);
 }
 
 void jd_services_announce() {
