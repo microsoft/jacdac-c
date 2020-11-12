@@ -5,6 +5,8 @@
 #include "interfaces/jd_accel.h"
 #include "interfaces/jd_sensor.h"
 
+#include "jacdac/dist/c/accelerometer.h"
+
 #ifdef PIN_ACC_INT
 #include "lib.h"
 #endif
@@ -31,19 +33,7 @@ static void acc_int(void) {
 }
 #endif
 
-#define ACCELEROMETER_EVT_NONE 0
-#define ACCELEROMETER_EVT_TILT_UP 1
-#define ACCELEROMETER_EVT_TILT_DOWN 2
-#define ACCELEROMETER_EVT_TILT_LEFT 3
-#define ACCELEROMETER_EVT_TILT_RIGHT 4
-#define ACCELEROMETER_EVT_FACE_UP 5
-#define ACCELEROMETER_EVT_FACE_DOWN 6
-#define ACCELEROMETER_EVT_FREEFALL 7
-#define ACCELEROMETER_EVT_3G 8
-#define ACCELEROMETER_EVT_6G 9
-#define ACCELEROMETER_EVT_8G 10
-#define ACCELEROMETER_EVT_SHAKE 11
-#define ACCELEROMETER_EVT_2G 12
+#define JD_ACCEL_EV_NONE 0
 
 #define ACCELEROMETER_REST_TOLERANCE 200
 #define ACCELEROMETER_TILT_TOLERANCE 200
@@ -59,10 +49,6 @@ static void acc_int(void) {
 #define ACCELEROMETER_FREEFALL_THRESHOLD                                                           \
     ((uint32_t)ACCELEROMETER_FREEFALL_TOLERANCE * (uint32_t)ACCELEROMETER_FREEFALL_TOLERANCE)
 
-struct Point {
-    int16_t x, y, z;
-};
-
 struct ShakeHistory {
     uint8_t shaken : 1, x : 1, y : 1, z : 1;
     uint8_t count;
@@ -77,7 +63,7 @@ struct srv_state {
     uint16_t g_events;
     uint16_t currentGesture, lastGesture;
     uint32_t nextSample;
-    struct Point sample;
+    jd_accel_forces_t sample;
     struct ShakeHistory shake;
 };
 
@@ -129,7 +115,7 @@ static uint16_t instantaneousPosture(srv_t *state, uint32_t force) {
         if (shake.count == ACCELEROMETER_SHAKE_COUNT_THRESHOLD) {
             shake.shaken = 1;
             shake.timer = 0;
-            return ACCELEROMETER_EVT_SHAKE;
+            return JD_ACCEL_EV_SHAKE;
         }
     }
 
@@ -155,28 +141,28 @@ static uint16_t instantaneousPosture(srv_t *state, uint32_t force) {
     }
 
     if (force < ACCELEROMETER_FREEFALL_THRESHOLD)
-        return ACCELEROMETER_EVT_FREEFALL;
+        return JD_ACCEL_EV_FREEFALL;
 
     // Determine our posture.
     if (sample.x < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
-        return ACCELEROMETER_EVT_TILT_LEFT;
+        return JD_ACCEL_EV_TILT_LEFT;
 
     if (sample.x > (1000 - ACCELEROMETER_TILT_TOLERANCE))
-        return ACCELEROMETER_EVT_TILT_RIGHT;
+        return JD_ACCEL_EV_TILT_RIGHT;
 
     if (sample.y < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
-        return ACCELEROMETER_EVT_TILT_DOWN;
+        return JD_ACCEL_EV_TILT_DOWN;
 
     if (sample.y > (1000 - ACCELEROMETER_TILT_TOLERANCE))
-        return ACCELEROMETER_EVT_TILT_UP;
+        return JD_ACCEL_EV_TILT_UP;
 
     if (sample.z < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
-        return ACCELEROMETER_EVT_FACE_UP;
+        return JD_ACCEL_EV_FACE_UP;
 
     if (sample.z > (1000 - ACCELEROMETER_TILT_TOLERANCE))
-        return ACCELEROMETER_EVT_FACE_DOWN;
+        return JD_ACCEL_EV_FACE_DOWN;
 
-    return ACCELEROMETER_EVT_NONE;
+    return JD_ACCEL_EV_NONE;
 }
 
 #define G(g) ((g * 1024) * (g * 1024))
@@ -187,13 +173,13 @@ static void process_events(srv_t *state) {
     if (force > G(2)) {
         state->impulseSigma = 0;
         if (force > G(2))
-            emit_g_event(state, ACCELEROMETER_EVT_2G);
+            emit_g_event(state, JD_ACCEL_EV_FORCE_2G);
         if (force > G(3))
-            emit_g_event(state, ACCELEROMETER_EVT_3G);
+            emit_g_event(state, JD_ACCEL_EV_FORCE_3G);
         if (force > G(6))
-            emit_g_event(state, ACCELEROMETER_EVT_6G);
+            emit_g_event(state, JD_ACCEL_EV_FORCE_6G);
         if (force > G(8))
-            emit_g_event(state, ACCELEROMETER_EVT_8G);
+            emit_g_event(state, JD_ACCEL_EV_FORCE_8G);
     }
 
     if (state->impulseSigma < 5)
@@ -204,8 +190,8 @@ static void process_events(srv_t *state) {
     // Determine what it looks like we're doing based on the latest sample...
     uint16_t g = instantaneousPosture(state, force);
 
-    if (g == ACCELEROMETER_EVT_SHAKE) {
-        jd_send_event(state, ACCELEROMETER_EVT_SHAKE);
+    if (g == JD_ACCEL_EV_SHAKE) {
+        jd_send_event(state, JD_ACCEL_EV_SHAKE);
     } else {
         // Perform some low pass filtering to reduce jitter from any detected effects
         if (g == state->currentGesture) {
@@ -220,7 +206,7 @@ static void process_events(srv_t *state) {
         if (state->currentGesture != state->lastGesture &&
             state->sigma >= ACCELEROMETER_GESTURE_DAMPING) {
             state->lastGesture = state->currentGesture;
-            if (state->lastGesture != ACCELEROMETER_EVT_NONE)
+            if (state->lastGesture != JD_ACCEL_EV_NONE)
                 jd_send_event(state, state->lastGesture);
         }
     }
@@ -247,7 +233,7 @@ void acc_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &sample, sizeof(sample));
 }
 
-SRV_DEF(acc, JD_SERVICE_CLASS_ACCELEROMETER);
+SRV_DEF(acc, JD_SERVICE_CLASS_ACCEL);
 void acc_init(void) {
     SRV_ALLOC(acc);
     acc_hw_init();

@@ -6,8 +6,7 @@
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_pwm.h"
 #include "interfaces/jd_hw_pwr.h"
-
-#define CMD_PLAY_TONE 0x80
+#include "jacdac/dist/c/music.h"
 
 #ifndef SND_OFF
 #define SND_OFF 1
@@ -64,11 +63,12 @@ void snd_process(srv_t *state) {
 void snd_handle_packet(srv_t *state, jd_packet_t *pkt) {
     service_handle_register(state, pkt, snd_regs);
     switch (pkt->service_command) {
-    case CMD_PLAY_TONE:
+    case JD_MUSIC_CMD_PLAY_TONE:
         if (pkt->service_size >= 6) {
-            state->end_tone_time = now + ((uint16_t *)pkt->data)[2] * 1000;
-            state->period = ((uint16_t *)pkt->data)[0];
-            play_tone(state, state->period, ((uint16_t *)pkt->data)[1]);
+            jd_music_play_tone_t *d = (void *)pkt->data;
+            state->end_tone_time = now + d->duration * 1000;
+            state->period = d->period;
+            play_tone(state, state->period, d->duty);
         }
         snd_process(state);
         break;

@@ -5,6 +5,7 @@
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_adc.h"
+#include "jacdac/dist/c/slider.h"
 
 struct srv_state {
     SENSOR_COMMON;

@@ -6,6 +6,7 @@
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_adc.h"
 #include "interfaces/jd_console.h"
+#include "jacdac/dist/c/multitouch.h"
 
 #define PIN_LOG 0
 #ifdef JD_CONSOLE
@@ -13,14 +14,6 @@
 #else
 #define CON_LOG 0
 #endif
-
-#define EVT_DOWN 1
-#define EVT_UP 2
-#define EVT_CLICK 3
-#define EVT_LONG_CLICK 4
-
-#define EVT_SWIPE_POS 0x10
-#define EVT_SWIPE_NEG 0x11
 
 #define PRESS_THRESHOLD 70
 #define PRESS_TICKS 2
@@ -143,9 +136,9 @@ static void detect_swipe(srv_t *state) {
     }
 
     if (delta > 0)
-        jd_send_event(state, EVT_SWIPE_POS);
+        jd_send_event(state, JD_MULTITOUCH_EV_SWIPE_POS);
     else
-        jd_send_event(state, EVT_SWIPE_NEG);
+        jd_send_event(state, JD_MULTITOUCH_EV_SWIPE_NEG);
 
 #if CON_LOG
     jdcon_warn("swp %d", delta);
@@ -178,14 +171,14 @@ static void update(srv_t *state) {
 #endif
         if (is_pressed != was_pressed) {
             if (is_pressed) {
-                jd_send_event_ext(state, EVT_DOWN, i);
+                jd_send_event_ext(state, JD_MULTITOUCH_EV_TOUCH, i);
                 p->start_press = now_ms;
                 if (now_ms - p->start_debounced > 500)
                     p->start_debounced = p->start_press;
                 detect_swipe(state);
             } else {
                 p->end_press = now_ms;
-                jd_send_event_ext(state, EVT_UP, i);
+                jd_send_event_ext(state, JD_MULTITOUCH_EV_RELEASE, i);
 #if CON_LOG
                 jdcon_log("press p%d %dms", i, now_ms - p->start_press);
 #endif

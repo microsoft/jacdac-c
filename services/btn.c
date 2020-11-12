@@ -5,10 +5,7 @@
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pins.h"
 
-#define EVT_DOWN 1
-#define EVT_UP 2
-#define EVT_CLICK 3
-#define EVT_LONG_CLICK 4
+#include "jacdac/dist/c/button.h"
 
 struct srv_state {
     SENSOR_COMMON;
@@ -28,15 +25,15 @@ static void update(srv_t *state) {
         state->prev_pressed = state->pressed;
         pin_set(state->blpin, state->pressed);
         if (state->pressed) {
-            jd_send_event(state, EVT_DOWN);
+            jd_send_event(state, JD_BUTTON_EV_DOWN);
             state->press_time = now;
         } else {
-            jd_send_event(state, EVT_UP);
+            jd_send_event(state, JD_BUTTON_EV_UP);
             uint32_t presslen = now - state->press_time;
             if (presslen > 500000)
-                jd_send_event(state, EVT_LONG_CLICK);
+                jd_send_event(state, JD_BUTTON_EV_LONG_CLICK);
             else
-                jd_send_event(state, EVT_CLICK);
+                jd_send_event(state, JD_BUTTON_EV_CLICK);
             state->num_zero = 0;
         }
     }

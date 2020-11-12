@@ -4,6 +4,7 @@
 #include "jd_protocol.h"
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pins.h"
+#include "jacdac/dist/c/crank.h"
 
 struct srv_state {
     SENSOR_COMMON;
@@ -52,7 +53,7 @@ void crank_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &state->sample, sizeof(state->sample));
 }
 
-SRV_DEF(crank, JD_SERVICE_CLASS_ROTARY_ENCODER);
+SRV_DEF(crank, JD_SERVICE_CLASS_CRANK);
 
 // specify pin0/1 so that clockwise rotations gives higher readings
 void crank_init(uint8_t pin0, uint8_t pin1) {

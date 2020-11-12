@@ -6,6 +6,7 @@
 #include "interfaces/jd_pwm.h"
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_hw_pwr.h"
+#include "jacdac/dist/c/servo.h"
 
 #define SERVO_PERIOD 20000
 
@@ -18,11 +19,11 @@ struct srv_state {
     uint8_t pin;
 };
 
-REG_DEFINITION(               //
-    servo_regs,               //
-    REG_SRV_BASE,             //
-    REG_U32(JD_REG_VALUE),    //
-    REG_U8(JD_REG_INTENSITY), //
+REG_DEFINITION(                   //
+    servo_regs,                   //
+    REG_SRV_BASE,                 //
+    REG_U32(JD_SERVO_REG_PULSE),  //
+    REG_U8(JD_SERVO_REG_ENABLED), //
 )
 
 static void set_pwr(srv_t *state, int on) {
