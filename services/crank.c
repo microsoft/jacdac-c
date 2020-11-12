@@ -4,6 +4,7 @@
 #include "jd_protocol.h"
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pins.h"
+#include "jacdac/dist/c/crank.h"
 
 struct srv_state {
     SENSOR_COMMON;

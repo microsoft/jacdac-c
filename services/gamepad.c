@@ -4,17 +4,7 @@
 #include "jd_protocol.h"
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pins.h"
-
-#define JD_ARCADE_CONTROLS_BUTTON_LEFT 0x0001
-#define JD_ARCADE_CONTROLS_BUTTON_UP 0x0002
-#define JD_ARCADE_CONTROLS_BUTTON_RIGHT 0x0003
-#define JD_ARCADE_CONTROLS_BUTTON_DOWN 0x0004
-#define JD_ARCADE_CONTROLS_BUTTON_A 0x0005
-#define JD_ARCADE_CONTROLS_BUTTON_B 0x0006
-#define JD_ARCADE_CONTROLS_BUTTON_MENU 0x0007
-#define JD_ARCADE_CONTROLS_BUTTON_MENU2 0x0008
-#define JD_ARCADE_CONTROLS_BUTTON_RESET 0x0009
-#define JD_ARCADE_CONTROLS_BUTTON_EXIT 0x000a
+#include "jacdac/dist/c/gamepad.h"
 
 typedef struct {
     uint8_t flags;
@@ -123,7 +113,7 @@ static void ad_data(srv_t *state) {
             *dst++ = i + 1;
         }
     }
-    jd_send(state->service_number, JD_CMD_ADVERTISEMENT_DATA, addata,
+    jd_send(state->service_number, JD_CMD_ANNOUNCE, addata,
              (uint8_t *)dst - (uint8_t *)addata);
 }
 
@@ -143,7 +133,7 @@ void gamepad_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     if (pkt->service_command == (JD_CMD_GET_REG | JD_REG_READING))
         send_report(state);
-    else if (pkt->service_command == JD_CMD_ADVERTISEMENT_DATA)
+    else if (pkt->service_command == JD_CMD_ANNOUNCE)
         ad_data(state);
 }
 
