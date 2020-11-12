@@ -7,7 +7,7 @@
 REG_DEFINITION(                         //
     sensor_regs,                        //
     REG_SRV_BASE,                       //
-    REG_U8(JD_REG_STREAMING_SAMPLES),   //
+    REG_U8(JD_REG_STREAM_SAMPLES),      //
     REG_U32(JD_REG_STREAMING_INTERVAL), //
     REG_U32(JD_REG_PADDING),            // next_streaming not accessible
 );
@@ -19,7 +19,7 @@ struct srv_state {
 int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
     int r = service_handle_register(state, pkt, sensor_regs);
     switch (r) {
-    case JD_REG_STREAMING_SAMPLES:
+    case JD_REG_STREAM_SAMPLES:
         if (state->streaming_samples) {
             if (state->streaming_interval == 0)
                 state->streaming_interval = 100;

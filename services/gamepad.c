@@ -6,28 +6,6 @@
 #include "interfaces/jd_pins.h"
 #include "jacdac/dist/c/gamepad.h"
 
-typedef struct {
-    uint8_t flags;
-    uint8_t numplayers;
-    uint16_t buttons[0];
-} jd_arcade_controls_advertisement_data_t;
-
-typedef struct {
-    uint16_t button;
-    uint8_t player_index;
-    uint8_t pressure; // for analog joysticks mostly, for digital inputs should be 0xff
-} jd_arcade_controls_report_entry_t;
-
-typedef struct {
-    jd_arcade_controls_report_entry_t pressedButtons[0];
-} jd_arcade_controls_report_t;
-
-#define EVT_DOWN 1
-#define EVT_UP 2
-// these two below not implemented yet
-#define EVT_CLICK 3
-#define EVT_LONG_CLICK 4
-
 #define BUTTON_FLAGS 0
 #define NUM_PLAYERS 1
 
@@ -80,7 +58,7 @@ static void update(srv_t *state) {
             if (isPressed != wasPressed) {
                 if (state->led_pins && state->led_pins[i] != 0xff)
                     pin_set(state->led_pins[i], isPressed);
-                jd_send_event_ext(state, isPressed ? EVT_DOWN : EVT_UP, i + 1);
+                jd_send_event_ext(state, isPressed ? JD_GAMEPAD_EV_DOWN : JD_GAMEPAD_EV_UP, i + 1);
             }
         }
         state->btn_state = newstate;
@@ -88,7 +66,7 @@ static void update(srv_t *state) {
 }
 
 static void send_report(srv_t *state) {
-    jd_arcade_controls_report_entry_t reports[state->num_pins], *report;
+    jd_gamepad_buttons_t reports[state->num_pins], *report;
     report = reports;
 
     for (int i = 0; i < state->num_pins; ++i) {
@@ -137,7 +115,7 @@ void gamepad_handle_packet(srv_t *state, jd_packet_t *pkt) {
         ad_data(state);
 }
 
-SRV_DEF(gamepad, JD_SERVICE_CLASS_ARCADE_CONTROLS);
+SRV_DEF(gamepad, JD_SERVICE_CLASS_GAMEPAD);
 
 void gamepad_init(uint8_t num_pins, const uint8_t *pins, const uint8_t *ledPins) {
     SRV_ALLOC(gamepad);

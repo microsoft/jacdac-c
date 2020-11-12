@@ -5,6 +5,7 @@
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_adc.h"
+#include "jacdac/dist/c/power.h"
 
 #define LOG JD_LOG
 // #define LOG JD_NOLOG
@@ -15,13 +16,6 @@
 // calibrate readings
 #define MA_SCALE 1890
 #define MV_SCALE 419
-
-// both in ms
-#define PWR_REG_KEEP_ON_PULSE_DURATION 0x80
-#define PWR_REG_KEEP_ON_PULSE_PERIOD 0x81
-
-#define PWR_REG_BAT_VOLTAGE 0x180
-#define PWR_REG_OVERLOAD 0x181
 
 #define READING_WINDOW 3
 
@@ -48,16 +42,16 @@ struct srv_state {
     uint8_t pin_pulse;
 };
 
-REG_DEFINITION(                              //
-    power_regs,                              //
-    REG_SENSOR_BASE,                         //
-    REG_U8(JD_REG_INTENSITY),                //
-    REG_U8(PWR_REG_OVERLOAD),                //
-    REG_U16(JD_REG_MAX_POWER),               //
-    REG_U16(JD_REG_READING),                 //
-    REG_U16(PWR_REG_BAT_VOLTAGE),            //
-    REG_U16(PWR_REG_KEEP_ON_PULSE_DURATION), //
-    REG_U16(PWR_REG_KEEP_ON_PULSE_PERIOD),   //
+REG_DEFINITION(                                   //
+    power_regs,                                   //
+    REG_SENSOR_BASE,                              //
+    REG_U8(JD_POWER_REG_ENABLED),                 //
+    REG_U8(JD_POWER_REG_OVERLOAD),                //
+    REG_U16(JD_POWER_REG_MAX_POWER),              //
+    REG_U16(JD_POWER_REG_CURRENT_DRAW),           //
+    REG_U16(JD_POWER_REG_BATTERY_VOLTAGE),        //
+    REG_U16(JD_POWER_REG_KEEP_ON_PULSE_DURATION), //
+    REG_U16(JD_POWER_REG_KEEP_ON_PULSE_PERIOD),   //
 )
 
 static void sort_ints(uint16_t arr[], int n) {
@@ -175,8 +169,8 @@ void power_handle_packet(srv_t *state, jd_packet_t *pkt) {
         return;
 
     switch (service_handle_register(state, pkt, power_regs)) {
-    case PWR_REG_KEEP_ON_PULSE_PERIOD:
-    case PWR_REG_KEEP_ON_PULSE_DURATION:
+    case JD_POWER_REG_KEEP_ON_PULSE_PERIOD:
+    case JD_POWER_REG_KEEP_ON_PULSE_DURATION:
         if (state->pulse_period && state->pulse_duration) {
             // assuming 22R in 0805, we get around 1W or power dissipation, but can withstand only
             // 1/8W continous so we limit duty cycle to 10%, and make sure it doesn't stay on for

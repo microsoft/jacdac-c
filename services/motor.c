@@ -6,6 +6,7 @@
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_pwm.h"
 #include "interfaces/jd_hw_pwr.h"
+#include "jacdac/dist/c/motor.h"
 
 #define PWM_BITS 9
 #define SERVO_PERIOD (1 << PWM_BITS)
@@ -33,11 +34,11 @@ struct srv_state {
     uint32_t duty_step_sample;
 };
 
-REG_DEFINITION(               //
-    motor_regs,               //
-    REG_SRV_BASE,             //
-    REG_S16(JD_REG_VALUE),    //
-    REG_U8(JD_REG_INTENSITY), //
+REG_DEFINITION(                   //
+    motor_regs,                   //
+    REG_SRV_BASE,                 //
+    REG_S16(JD_MOTOR_REG_DUTY),   //
+    REG_U8(JD_MOTOR_REG_ENABLED), //
 )
 
 static void disable_ch(channel_t *ch) {

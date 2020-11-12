@@ -233,7 +233,7 @@ void acc_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &sample, sizeof(sample));
 }
 
-SRV_DEF(acc, JD_SERVICE_CLASS_ACCELEROMETER);
+SRV_DEF(acc, JD_SERVICE_CLASS_ACCEL);
 void acc_init(void) {
     SRV_ALLOC(acc);
     acc_hw_init();

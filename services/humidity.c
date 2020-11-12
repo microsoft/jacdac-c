@@ -4,6 +4,7 @@
 #include "jd_protocol.h"
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_environment.h"
+#include "jacdac/dist/c/humidity.h"
 
 struct srv_state {
     SENSOR_COMMON;

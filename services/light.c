@@ -4,18 +4,17 @@
 #include "jd_protocol.h"
 #include "interfaces/jd_pixel.h"
 #include "interfaces/jd_hw_pwr.h"
+#include "jacdac/dist/c/light.h"
+#include "tinyhw.h"
+
+STATIC_ASSERT(LIGHT_TYPE_APA102 == JD_LIGHT_LIGHT_TYPE_APA102);
+STATIC_ASSERT(LIGHT_TYPE_APA_MASK == JD_LIGHT_LIGHT_TYPE_APA102);
+STATIC_ASSERT(LIGHT_TYPE_WS2812B_GRB == JD_LIGHT_LIGHT_TYPE_WS2812B_GRB);
+STATIC_ASSERT(LIGHT_TYPE_SK9822 == JD_LIGHT_LIGHT_TYPE_SK9822);
 
 #define DEFAULT_INTENSITY 15
 #define DEFAULT_NUMPIXELS 15
 #define DEFAULT_MAXPOWER 200
-
-#define LIGHT_REG_LIGHTTYPE 0x80
-#define LIGHT_REG_NUMPIXELS 0x81
-//#define LIGHT_REG_DURATION 0x82
-//#define LIGHT_REG_COLOR 0x83
-#define LIGHT_REG_ACTUAL_INTENSITY 0x180
-
-#define LIGHT_CMD_RUN 0x81
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
@@ -72,14 +71,14 @@ typedef union {
     uint32_t val;
 } RGB;
 
-REG_DEFINITION(                         //
-    light_regs,                         //
-    REG_SRV_BASE,                       //
-    REG_U8(JD_REG_INTENSITY),           //
-    REG_U8(LIGHT_REG_ACTUAL_INTENSITY), //
-    REG_U8(LIGHT_REG_LIGHTTYPE),        //
-    REG_U16(LIGHT_REG_NUMPIXELS),       //
-    REG_U16(JD_REG_MAX_POWER),          //
+REG_DEFINITION(                             //
+    light_regs,                             //
+    REG_SRV_BASE,                           //
+    REG_U8(JD_LIGHT_REG_BRIGHTNESS),        //
+    REG_U8(JD_LIGHT_REG_ACTUAL_BRIGHTNESS), //
+    REG_U8(JD_LIGHT_REG_LIGHT_TYPE),        //
+    REG_U16(JD_LIGHT_REG_NUM_PIXELS),       //
+    REG_U16(JD_LIGHT_REG_MAX_POWER),        //
 )
 
 struct srv_state {
@@ -586,7 +585,7 @@ static void handle_run_cmd(srv_t *state, jd_packet_t *pkt) {
 void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
     LOG("cmd: %x", pkt->service_command);
     switch (pkt->service_command) {
-    case LIGHT_CMD_RUN:
+    case JD_LIGHT_CMD_RUN:
         handle_run_cmd(state, pkt);
         break;
     default:
