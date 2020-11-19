@@ -52,32 +52,32 @@ void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt) {
         target_reset();
         break;
 
-    case (JD_CMD_GET_REG | JD_CTRL_REG_DEVICE_DESCRIPTION):
+    case JD_GET(JD_CTRL_REG_DEVICE_DESCRIPTION):
         jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_dev_class_name,
                 strlen(app_dev_class_name));
         break;
 
-    case (JD_CMD_GET_REG | JD_CTRL_REG_FIRMWARE_VERSION):
+    case JD_GET(JD_CTRL_REG_FIRMWARE_VERSION):
         jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, app_fw_version,
                 strlen(app_fw_version));
         break;
 
-    case (JD_CMD_GET_REG | JD_CTRL_REG_FIRMWARE_IDENTIFIER):
+    case JD_GET(JD_CTRL_REG_FIRMWARE_IDENTIFIER):
         send_value(pkt, app_get_device_class());
         break;
 
-    case (JD_CMD_GET_REG | JD_CTRL_REG_BOOTLOADER_FIRMWARE_IDENTIFIER):
+    case JD_GET(JD_CTRL_REG_BOOTLOADER_FIRMWARE_IDENTIFIER):
         send_value(pkt, app_get_device_class());
         break;
 
-    case (JD_CMD_GET_REG | JD_CTRL_REG_UPTIME): {
+    case JD_GET(JD_CTRL_REG_UPTIME): {
         uint64_t t = tim_get_micros();
         jd_send(JD_SERVICE_NUMBER_CTRL, pkt->service_command, &t, sizeof(t));
         break;
     }
 
 #if JD_CONFIG_TEMPERATURE == 1
-    case (JD_CMD_GET_REG | JD_CTRL_REG_TEMPERATURE):
+    case JD_GET(JD_CTRL_REG_TEMPERATURE):
         send_value(pkt, adc_read_temp());
         break;
 #endif

@@ -29,8 +29,8 @@ struct srv_state {
 static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1};
 
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]) {
-    bool is_get = (pkt->service_command >> 12) == (JD_CMD_GET_REG >> 12);
-    bool is_set = (pkt->service_command >> 12) == (JD_CMD_SET_REG >> 12);
+    bool is_get = (pkt->service_command >> 12) == (JD_CMD_GET_REGISTER >> 12);
+    bool is_set = (pkt->service_command >> 12) == (JD_CMD_SET_REGISTER >> 12);
     if (!is_get && !is_set)
         return 0;
 

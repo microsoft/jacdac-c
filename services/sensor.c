@@ -39,14 +39,14 @@ int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 void sensor_process_simple(srv_t *state, const void *sample, uint32_t sample_size) {
     if (sensor_should_stream(state))
-        jd_send(state->service_number, JD_CMD_GET_REG | JD_REG_READING, sample, sample_size);
+        jd_send(state->service_number, JD_GET(JD_REG_READING), sample, sample_size);
 }
 
 int sensor_handle_packet_simple(srv_t *state, jd_packet_t *pkt, const void *sample,
                                 uint32_t sample_size) {
     int r = sensor_handle_packet(state, pkt);
 
-    if (pkt->service_command == (JD_CMD_GET_REG | JD_REG_READING)) {
+    if (pkt->service_command == JD_GET(JD_REG_READING)) {
         state->got_query = 1;
         jd_send(pkt->service_number, pkt->service_command, sample, sample_size);
         r = -JD_REG_READING;

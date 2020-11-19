@@ -25,8 +25,8 @@
 #define JD_ADVERTISEMENT_0_COUNTER_MASK 0x0000000F
 #define JD_ADVERTISEMENT_0_ACK_SUPPORTED 0x00000100
 
-#define JD_CMD_GET_REG 0x1000
-#define JD_CMD_SET_REG 0x2000
+#define JD_GET(reg) (JD_CMD_GET_REGISTER | (reg))
+#define JD_SET(reg) (JD_CMD_SET_REGISTER | (reg))
 
 void jd_ctrl_init(void);
 void jd_ctrl_process(srv_t *_state);

@@ -45,7 +45,7 @@ void btn_process(srv_t *state) {
 
         if (sensor_should_stream(state) && (state->pressed || state->num_zero < 20)) {
             state->num_zero++;
-            jd_send(state->service_number, JD_CMD_GET_REG | JD_REG_READING, &state->pressed,
+            jd_send(state->service_number, JD_GET(JD_REG_READING), &state->pressed,
                      sizeof(state->pressed));
         }
     }

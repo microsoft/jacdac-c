@@ -78,7 +78,7 @@ static void send_report(srv_t *state) {
         }
     }
 
-    jd_send(state->service_number, JD_CMD_GET_REG | JD_REG_READING, reports,
+    jd_send(state->service_number, JD_GET(JD_REG_READING), reports,
              (uint8_t *)report - (uint8_t *)reports);
 }
 
@@ -109,7 +109,7 @@ void gamepad_process(srv_t *state) {
 void gamepad_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet(state, pkt);
 
-    if (pkt->service_command == (JD_CMD_GET_REG | JD_REG_READING))
+    if (pkt->service_command == JD_GET(JD_REG_READING))
         send_report(state);
     else if (pkt->service_command == JD_CMD_ANNOUNCE)
         ad_data(state);
