@@ -171,14 +171,14 @@ static void update(srv_t *state) {
 #endif
         if (is_pressed != was_pressed) {
             if (is_pressed) {
-                jd_send_event_ext(state, JD_MULTITOUCH_EV_TOUCH, i);
+                jd_send_event_ext(state, JD_MULTITOUCH_EV_TOUCH, &i, sizeof(i));
                 p->start_press = now_ms;
                 if (now_ms - p->start_debounced > 500)
                     p->start_debounced = p->start_press;
                 detect_swipe(state);
             } else {
                 p->end_press = now_ms;
-                jd_send_event_ext(state, JD_MULTITOUCH_EV_RELEASE, i);
+                jd_send_event_ext(state, JD_MULTITOUCH_EV_RELEASE, &i, sizeof(i));
 #if CON_LOG
                 jdcon_log("press p%d %dms", i, now_ms - p->start_press);
 #endif

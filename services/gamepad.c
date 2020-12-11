@@ -58,7 +58,9 @@ static void update(srv_t *state) {
             if (isPressed != wasPressed) {
                 if (state->led_pins && state->led_pins[i] != 0xff)
                     pin_set(state->led_pins[i], isPressed);
-                jd_send_event_ext(state, isPressed ? JD_GAMEPAD_EV_DOWN : JD_GAMEPAD_EV_UP, i + 1);
+                uint32_t arg = i + 1;
+                jd_send_event_ext(state, isPressed ? JD_GAMEPAD_EV_DOWN : JD_GAMEPAD_EV_UP, &arg,
+                                  sizeof(arg));
             }
         }
         state->btn_state = newstate;
@@ -79,7 +81,7 @@ static void send_report(srv_t *state) {
     }
 
     jd_send(state->service_number, JD_GET(JD_REG_READING), reports,
-             (uint8_t *)report - (uint8_t *)reports);
+            (uint8_t *)report - (uint8_t *)reports);
 }
 
 static void ad_data(srv_t *state) {
@@ -91,8 +93,7 @@ static void ad_data(srv_t *state) {
             *dst++ = i + 1;
         }
     }
-    jd_send(state->service_number, JD_CMD_ANNOUNCE, addata,
-             (uint8_t *)dst - (uint8_t *)addata);
+    jd_send(state->service_number, JD_CMD_ANNOUNCE, addata, (uint8_t *)dst - (uint8_t *)addata);
 }
 
 void gamepad_process(srv_t *state) {
