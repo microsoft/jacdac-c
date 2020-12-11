@@ -22,7 +22,9 @@ extern "C" {
 // the device_identifier contains target service class number
 #define JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS 0x04
 // set on frames not received from the JD-wire
-#define JD_FRAME_FLAG_LOOPBACK 0x80
+#define JD_FRAME_FLAG_LOOPBACK 0x40
+// when set, the packet may have different layout and should be dropped
+#define JD_FRAME_FLAG_VNEXT 0x80
 
 #define JD_FRAME_SIZE(pkt) ((pkt)->size + 12)
 
