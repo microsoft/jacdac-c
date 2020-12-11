@@ -235,6 +235,8 @@ void jd_services_tick() {
         services[i]->vt->process(services[i]);
     }
 
+    jd_process_event_queue();
+
     jd_tx_flush();
 }
 

@@ -201,7 +201,6 @@ void jd_rx_completed(int dataLeft) {
     LOG("rx cmpl");
     jd_frame_t *frame = rxFrame;
 
-
 #ifdef JD_DEBUG_MODE
     jd_debug_signal_read(0);
 #endif
@@ -225,6 +224,11 @@ void jd_rx_completed(int dataLeft) {
     if (crc != frame->crc) {
         ERROR("crc mismatch");
         jd_diagnostics.bus_uart_error++;
+        return;
+    }
+
+    if (frame->flags & JD_FRAME_FLAG_VNEXT) {
+        jd_diagnostics.packets_dropped++;
         return;
     }
 
@@ -252,7 +256,6 @@ void jd_packet_ready(void) {
     target_enable_irq();
 }
 
-void _jd_phys_start(void)
-{
+void _jd_phys_start(void) {
     set_tick_timer(0);
 }

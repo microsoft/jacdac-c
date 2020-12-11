@@ -23,6 +23,7 @@ void target_enable_irq(void);
 void target_disable_irq(void);
 void target_wait_us(uint32_t n);
 void target_reset(void);
+int target_in_irq(void);
 
 extern uint16_t tim_max_sleep;
 extern uint8_t cpu_mhz;

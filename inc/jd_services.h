@@ -52,7 +52,6 @@ struct _srv_vt {
 };
 typedef struct _srv_vt srv_vt_t;
 
-
 #define SRV_COMMON                                                                                 \
     const srv_vt_t *vt;                                                                            \
     uint8_t service_number;                                                                        \
@@ -127,6 +126,5 @@ uint32_t app_get_device_class(void);
     }
 
 #define SRV_ALLOC(id)                                                                              \
-    srv_t *state = jd_allocate_service(&id##_vt);                                                            \
+    srv_t *state = jd_allocate_service(&id##_vt);                                                  \
     (void)state;
-
