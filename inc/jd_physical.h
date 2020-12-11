@@ -10,18 +10,43 @@
 extern "C" {
 #endif
 
+// 255 minus size of the serial header, rounded down to 4
+#define JD_SERIAL_PAYLOAD_SIZE 236
+#define JD_SERIAL_FULL_HEADER_SIZE 16
+// the COMMAND flag signifies that the device_identifier is the recipient
+// (i.e., it's a command for the peripheral); the bit clear means device_identifier is the source
+// (i.e., it's a report from peripheral or a broadcast message)
+#define JD_FRAME_FLAG_COMMAND 0x01
+// an ACK should be issued with CRC of this frame upon reception
+#define JD_FRAME_FLAG_ACK_REQUESTED 0x02
+// the device_identifier contains target service class number
+#define JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS 0x04
+// set on frames not received from the JD-wire
+#define JD_FRAME_FLAG_LOOPBACK 0x80
+
+#define JD_FRAME_SIZE(pkt) ((pkt)->size + 12)
+
+#define JD_SERVICE_NUMBER_CTRL 0x00
+#define JD_SERVICE_NUMBER_MASK 0x3f
+#define JD_SERVICE_NUMBER_CRC_ACK 0x3f
+#define JD_SERVICE_NUMBER_STREAM 0x3e
+
+#define JD_PIPE_COUNTER_MASK 0x001f
+#define JD_PIPE_CLOSE_MASK 0x0020
+#define JD_PIPE_METADATA_MASK 0x0040
+#define JD_PIPE_PORT_SHIFT 7
+
+#define JD_CMD_EVENT_MASK 0x8000
+#define JD_CMD_EVENT_CODE_MASK 0x00ff
+#define JD_CMD_EVENT_COUNTER_MASK 0x7f00
+#define JD_CMD_EVENT_COUNTER_SHIFT 8
+#define JD_CMD_EVENT_MK(counter, code)                                                                \
+    (JD_CMD_EVENT_MASK | (((counter) << JD_CMD_EVENT_COUNTER_SHIFT) & JD_CMD_EVENT_COUNTER_MASK) | \
+     (code & JD_CMD_EVENT_CODE_MASK))
+
+
 #define JDSPI_MAGIC 0x7ACD
 #define JDSPI_MAGIC_NOOP 0xB3CD
-
-#ifndef JD_TIM_OVERHEAD
-#define JD_TIM_OVERHEAD 12
-#endif
-
-// this is timing overhead (in us) of starting transmission
-// see set_tick_timer() for how to calibrate this
-#ifndef JD_WR_OVERHEAD
-#define JD_WR_OVERHEAD 8
-#endif
 
 typedef void (*cb_t)(void);
 
@@ -78,6 +103,7 @@ typedef struct {
     uint32_t packets_dropped;
 } jd_diagnostics_t;
 jd_diagnostics_t *jd_get_diagnostics(void);
+
 
 #ifdef __cplusplus
 }
