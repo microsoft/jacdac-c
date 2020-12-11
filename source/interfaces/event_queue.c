@@ -52,6 +52,7 @@ void jd_process_event_queue(void) {
     if (info.qptr == 0)
         return;
 
+    // if info.qptr != 0, then info.buffer has been initialized already
     ev_t *ev = info.buffer;
     while ((uint8_t *)ev - (uint8_t *)info.buffer < info.qptr) {
         if (ev->service_number == 0xff) {
@@ -81,22 +82,22 @@ void jd_process_event_queue(void) {
     }
 }
 
-void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t datalen) {
+void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t data_bytes) {
     srv_common_t *state = (srv_common_t *)srv;
 
     uint16_t cmd = next_event_cmd(eventid);
-    jd_send(state->service_number, cmd, data, datalen);
+    jd_send(state->service_number, cmd, data, data_bytes);
 
     ev_init();
 
-    int reqlen = datalen + sizeof(ev_t);
+    int reqlen = data_bytes + sizeof(ev_t);
     if (reqlen > JD_EVENT_QUEUE_SIZE)
         return; // too long to queue; shouldn't happen
-    while (JD_EVENT_QUEUE_SIZE - info.qptr < (int)datalen)
+    while (JD_EVENT_QUEUE_SIZE - info.qptr < (int)data_bytes)
         ev_shift();
 
     ev_t *ev = (ev_t *)((uint8_t *)info.buffer + info.qptr);
-    ev->service_size = datalen;
+    ev->service_size = data_bytes;
     ev->service_command = cmd;
     ev->service_number = state->service_number;
     // no randomization; it's somewhat often to generate multiple events in the same tick
