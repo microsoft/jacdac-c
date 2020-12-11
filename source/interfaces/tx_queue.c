@@ -15,23 +15,19 @@ void jd_tx_init(void) {
         sendFrame = (jd_frame_t *)jd_alloc(sizeof(jd_frame_t) * 2);
 }
 
-void jd_send(unsigned service_num, unsigned service_cmd, const void *data,
-               unsigned service_size) {
+int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsigned service_size) {
+    if (target_in_irq())
+        jd_panic();
+
     void *trg = jd_push_in_frame(&sendFrame[bufferPtr], service_num, service_cmd, service_size);
     if (!trg) {
         JD_LOG("send overflow!");
-        return;
+        return -1;
     }
     if (data)
         memcpy(trg, data, service_size);
-}
 
-void jd_send_event_ext(srv_t *srv, uint32_t eventid, uint32_t arg) {
-    srv_common_t *state = (srv_common_t *)srv;
-    if (eventid >> 16)
-        jd_panic();
-    uint32_t data[] = {eventid, arg};
-    jd_send(state->service_number, JD_CMD_EVENT, data, 8);
+    return 0;
 }
 
 // bridge between phys and queue imp, phys calls this to get the next frame.
