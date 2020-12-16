@@ -45,3 +45,13 @@ uint16_t adc_read_temp(void);
 
 uint64_t hw_device_id(void);
 void hw_panic(void);
+
+// only required by drivers/*.c
+// i2c.c
+void i2c_init(void);
+// addr are 7bit
+int i2c_write_buf(uint8_t addr, const void *src, unsigned len);
+int i2c_write_reg_buf(uint8_t addr, uint8_t reg, const void *src, unsigned len);
+int i2c_read_buf(uint8_t addr, uint8_t reg, void *dst, unsigned len);
+int i2c_write_reg(uint8_t addr, uint8_t reg, uint8_t val);
+int i2c_read_reg(uint8_t addr, uint8_t reg);
