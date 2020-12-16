@@ -61,9 +61,13 @@ void snd_process(srv_t *state) {
 }
 
 void snd_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    service_handle_register(state, pkt, snd_regs);
+    // if the packet was handled as a register read or write, no reason to continue
+    if (service_handle_register(state, pkt, snd_regs))
+        return;
+
     switch (pkt->service_command) {
     case JD_MUSIC_CMD_PLAY_TONE:
+        // ensure input is big enough
         if (pkt->service_size >= 6) {
             jd_music_play_tone_t *d = (void *)pkt->data;
             state->end_tone_time = now + d->duration * 1000;

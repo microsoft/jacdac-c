@@ -68,6 +68,14 @@ extern const char app_dev_class_name[];
 extern const char app_fw_version[];
 
 srv_t *jd_allocate_service(const srv_vt_t *vt);
+
+/**
+ * Interprets packet as a register read/write, based on REG_DEFINITION() passed as 'sdesc'.
+ * It will either read from or write to 'state', depending on register.
+ * Returns 0 if the packet was not handled.
+ * Returns register code, if the packet was handled as register write of that code.
+ * Returns -register code, if the packet was handled as register read of that code.
+ */
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
 
 /**
