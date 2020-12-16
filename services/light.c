@@ -13,8 +13,6 @@ STATIC_ASSERT(LIGHT_TYPE_WS2812B_GRB == JD_LIGHT_LIGHT_TYPE_WS2812B_GRB);
 STATIC_ASSERT(LIGHT_TYPE_SK9822 == JD_LIGHT_LIGHT_TYPE_SK9822);
 
 #define DEFAULT_INTENSITY 15
-#define DEFAULT_NUMPIXELS 15
-#define DEFAULT_MAXPOWER 200
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
@@ -90,6 +88,7 @@ struct srv_state {
     uint16_t numpixels;
     uint16_t maxpower;
 
+    // end of registers
     uint16_t pxbuffer_allocated;
     uint8_t *pxbuffer;
     volatile uint8_t in_tx;
@@ -589,16 +588,25 @@ void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
         handle_run_cmd(state, pkt);
         break;
     default:
+#ifdef LIGHT_LOCK_TYPE
+        if (pkt->service_command == JD_SET(JD_LIGHT_REG_LIGHT_TYPE))
+            break;
+#endif
+#ifdef LIGHT_LOCK_NUM_PIXELS
+        if (pkt->service_command == JD_SET(JD_LIGHT_REG_NUM_PIXELS))
+            break;
+#endif
         service_handle_register(state, pkt, light_regs);
         break;
     }
 }
 
 SRV_DEF(light, JD_SERVICE_CLASS_LIGHT);
-void light_init(void) {
+void light_init(uint8_t default_light_type, uint32_t default_num_pixels, uint32_t default_max_power) {
     SRV_ALLOC(light);
     state_ = state; // there is global singleton state
+    state->lighttype = default_light_type;
+    state->numpixels = default_num_pixels;
+    state->maxpower = default_max_power;
     state->intensity = DEFAULT_INTENSITY;
-    state->numpixels = DEFAULT_NUMPIXELS;
-    state->maxpower = DEFAULT_MAXPOWER;
 }
