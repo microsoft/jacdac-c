@@ -121,6 +121,11 @@ void jd_services_handle_packet(jd_packet_t *pkt);
 void jd_services_announce(void);
 
 /**
+ * Called by TX queue implementation when a packet is queued for sending.
+ */
+void jd_services_packet_queued(void);
+
+/**
  * TODO: work out if this is required, or if we can write it out...
  **/
 uint32_t app_get_device_class(void);

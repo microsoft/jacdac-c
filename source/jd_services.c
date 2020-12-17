@@ -16,7 +16,7 @@
 #define MAX_SERV 32
 
 static srv_t **services;
-static uint8_t num_services, reset_counter;
+static uint8_t num_services, reset_counter, packets_sent;
 
 static uint64_t maxId;
 static uint32_t lastMax, lastDisconnectBlink;
@@ -161,6 +161,10 @@ void jd_services_init() {
     memcpy(services, tmp, sizeof(void *) * num_services);
 }
 
+void jd_services_packet_queued() {
+    packets_sent++;
+}
+
 void jd_services_announce() {
     jd_alloc_stack_check();
 
@@ -169,8 +173,10 @@ void jd_services_announce() {
         dst[i] = services[i]->vt->service_class;
     if (reset_counter < 0xf)
         reset_counter++;
-    dst[0] = reset_counter | JD_ADVERTISEMENT_0_ACK_SUPPORTED;
-    jd_send(JD_SERVICE_NUMBER_CONTROL, JD_CONTROL_CMD_SERVICES, dst, num_services * 4);
+    dst[0] = reset_counter | JD_ADVERTISEMENT_0_ACK_SUPPORTED | ((packets_sent + 1) << 16);
+    if (jd_send(JD_SERVICE_NUMBER_CONTROL, JD_CONTROL_CMD_SERVICES, dst, num_services * 4) == 0) {
+        packets_sent = 0;
+    }
 }
 
 static void handle_ctrl_tick(jd_packet_t *pkt) {

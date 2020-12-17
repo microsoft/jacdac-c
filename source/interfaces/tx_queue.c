@@ -52,6 +52,7 @@ void jd_tx_flush() {
     jd_compute_crc(&sendFrame[bufferPtr]);
     bufferPtr ^= 1;
     jd_packet_ready();
+    jd_services_packet_queued();
 
     jd_reset_frame(&sendFrame[bufferPtr]);
 }
