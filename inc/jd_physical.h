@@ -28,7 +28,7 @@ extern "C" {
 
 #define JD_FRAME_SIZE(pkt) ((pkt)->size + 12)
 
-#define JD_SERVICE_NUMBER_CTRL 0x00
+#define JD_SERVICE_NUMBER_CONTROL 0x00
 #define JD_SERVICE_NUMBER_MASK 0x3f
 #define JD_SERVICE_NUMBER_CRC_ACK 0x3f
 #define JD_SERVICE_NUMBER_STREAM 0x3e

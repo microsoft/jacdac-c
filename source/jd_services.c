@@ -170,11 +170,11 @@ void jd_services_announce() {
     if (reset_counter < 0xf)
         reset_counter++;
     dst[0] = reset_counter | JD_ADVERTISEMENT_0_ACK_SUPPORTED;
-    jd_send(JD_SERVICE_NUMBER_CTRL, JD_CTRL_CMD_SERVICES, dst, num_services * 4);
+    jd_send(JD_SERVICE_NUMBER_CONTROL, JD_CONTROL_CMD_SERVICES, dst, num_services * 4);
 }
 
 static void handle_ctrl_tick(jd_packet_t *pkt) {
-    if (pkt->service_command == JD_CTRL_CMD_SERVICES) {
+    if (pkt->service_command == JD_CONTROL_CMD_SERVICES) {
         // if we have not seen maxId for 1.1s, find a new maxId
         if (pkt->device_identifier < maxId && in_past(lastMax + 1100000)) {
             maxId = pkt->device_identifier;

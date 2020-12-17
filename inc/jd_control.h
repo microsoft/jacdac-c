@@ -8,6 +8,7 @@
 #include "jd_services.h"
 
 #include "jacdac/dist/c/_base.h"
+#include "jacdac/dist/c/_system.h"
 #include "jacdac/dist/c/_sensor.h"
 #include "jacdac/dist/c/control.h"
 
