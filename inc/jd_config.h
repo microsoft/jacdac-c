@@ -34,6 +34,10 @@
 #define JD_CONFIG_TEMPERATURE 0
 #endif
 
+#ifndef JD_CONFIG_CONTROL_FLOOD
+#define JD_CONFIG_CONTROL_FLOOD 1
+#endif
+
 #define CONCAT_1(a, b) a##b
 #define CONCAT_0(a, b) CONCAT_1(a, b)
 #ifndef STATIC_ASSERT

@@ -42,6 +42,8 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
 }
 
 void jd_tx_flush() {
+    if (target_in_irq())
+        jd_panic();
     if (isSending)
         return;
     if (sendFrame[bufferPtr].size == 0)

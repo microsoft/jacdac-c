@@ -11,3 +11,6 @@ void pwr_leave_tim(void);
 void pwr_sleep(void);
 // do WFI until PLL/TIM mode is left
 void pwr_wait_tim(void);
+// when enabled, services processing is run as fast as possible without sleep
+void pwr_enter_no_sleep(void);
+void pwr_leave_no_sleep(void);
