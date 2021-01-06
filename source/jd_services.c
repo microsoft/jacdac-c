@@ -19,7 +19,7 @@ static srv_t **services;
 static uint8_t num_services, reset_counter, packets_sent;
 
 static uint64_t maxId;
-static uint32_t lastMax, lastDisconnectBlink;
+static uint32_t lastMax, lastDisconnectBlink, nextAnnounce;
 
 struct srv_state {
     SRV_COMMON;
@@ -231,6 +231,9 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
 }
 
 void jd_services_tick() {
+    if (jd_should_sample(&nextAnnounce, 500000))
+        jd_services_announce();
+
     if (jd_should_sample(&lastDisconnectBlink, 250000)) {
         if (in_past(lastMax + 2000000)) {
             led_blink(5000);
