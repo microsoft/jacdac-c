@@ -25,22 +25,12 @@ static volatile uint8_t status;
 static jd_frame_t *txFrame;
 static uint64_t nextAnnounce;
 static uint8_t txPending;
-static uint8_t annCounter;
 
 static jd_diagnostics_t jd_diagnostics;
 
 jd_diagnostics_t *jd_get_diagnostics(void) {
     jd_diagnostics.bus_state = 0; // TODO?
     return &jd_diagnostics;
-}
-
-static void check_announce(void) {
-    if (tim_get_micros() > nextAnnounce) {
-        // pulse_log_pin();
-        if (nextAnnounce)
-            jd_services_announce();
-        nextAnnounce = tim_get_micros() + 499000 + (jd_random() & 0x7ff);
-    }
 }
 
 int jd_is_running(void) {
@@ -66,15 +56,10 @@ void jd_tx_completed(int errCode) {
 }
 
 static void tick(void) {
-    check_announce();
     set_tick_timer(0);
 }
 
 static void flush_tx_queue(void) {
-    // pulse1();
-    if (annCounter++ == 0)
-        check_announce();
-
     LOG("flush %d", status);
     target_disable_irq();
     if (status & (JD_STATUS_RX_ACTIVE | JD_STATUS_TX_ACTIVE)) {
@@ -195,9 +180,6 @@ void jd_line_falling() {
 }
 
 void jd_rx_completed(int dataLeft) {
-    if (annCounter++ == 0)
-        check_announce();
-
     LOG("rx cmpl");
     jd_frame_t *frame = rxFrame;
 

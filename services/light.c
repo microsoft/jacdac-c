@@ -103,6 +103,8 @@ struct srv_state {
     uint16_t range_len;
     uint16_t range_ptr;
 
+    uint32_t auto_refresh;
+
     uint8_t prog_ptr;
     uint8_t prog_size;
     uint32_t prog_next_step;
@@ -173,8 +175,7 @@ static bool is_empty(const uint32_t *data, uint32_t size) {
 }
 
 static bool is_enabled(srv_t *state) {
-    // TODO check if all pixels are zero
-    return state->numpixels > 0 && state->intensity > 0;
+    return state->numpixels > 0 && state->requested_intensity > 0;
 }
 
 static void reset_range(srv_t *state) {
@@ -235,10 +236,6 @@ static bool set_next(srv_t *state, RGB c) {
     return true;
 }
 
-static void show(srv_t *state) {
-    state->dirty = 1;
-}
-
 #define SCALE0(c, i) ((((c)&0xff) * (1 + (i & 0xff))) >> 8)
 #define SCALE(c, i)                                                                                \
     (SCALE0((c) >> 0, i) << 0) | (SCALE0((c) >> 8, i) << 8) | (SCALE0((c) >> 16, i) << 16)
@@ -252,22 +249,25 @@ static void limit_intensity(srv_t *state) {
     uint8_t *d = (uint8_t *)state->pxbuffer;
     unsigned n = state->numpixels * 3;
     int prev_intensity = state->intensity;
+    int intensity = state->intensity;
 
-    if (state->requested_intensity > state->intensity)
-        state->intensity += 1 + (state->intensity >> 5);
-    if (state->intensity > state->requested_intensity)
-        state->intensity = state->requested_intensity;
+    intensity += 1 + (intensity >> 5);
+    if (intensity > state->requested_intensity)
+        intensity = state->requested_intensity;
 
     int current_full = 0;
     int current = 0;
+    int current_prev = 0;
     while (n--) {
         uint8_t v = *d++;
-        current += SCALE0(v, state->intensity);
+        current += SCALE0(v, intensity);
+        current_prev += SCALE0(v, prev_intensity);
         current_full += v;
     }
 
     // 46uA per step of LED
     current *= 46;
+    current_prev *= 46;
     current_full *= 46;
 
     // 14mA is the chip at 48MHz, 930uA per LED is static
@@ -275,17 +275,20 @@ static void limit_intensity(srv_t *state) {
     int current_limit = state->maxpower * 1000 - base_current;
 
     if (current <= current_limit) {
+        state->intensity = intensity;
         // LOG("curr: %dmA; not limiting %d", (base_current + current) / 1000, state->intensity);
         return;
+    }
+
+    if (current_prev <= current_limit) {
+        return; // no change needed
     }
 
     int inten = current_limit / (current_full >> 8) - 1;
     if (inten < 0)
         inten = 0;
-    // only display message if the limit wasn't just a result of relaxing above
-    if (inten < prev_intensity)
-        LOG("limiting %d -> %d; %dmA", state->intensity, inten,
-            (base_current + (current_full * inten >> 8)) / 1000);
+    LOG("limiting %d -> %d; %dmA", state->intensity, inten,
+        (base_current + (current_full * inten >> 8)) / 1000);
     state->intensity = inten;
 }
 
@@ -365,7 +368,7 @@ static void prog_set(srv_t *state, uint32_t len) {
         state->prog_ptr = start;
         bool ok = false;
         for (uint32_t i = 0; i < len; ++i) {
-            // don't break the loop immedietely if !ok - make sure the prog counter advances
+            // don't break the loop immediately if !ok - make sure the prog counter advances
             ok = set_next(state, prog_fetch_color(state));
         }
         if (!ok)
@@ -457,10 +460,10 @@ static void prog_process(srv_t *state) {
 
         if (cmd == LIGHT_PROG_SHOW) {
             uint32_t k = prog_fetch_num(state, 50);
-            // base the next step of previous expect step time, now current time
+            // base the next step of previous expect step time, not current time
             // to keep the clock synchronized
             state->prog_next_step += k * 1000;
-            show(state);
+            state->dirty = 1;
             break;
         }
 
@@ -530,11 +533,15 @@ static void prog_process(srv_t *state) {
 void light_process(srv_t *state) {
     prog_process(state);
 
+    if (in_past(state->auto_refresh) && state->inited)
+        state->dirty = 1;
+
     if (!is_enabled(state))
         return;
 
     if (state->dirty && !state->in_tx) {
         state->dirty = 0;
+        state->auto_refresh = now + (64 << 10);
         if (is_empty((uint32_t *)state->pxbuffer, PX_WORDS(state->numpixels))) {
             jd_power_enable(0);
             return;
@@ -569,6 +576,7 @@ static void sync_config(srv_t *state) {
 }
 
 static void handle_run_cmd(srv_t *state, jd_packet_t *pkt) {
+    LOG("run: br %d->%d", state->intensity, state->requested_intensity);
     state->prog_size = pkt->service_size;
     state->prog_ptr = 0;
     memcpy(state->prog_data, pkt->data, state->prog_size);
@@ -596,17 +604,22 @@ void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
         if (pkt->service_command == JD_SET(JD_LIGHT_REG_NUM_PIXELS))
             break;
 #endif
-        service_handle_register(state, pkt, light_regs);
+        switch (service_handle_register(state, pkt, light_regs)) {
+        case JD_LIGHT_REG_BRIGHTNESS:
+            state->intensity = state->requested_intensity;
+            break;
+        }
         break;
     }
 }
 
 SRV_DEF(light, JD_SERVICE_CLASS_LIGHT);
-void light_init(uint8_t default_light_type, uint32_t default_num_pixels, uint32_t default_max_power) {
+void light_init(uint8_t default_light_type, uint32_t default_num_pixels,
+                uint32_t default_max_power) {
     SRV_ALLOC(light);
     state_ = state; // there is global singleton state
     state->lighttype = default_light_type;
     state->numpixels = default_num_pixels;
     state->maxpower = default_max_power;
-    state->intensity = DEFAULT_INTENSITY;
+    state->intensity = state->requested_intensity = DEFAULT_INTENSITY;
 }
