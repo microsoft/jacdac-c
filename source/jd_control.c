@@ -123,14 +123,14 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 
 #if JD_CONFIG_WATCHDOG == 1
-    case JD_GET(0x80): {
+    case JD_GET(JD_CONTROL_REG_RESET_IN): {
         uint32_t d = state->watchdog;
         if (d)
             d -= now;
         jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, &d, sizeof(d));
         break;
     }
-    case JD_SET(0x80):
+    case JD_SET(JD_CONTROL_REG_RESET_IN):
         if (pkt->service_size == 4) {
             uint32_t delta = *(uint32_t *)pkt->data;
             state->watchdog = delta ? now + delta : 0;
