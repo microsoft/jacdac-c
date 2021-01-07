@@ -21,12 +21,12 @@
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         jd_debug_signal_error();                                                                   \
-        JD_LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
     } while (0)
 #else
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
-        JD_LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
     } while (0)
 #endif
 
@@ -36,6 +36,10 @@
 
 #ifndef JD_CONFIG_CONTROL_FLOOD
 #define JD_CONFIG_CONTROL_FLOOD 1
+#endif
+
+#ifndef JD_CONFIG_WATCHDOG
+#define JD_CONFIG_WATCHDOG 1
 #endif
 
 #define CONCAT_1(a, b) a##b

@@ -118,7 +118,7 @@ static void set_tick_timer(uint8_t statusClear) {
 static void rx_timeout(void) {
     target_disable_irq();
     jd_diagnostics.bus_timeout_error++;
-    ERROR("RX timeout");
+    ERROR("RX t/o");
     uart_disable();
 #ifdef JD_DEBUG_MODE
     jd_debug_signal_read(0);
@@ -190,7 +190,7 @@ void jd_rx_completed(int dataLeft) {
     set_tick_timer(JD_STATUS_RX_ACTIVE);
 
     if (dataLeft < 0) {
-        ERROR("rx error: %d", dataLeft);
+        ERROR("rx err: %d", dataLeft);
         jd_diagnostics.bus_uart_error++;
         return;
     }
@@ -198,13 +198,13 @@ void jd_rx_completed(int dataLeft) {
     uint32_t txSize = sizeof(*frame) - dataLeft;
     uint32_t declaredSize = JD_FRAME_SIZE(frame);
     if (txSize < declaredSize) {
-        ERROR("frame too short");
+        ERROR("short frm");
         jd_diagnostics.bus_uart_error++;
         return;
     }
     uint16_t crc = jd_crc16((uint8_t *)frame + 2, declaredSize - 2);
     if (crc != frame->crc) {
-        ERROR("crc mismatch");
+        ERROR("crc err");
         jd_diagnostics.bus_uart_error++;
         return;
     }

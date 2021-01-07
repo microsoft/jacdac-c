@@ -16,6 +16,9 @@ struct srv_state {
     SRV_COMMON;
     uint32_t nextblink;
     uint8_t id_counter;
+#if JD_CONFIG_WATCHDOG == 1
+    uint32_t watchdog;
+#endif
 #if JD_CONFIG_CONTROL_FLOOD == 1
     uint8_t flood_size;
     uint32_t flood_counter;
@@ -61,6 +64,10 @@ static void process_flood(srv_t *state) {}
 void jd_ctrl_process(srv_t *state) {
     identify(state);
     process_flood(state);
+#if JD_CONFIG_WATCHDOG == 1
+    if (state->watchdog && in_past(state->watchdog))
+        target_reset();
+#endif
 }
 
 static void send_value(jd_packet_t *pkt, uint32_t v) {
@@ -105,9 +112,6 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     case JD_GET(JD_CONTROL_REG_FIRMWARE_IDENTIFIER):
-        send_value(pkt, app_get_device_class());
-        break;
-
     case JD_GET(JD_CONTROL_REG_BOOTLOADER_FIRMWARE_IDENTIFIER):
         send_value(pkt, app_get_device_class());
         break;
@@ -117,6 +121,22 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
         jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, &t, sizeof(t));
         break;
     }
+
+#if JD_CONFIG_WATCHDOG == 1
+    case JD_GET(JD_CONTROL_REG_RESET_IN): {
+        uint32_t d = state->watchdog;
+        if (d)
+            d -= now;
+        jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, &d, sizeof(d));
+        break;
+    }
+    case JD_SET(JD_CONTROL_REG_RESET_IN):
+        if (pkt->service_size == 4) {
+            uint32_t delta = *(uint32_t *)pkt->data;
+            state->watchdog = delta ? now + delta : 0;
+        }
+        break;
+#endif
 
 #if JD_CONFIG_TEMPERATURE == 1
     case JD_GET(JD_CONTROL_REG_MCU_TEMPERATURE):
