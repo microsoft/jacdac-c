@@ -21,12 +21,12 @@
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         jd_debug_signal_error();                                                                   \
-        JD_LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
     } while (0)
 #else
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
-        JD_LOG("JD-ERROR: " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
     } while (0)
 #endif
 

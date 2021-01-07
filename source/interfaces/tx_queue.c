@@ -21,7 +21,7 @@ int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsign
 
     void *trg = jd_push_in_frame(&sendFrame[bufferPtr], service_num, service_cmd, service_size);
     if (!trg) {
-        JD_LOG("send overflow!");
+        ERROR("send ovf");
         return -1;
     }
     if (data)
