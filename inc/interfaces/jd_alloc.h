@@ -22,7 +22,14 @@ void jd_alloc_init(void);
 void* jd_alloc(uint32_t size);
 
 /**
+ * Return the amount of memory left to allocated.
+ */
+uint32_t jd_available_memory(void);
+
+/**
  *  Any corresponding free calls made by the jacdac-c library will use this function.
+ * 
+ *  Note: this is never used.
  **/
 void jd_free(void* ptr);
 

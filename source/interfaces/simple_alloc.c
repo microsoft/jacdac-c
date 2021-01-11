@@ -26,17 +26,17 @@ void jd_alloc_stack_check(void) {
     }
     int sz = STACK_BASE - (uint32_t)ptr;
     if (sz > maxStack)
-        JD_LOG("used stack: %d", maxStack = sz);
+        JD_LOG("stk:%d", maxStack = sz);
 }
 
 void jd_alloc_init(void) {
-    JD_LOG("space: %d", HEAP_END - HEAP_BASE);
+    JD_LOG("free:%d", HEAP_END - HEAP_BASE);
 
     aptr = (uint32_t *)HEAP_BASE;
     int p = 0;
     int sz = (uint32_t)&p - HEAP_BASE - 32;
     // seed PRNG with random RAM contents (later we add ADC readings)
-    jd_seed_random(jd_hash_fnv1a((void *)HEAP_BASE,  sz));
+    jd_seed_random(jd_hash_fnv1a((void *)HEAP_BASE, sz));
     memset((void *)HEAP_BASE, 0x33, sz);
 
     jd_alloc_stack_check();
@@ -51,6 +51,10 @@ void *jd_alloc(uint32_t size) {
         jd_panic();
     memset(r, 0, size << 2);
     return r;
+}
+
+uint32_t jd_available_memory() {
+    return HEAP_END - (uint32_t)aptr;
 }
 
 void *jd_alloc_emergency_area(uint32_t size) {
