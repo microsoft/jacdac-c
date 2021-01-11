@@ -13,6 +13,7 @@ typedef struct {
 
 struct event_info {
     ev_t *buffer;
+    cb_t process;
     uint16_t qptr;
     uint8_t counter;
 };
@@ -33,12 +34,6 @@ static uint16_t next_event_cmd(uint32_t eventid) {
     return JD_CMD_EVENT_MK(info.counter, eventid);
 }
 
-static void ev_init(void) {
-    if (info.buffer)
-        return;
-    info.buffer = jd_alloc(JD_EVENT_QUEUE_SIZE);
-}
-
 static void ev_shift(void) {
     int words = ev_size(info.buffer) >> 2;
     uint32_t *dst = &info.buffer->timestamp;
@@ -48,11 +43,8 @@ static void ev_shift(void) {
         *dst++ = *src++;
 }
 
-void jd_process_event_queue(void) {
-    if (info.qptr == 0)
-        return;
-
-    // if info.qptr != 0, then info.buffer has been initialized already
+static void do_process_event_queue(void) {
+    // if info.process != NULL, then info.buffer has been initialized already
     ev_t *ev = info.buffer;
     while ((uint8_t *)ev - (uint8_t *)info.buffer < info.qptr) {
         if (ev->service_number == 0xff) {
@@ -80,6 +72,19 @@ void jd_process_event_queue(void) {
 
         ev = next_ev(ev);
     }
+}
+
+static void ev_init(void) {
+    if (info.buffer)
+        return;
+    info.buffer = jd_alloc(JD_EVENT_QUEUE_SIZE);
+    // this is only linked in, when the code uses event sending functions
+    info.process = do_process_event_queue;
+}
+
+void jd_process_event_queue(void) {
+    if (info.process)
+        info.process();
 }
 
 void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t data_bytes) {
