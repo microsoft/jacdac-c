@@ -17,6 +17,8 @@ STATIC_ASSERT(LIGHT_TYPE_SK9822 == JD_LIGHT_LIGHT_TYPE_SK9822);
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
 
+#define PX_WORDS(NUM_PIXELS) (((NUM_PIXELS)*3 + 3) / 4)
+
 /*
 
 * `0xD0: set_all(C+)` - set all pixels in current range to given color pattern
@@ -77,6 +79,7 @@ REG_DEFINITION(                             //
     REG_U8(JD_LIGHT_REG_LIGHT_TYPE),        //
     REG_U16(JD_LIGHT_REG_NUM_PIXELS),       //
     REG_U16(JD_LIGHT_REG_MAX_POWER),        //
+    REG_U16(JD_LIGHT_REG_MAX_PIXELS),       //
 )
 
 struct srv_state {
@@ -87,9 +90,9 @@ struct srv_state {
     uint8_t lighttype;
     uint16_t numpixels;
     uint16_t maxpower;
+    uint16_t maxpixels;
 
     // end of registers
-    uint16_t pxbuffer_allocated;
     uint8_t *pxbuffer;
     volatile uint8_t in_tx;
     volatile uint8_t dirty;
@@ -530,7 +533,23 @@ static void prog_process(srv_t *state) {
     pwr_leave_pll();
 }
 
+static void alloc(srv_t *state) {
+    if (state->maxpixels)
+        return;
+    px_alloc();
+    int maxpix = jd_available_memory() / 3 - 1;
+    if (maxpix > 4096)
+        maxpix = 4096;
+    state->maxpixels = maxpix;
+    state->pxbuffer = jd_alloc(PX_WORDS(state->maxpixels));
+}
+
 void light_process(srv_t *state) {
+    // it's important alloc() is called after all services have initalized (and allocated)
+    // as it consumes all remaining RAM
+    // the light_process() function is always called a few times before any packet is handled
+    alloc(state);
+
     prog_process(state);
 
     if (in_past(state->auto_refresh) && state->inited)
@@ -564,12 +583,6 @@ static void sync_config(srv_t *state) {
     if (!state->inited) {
         state->inited = true;
         px_init(state->lighttype);
-    }
-
-    int needed = PX_WORDS(state->numpixels);
-    if (needed > state->pxbuffer_allocated) {
-        state->pxbuffer_allocated = needed;
-        state->pxbuffer = jd_alloc(needed * 4);
     }
 
     jd_power_enable(1);
@@ -607,6 +620,10 @@ void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
         switch (service_handle_register(state, pkt, light_regs)) {
         case JD_LIGHT_REG_BRIGHTNESS:
             state->intensity = state->requested_intensity;
+            break;
+        case JD_LIGHT_REG_NUM_PIXELS:
+            if (state->numpixels > state->maxpixels)
+                state->numpixels = state->maxpixels;
             break;
         }
         break;

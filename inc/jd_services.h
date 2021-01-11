@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "jd_config.h"
 #include "jd_service_classes.h"
 #include "jd_physical.h"
-#include "jd_config.h"
 #include "services/interfaces/jd_service_initializers.h"
 
 #define PKT_UNHANDLED 0

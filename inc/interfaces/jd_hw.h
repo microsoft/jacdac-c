@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "jd_physical.h"
 #include "jd_config.h"
+#include "jd_physical.h"
 
 extern uint32_t now;
 
