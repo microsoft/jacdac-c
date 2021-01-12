@@ -48,12 +48,11 @@ static void do_process_event_queue(void) {
     ev_t *ev = info.buffer;
     while ((uint8_t *)ev - (uint8_t *)info.buffer < info.qptr) {
         if (ev->service_number == 0xff) {
-            if (ev == info.buffer)
+            if (ev == info.buffer) {
                 ev_shift();
-            continue;
-        }
-
-        if (in_past(ev->timestamp)) {
+                continue;
+            }
+        } else if (in_past(ev->timestamp)) {
             if (jd_send(ev->service_number & 0x7f, ev->service_command, ev->data,
                         ev->service_size) != 0)
                 break;
