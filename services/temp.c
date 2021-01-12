@@ -4,7 +4,7 @@
 #include "jd_protocol.h"
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_environment.h"
-#include "jacdac/dist/c/temperature.h"
+#include "jacdac/dist/c/thermometer.h"
 
 struct srv_state {
     SENSOR_COMMON;
@@ -20,7 +20,7 @@ void temp_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &temp, sizeof(temp));
 }
 
-SRV_DEF(temp, JD_SERVICE_CLASS_TEMPERATURE);
+SRV_DEF(temp, JD_SERVICE_CLASS_THERMOMETER);
 
 void temp_init(void) {
     SRV_ALLOC(temp);

@@ -6,7 +6,7 @@
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_pwm.h"
 #include "interfaces/jd_hw_pwr.h"
-#include "jacdac/dist/c/music.h"
+#include "jacdac/dist/c/buzzer.h"
 
 #ifndef SND_OFF
 #define SND_OFF 1
@@ -66,10 +66,10 @@ void snd_handle_packet(srv_t *state, jd_packet_t *pkt) {
         return;
 
     switch (pkt->service_command) {
-    case JD_MUSIC_CMD_PLAY_TONE:
+    case JD_BUZZER_CMD_PLAY_TONE:
         // ensure input is big enough
         if (pkt->service_size >= 6) {
-            jd_music_play_tone_t *d = (void *)pkt->data;
+            jd_buzzer_play_tone_t *d = (void *)pkt->data;
             state->end_tone_time = now + d->duration * 1000;
             state->period = d->period;
             play_tone(state, state->period, d->duty);
@@ -79,7 +79,7 @@ void snd_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(snd, JD_SERVICE_CLASS_MUSIC);
+SRV_DEF(snd, JD_SERVICE_CLASS_BUZZER);
 void snd_init(uint8_t pin) {
     SRV_ALLOC(snd);
     state->pin = pin;

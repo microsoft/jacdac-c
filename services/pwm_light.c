@@ -6,7 +6,7 @@
 #include "interfaces/jd_pwm.h"
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_hw_pwr.h"
-#include "jacdac/dist/c/pwmlight.h"
+#include "jacdac/dist/c/monolight.h"
 
 #define DEFAULT_MAXPOWER 100
 
@@ -23,7 +23,7 @@ struct srv_state {
     uint16_t curr_iteration;
     uint16_t max_iterations;
     uint8_t max_steps;
-    __attribute__((aligned(4))) jd_pwm_light_steps_t steps[MAX_STEPS];
+    __attribute__((aligned(4))) jd_mono_light_steps_t steps[MAX_STEPS];
 
     // internal state
     uint32_t step_start_time;
@@ -33,15 +33,15 @@ struct srv_state {
     uint8_t pin;
 };
 
-REG_DEFINITION(                                                                  //
-    pwm_light_regs,                                                              //
-    REG_SRV_BASE,                                                                //
-    REG_U16(JD_PWM_LIGHT_REG_BRIGHTNESS),                                        //
-    REG_U16(JD_PWM_LIGHT_REG_MAX_POWER),                                         //
-    REG_U16(JD_PWM_LIGHT_REG_CURRENT_ITERATION),                                 //
-    REG_U16(JD_PWM_LIGHT_REG_MAX_ITERATIONS),                                    //
-    REG_U8(JD_PWM_LIGHT_REG_MAX_STEPS),                                          //
-    REG_BYTES(JD_PWM_LIGHT_REG_STEPS, MAX_STEPS * sizeof(jd_pwm_light_steps_t)), //
+REG_DEFINITION(                                                                   //
+    pwm_light_regs,                                                               //
+    REG_SRV_BASE,                                                                 //
+    REG_U16(JD_MONO_LIGHT_REG_BRIGHTNESS),                                        //
+    REG_U16(JD_MONO_LIGHT_REG_MAX_POWER),                                         //
+    REG_U16(JD_MONO_LIGHT_REG_CURRENT_ITERATION),                                 //
+    REG_U16(JD_MONO_LIGHT_REG_MAX_ITERATIONS),                                    //
+    REG_U8(JD_MONO_LIGHT_REG_MAX_STEPS),                                          //
+    REG_BYTES(JD_MONO_LIGHT_REG_STEPS, MAX_STEPS * sizeof(jd_mono_light_steps_t)), //
 )
 
 static const uint16_t stable[] = {0xffff, 10000, 0xffff, 0};
@@ -73,7 +73,7 @@ void pwm_light_process(srv_t *state) {
         uint32_t tm = tim_get_micros() >> 10;
         uint32_t delta = tm - state->step_start_time;
         uint32_t pos = 0;
-        jd_pwm_light_steps_t *st = &state->steps[0];
+        jd_mono_light_steps_t *st = &state->steps[0];
         for (int i = 0; i < MAX_STEPS; ++i) {
             unsigned d = st[i].duration;
             if (d == 0)
@@ -113,14 +113,14 @@ void pwm_light_process(srv_t *state) {
 
 void pwm_light_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (service_handle_register(state, pkt, pwm_light_regs)) {
-    case JD_PWM_LIGHT_REG_STEPS:
+    case JD_MONO_LIGHT_REG_STEPS:
         state->curr_iteration = 0;
         state->step_start_time = tim_get_micros() >> 10;
         break;
     }
 }
 
-SRV_DEF(pwm_light, JD_SERVICE_CLASS_PWM_LIGHT);
+SRV_DEF(pwm_light, JD_SERVICE_CLASS_MONO_LIGHT);
 void pwm_light_init(uint8_t pin) {
     SRV_ALLOC(pwm_light);
 
