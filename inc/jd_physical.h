@@ -39,13 +39,12 @@ extern "C" {
 #define JD_PIPE_PORT_SHIFT 7
 
 #define JD_CMD_EVENT_MASK 0x8000
-#define JD_CMD_EVENT_CODE_MASK 0x00ff
-#define JD_CMD_EVENT_COUNTER_MASK 0x7f00
+#define JD_CMD_EVENT_CODE_MASK 0xff
+#define JD_CMD_EVENT_COUNTER_MASK 0x7f
 #define JD_CMD_EVENT_COUNTER_SHIFT 8
-#define JD_CMD_EVENT_MK(counter, code)                                                                \
-    (JD_CMD_EVENT_MASK | (((counter) << JD_CMD_EVENT_COUNTER_SHIFT) & JD_CMD_EVENT_COUNTER_MASK) | \
+#define JD_CMD_EVENT_MK(counter, code)                                                             \
+    (JD_CMD_EVENT_MASK | ((((counter)&JD_CMD_EVENT_COUNTER_MASK) << JD_CMD_EVENT_COUNTER_SHIFT)) | \
      (code & JD_CMD_EVENT_CODE_MASK))
-
 
 #define JDSPI_MAGIC 0x7ACD
 #define JDSPI_MAGIC_NOOP 0xB3CD
@@ -83,7 +82,7 @@ struct _jd_pipe_cmd_t {
     uint64_t device_identifier;
     uint16_t port_num;
     uint16_t reserved;
-}  __attribute__((__packed__, aligned(4)));
+} __attribute__((__packed__, aligned(4)));
 typedef struct _jd_pipe_cmd_t jd_pipe_cmd_t;
 
 void jd_packet_ready(void);
@@ -105,7 +104,6 @@ typedef struct {
     uint32_t packets_dropped;
 } jd_diagnostics_t;
 jd_diagnostics_t *jd_get_diagnostics(void);
-
 
 #ifdef __cplusplus
 }
