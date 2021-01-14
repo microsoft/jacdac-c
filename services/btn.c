@@ -13,7 +13,6 @@ struct srv_state {
     uint8_t backlight_pin;
     uint8_t pressed;
     uint8_t prev_pressed;
-    uint8_t num_zero;
     uint8_t active;
     uint32_t press_time;
     uint32_t nextSample;
@@ -34,7 +33,6 @@ static void update(srv_t *state) {
                 jd_send_event(state, JD_BUTTON_EV_LONG_CLICK);
             else
                 jd_send_event(state, JD_BUTTON_EV_CLICK);
-            state->num_zero = 0;
         }
     }
 }
@@ -42,12 +40,6 @@ static void update(srv_t *state) {
 void btn_process(srv_t *state) {
     if (jd_should_sample(&state->nextSample, 9000)) {
         update(state);
-
-        if (sensor_should_stream(state) && (state->pressed || state->num_zero < 20)) {
-            state->num_zero++;
-            jd_send(state->service_number, JD_GET(JD_REG_READING), &state->pressed,
-                    sizeof(state->pressed));
-        }
     }
 }
 
@@ -62,9 +54,7 @@ void btn_init(uint8_t pin, bool active, uint8_t backlight_pin) {
     state->pin = pin;
     state->backlight_pin = backlight_pin;
     state->active = active;
-    if (backlight_pin != 0xff) {
-        pin_setup_output(backlight_pin);
-    }
+    pin_setup_output(backlight_pin);
     pin_setup_input(state->pin, state->active == 0 ? 1 : -1);
     update(state);
 }
