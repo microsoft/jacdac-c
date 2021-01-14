@@ -35,10 +35,11 @@ static uint16_t next_event_cmd(uint32_t eventid) {
 }
 
 static void ev_shift(void) {
-    int words = ev_size(info.buffer) >> 2;
+    int offset = ev_size(info.buffer) >> 2;
     uint32_t *dst = &info.buffer->timestamp;
-    uint32_t *src = dst + words;
-    info.qptr -= words << 2;
+    uint32_t *src = dst + offset;
+    info.qptr -= offset << 2;
+    int words = info.qptr >> 2;
     while (words--)
         *dst++ = *src++;
 }
