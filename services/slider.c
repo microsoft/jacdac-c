@@ -5,7 +5,7 @@
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_adc.h"
-#include "jacdac/dist/c/slider.h"
+#include "jacdac/dist/c/potentiometer.h"
 
 struct srv_state {
     SENSOR_COMMON;
@@ -48,7 +48,7 @@ void slider_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &state->sample, sizeof(state->sample));
 }
 
-SRV_DEF(slider, JD_SERVICE_CLASS_SLIDER);
+SRV_DEF(slider, JD_SERVICE_CLASS_POTENTIOMETER);
 
 void slider_init(uint8_t pinL, uint8_t pinM, uint8_t pinH) {
     SRV_ALLOC(slider);
