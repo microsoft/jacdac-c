@@ -112,11 +112,6 @@ struct srv_state {
     uint8_t prog_size;
     uint32_t prog_next_step;
     uint8_t prog_data[JD_SERIAL_PAYLOAD_SIZE + 1];
-
-    uint8_t anim_flag;
-    uint32_t anim_step, anim_value;
-    srv_cb_t anim_fn;
-    uint32_t anim_end;
 };
 
 static srv_t *state_;
