@@ -87,7 +87,7 @@ static void duty_step(channel_t *ch) {
     if (ch->target_duty > ch->current_duty)
         ch->current_duty += SERVO_PERIOD / 32;
 
-    // never go above, and also if need to step down, so it immedietely
+    // never go above, and also if need to step down, so it immediately
     if (ch->target_duty < ch->current_duty)
         ch->current_duty = ch->target_duty;
 

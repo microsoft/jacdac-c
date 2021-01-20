@@ -80,6 +80,7 @@ REG_DEFINITION(                             //
     REG_U16(JD_LIGHT_REG_NUM_PIXELS),       //
     REG_U16(JD_LIGHT_REG_MAX_POWER),        //
     REG_U16(JD_LIGHT_REG_MAX_PIXELS),       //
+    REG_U16(JD_LIGHT_REG_NUM_REPEATS),      //
 )
 
 struct srv_state {
@@ -91,6 +92,7 @@ struct srv_state {
     uint16_t numpixels;
     uint16_t maxpower;
     uint16_t maxpixels;
+    uint16_t num_repeats;
 
     // end of registers
     uint8_t *pxbuffer;
@@ -439,13 +441,28 @@ static int fetch_mode(srv_t *state) {
     return m;
 }
 
-static void prog_process(srv_t *state) {
-    if (state->prog_ptr >= state->prog_size)
-        return;
+static void reset_prog(srv_t *state) {
+    state->prog_ptr = 0;
+    state->range_start = 0;
+    state->range_end = state->range_len = state->numpixels;
+    state->prog_tmpmode = state->prog_mode = 0;
+    state->prog_next_step = now;
+}
 
+static void prog_process(srv_t *state) {
     // don't run programs while sending data
     if (state->in_tx || in_future(state->prog_next_step))
         return;
+
+    if (state->prog_ptr >= state->prog_size) {
+        if (state->num_repeats != 1) {
+            if (state->num_repeats)
+                state->num_repeats--;
+            reset_prog(state);
+        } else {
+            return;
+        }
+    }
 
     // full speed ahead! the code below can be a bit heavy and we want it done quickly
     pwr_enter_pll();
@@ -586,14 +603,9 @@ static void sync_config(srv_t *state) {
 static void handle_run_cmd(srv_t *state, jd_packet_t *pkt) {
     LOG("run: br %d->%d", state->intensity, state->requested_intensity);
     state->prog_size = pkt->service_size;
-    state->prog_ptr = 0;
     memcpy(state->prog_data, pkt->data, state->prog_size);
 
-    state->range_start = 0;
-    state->range_end = state->range_len = state->numpixels;
-    state->prog_tmpmode = state->prog_mode = 0;
-
-    state->prog_next_step = now;
+    reset_prog(state);
     sync_config(state);
 }
 
@@ -633,5 +645,6 @@ void light_init(uint8_t default_light_type, uint32_t default_num_pixels,
     state->lighttype = default_light_type;
     state->numpixels = default_num_pixels;
     state->maxpower = default_max_power;
+    state->num_repeats = 1;
     state->intensity = state->requested_intensity = DEFAULT_INTENSITY;
 }
