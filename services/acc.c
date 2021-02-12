@@ -38,7 +38,7 @@ static void acc_int(void) {
 #define ACCELEROMETER_REST_TOLERANCE 200
 #define ACCELEROMETER_TILT_TOLERANCE 200
 #define ACCELEROMETER_FREEFALL_TOLERANCE 400
-#define ACCELEROMETER_SHAKE_TOLERANCE 400
+#define ACCELEROMETER_SHAKE_TOLERANCE (400 << 10)
 #define ACCELEROMETER_SHAKE_COUNT_THRESHOLD 4
 
 #define ACCELEROMETER_GESTURE_DAMPING 5
@@ -144,22 +144,22 @@ static uint16_t instantaneousPosture(srv_t *state, uint32_t force) {
         return JD_ACCELEROMETER_EV_FREEFALL;
 
     // Determine our posture.
-    if (sample.x < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
+    if ((sample.x >> 10) < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
         return JD_ACCELEROMETER_EV_TILT_LEFT;
 
-    if (sample.x > (1000 - ACCELEROMETER_TILT_TOLERANCE))
+    if ((sample.x >> 10) > (1000 - ACCELEROMETER_TILT_TOLERANCE))
         return JD_ACCELEROMETER_EV_TILT_RIGHT;
 
-    if (sample.y < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
+    if ((sample.y >> 10) < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
         return JD_ACCELEROMETER_EV_TILT_DOWN;
 
-    if (sample.y > (1000 - ACCELEROMETER_TILT_TOLERANCE))
+    if ((sample.y >> 10) > (1000 - ACCELEROMETER_TILT_TOLERANCE))
         return JD_ACCELEROMETER_EV_TILT_UP;
 
-    if (sample.z < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
+    if ((sample.z >> 10) < (-1000 + ACCELEROMETER_TILT_TOLERANCE))
         return JD_ACCELEROMETER_EV_FACE_UP;
 
-    if (sample.z > (1000 - ACCELEROMETER_TILT_TOLERANCE))
+    if ((sample.z >> 10) > (1000 - ACCELEROMETER_TILT_TOLERANCE))
         return JD_ACCELEROMETER_EV_FACE_DOWN;
 
     return JD_ACCELEROMETER_EV_NONE;
@@ -168,7 +168,7 @@ static uint16_t instantaneousPosture(srv_t *state, uint32_t force) {
 #define G(g) ((g * 1024) * (g * 1024))
 static void process_events(srv_t *state) {
     // works up to 16g
-    uint32_t force = sample.x * sample.x + sample.y * sample.y + sample.z * sample.z;
+    uint32_t force = (sample.x >> 10) * (sample.x >> 10) + (sample.y >> 10) * (sample.y >> 10) + (sample.z >> 10) * (sample.z >> 10);
 
     if (force > G(2)) {
         state->impulseSigma = 0;
@@ -222,7 +222,11 @@ void acc_process(srv_t *state) {
         return;
 #endif
 
-    acc_hw_get(&sample.x);
+    int16_t s[3];
+    acc_hw_get(s);
+    sample.x = s[0] << 10;
+    sample.y = s[1] << 10;
+    sample.z = s[2] << 10;
 
     process_events(state);
 
