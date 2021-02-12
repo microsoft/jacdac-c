@@ -25,11 +25,14 @@ void ledpixel_init(uint8_t default_ledpixel_type, uint32_t default_num_pixels,
 // Sound (buzzer) service on given pin. Uses BUZZER_OFF config from board.h.
 void buzzer_init(uint8_t pin);
 
+// this has to match REG_DEFINITION() in servo.c!
 typedef struct {
     uint8_t pin;
+    uint8_t fixed; // if set min/max angle/pulse can't be modified by register writes
+    uint8_t variant; // JD_SERVO_VARIANT_*
     int32_t min_angle;
-    int16_t min_pulse;
     int32_t max_angle;
+    int16_t min_pulse;
     int16_t max_pulse;
 } servo_params_t;
 

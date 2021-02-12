@@ -17,11 +17,12 @@ struct srv_state {
     // the new three fields are exposed as registers in the REG_DEFINITION() below
     int32_t angle;
     int32_t offset;
+    servo_params_t params;
     uint8_t intensity;
     // these fields are not exposed
     uint8_t pwm_pin;
     uint8_t is_on;
-    const servo_params_t *params;
+    const servo_params_t *params0;
     uint32_t pulse;
 };
 
@@ -30,7 +31,14 @@ REG_DEFINITION(                   //
     REG_SRV_BASE,                 //
     REG_S32(JD_SERVO_REG_ANGLE),  // this must match the uint32_t type on 'angle' field in srv_state
     REG_S32(JD_SERVO_REG_OFFSET), // ditto for 'offset'
-    REG_U8(JD_SERVO_REG_ENABLED), // same, for 'uint8_t enabled'
+    REG_U8(JD_REG_PADDING),       // pin
+    REG_U8(JD_REG_PADDING),       // fixed
+    REG_U8(JD_SERVO_REG_VARIANT), //
+    REG_S32(JD_SERVO_REG_MIN_ANGLE), //
+    REG_S32(JD_SERVO_REG_MAX_ANGLE), //
+    REG_U16(JD_SERVO_REG_MIN_PULSE), //
+    REG_U16(JD_SERVO_REG_MAX_PULSE), //
+    REG_U8(JD_SERVO_REG_ENABLED),    // same, for 'uint8_t enabled'
 )
 
 static void set_pwr(srv_t *state, int on) {
@@ -40,10 +48,10 @@ static void set_pwr(srv_t *state, int on) {
         pwr_enter_pll();
         // configure at 1MHz
         if (!state->pwm_pin)
-            state->pwm_pin = pwm_init(state->params->pin, SERVO_PERIOD, 0, cpu_mhz);
+            state->pwm_pin = pwm_init(state->params.pin, SERVO_PERIOD, 0, cpu_mhz);
         pwm_enable(state->pwm_pin, 1);
     } else {
-        pin_set(state->params->pin, 0);
+        pin_set(state->params.pin, 0);
         pwm_enable(state->pwm_pin, 0);
         pwr_leave_pll();
     }
@@ -70,13 +78,25 @@ void servo_handle_packet(srv_t *state, jd_packet_t *pkt) {
     if (service_handle_register(state, pkt, servo_regs) > 0) {
         set_pwr(state, !!state->intensity);
 
-        const servo_params_t *p = state->params;
+        servo_params_t *p = &state->params;
+        if (p->fixed) {
+            // if the config if fixed, just overwrite whatever the user might have written
+            *p = *state->params0;
+        } else {
+            // otherwise, clamp the supplied user config
+            // the clamping values are chosen so that the multiplication in pulse computation doesn't overflow
+            // we take a larger positive max_angle for linear servos
+            p->min_angle = clamp(-360 << 16, p->min_angle, 1024 << 16);
+            p->max_angle = clamp(-360 << 16, p->max_angle, 1024 << 16);
+            p->min_pulse = clamp(0, p->min_pulse, 6000);
+            p->max_pulse = clamp(0, p->max_pulse, 6000);
+        }
 
         // clamp offset to allowed range
         state->offset = clamp(p->min_angle, state->offset, p->max_angle);
         // compute the effective angle, with offset and clamp it
         int angle = clamp(p->min_angle, state->angle + state->offset, p->max_angle);
-        // make sure the user sees the actual value of angle when they read it back
+        // make sure the user sees the actual value of angle if they read it back
         state->angle = angle - state->offset;
 
         // compute pulse length based on servo parameters and pulse lengths
@@ -92,5 +112,6 @@ void servo_handle_packet(srv_t *state, jd_packet_t *pkt) {
 SRV_DEF(servo, JD_SERVICE_CLASS_SERVO);
 void servo_init(const servo_params_t *params) {
     SRV_ALLOC(servo);
-    state->params = params;
+    state->params = *params;
+    state->params0 = params;
 }
