@@ -24,10 +24,10 @@
 
 #if ACC_RANGE == 8
 #define RANGE RANGE_8G
-#define ACC_SHIFT 2
+#define ACC_SHIFT 8
 #elif ACC_RANGE == 16
 #define RANGE RANGE_16G
-#define ACC_SHIFT 1
+#define ACC_SHIFT 9
 #else
 #error "untested range"
 #endif
@@ -62,12 +62,12 @@ static void init_chip(void) {
     writeReg(CTRL_REG1, 0b11100000 | RANGE); // write ctrl_reg1 last as it enables chip
 }
 
-void acc_hw_get(int16_t sample[3]) {
+void acc_hw_get(int32_t sample[3]) {
     int16_t data[3];
     readData(0x06, (uint8_t *)data, 6);
-    sample[0] = data[1] >> ACC_SHIFT;
-    sample[1] = -data[0] >> ACC_SHIFT;
-    sample[2] = -data[2] >> ACC_SHIFT;
+    sample[0] = data[1] << ACC_SHIFT;
+    sample[1] = -data[0] << ACC_SHIFT;
+    sample[2] = -data[2] << ACC_SHIFT;
 }
 
 void acc_hw_sleep(void) {

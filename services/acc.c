@@ -222,11 +222,7 @@ void acc_process(srv_t *state) {
         return;
 #endif
 
-    int16_t s[3];
-    acc_hw_get(s);
-    sample.x = s[0] << 10;
-    sample.y = s[1] << 10;
-    sample.z = s[2] << 10;
+    acc_hw_get(&sample.x);
 
     process_events(state);
 
