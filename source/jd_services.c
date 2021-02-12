@@ -95,9 +95,9 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
                 } else {
                     LOG("too little @%d - %x", offset, reg);
                     memcpy(sptr, pkt->data, pkt->service_size);
-                    int fill = !REG_IS_SIGNED(tp)
-                                   ? 0
-                                   : (pkt->data[pkt->service_size - 1] & 0x80) ? 0xff : 0;
+                    int fill = !REG_IS_SIGNED(tp)                          ? 0
+                               : (pkt->data[pkt->service_size - 1] & 0x80) ? 0xff
+                                                                           : 0;
                     memset(sptr + pkt->service_size, fill, regsz - pkt->service_size);
                 }
                 return reg;
@@ -207,26 +207,20 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
         return;
     }
 
-    bool matched_devid = pkt->device_identifier == jd_device_id();
-
-    if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) {
+    if (pkt->device_identifier == jd_device_id()) {
+        jd_app_handle_command(pkt);
+        if (pkt->service_number < num_services) {
+            srv_t *s = services[pkt->service_number];
+            s->vt->handle_pkt(s, pkt);
+        }
+    } else if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) {
         for (int i = 0; i < num_services; ++i) {
-            if (pkt->device_identifier == services[i]->vt->service_class) {
+            srv_t *s = services[i];
+            if (pkt->device_identifier == s->vt->service_class) {
                 pkt->service_number = i;
-                matched_devid = true;
-                break;
+                s->vt->handle_pkt(s, pkt);
             }
         }
-    }
-
-    if (!matched_devid)
-        return;
-
-    jd_app_handle_command(pkt);
-
-    if (pkt->service_number < num_services) {
-        srv_t *s = services[pkt->service_number];
-        s->vt->handle_pkt(s, pkt);
     }
 }
 
