@@ -16,21 +16,21 @@
 #define JD_REG_END 0xff1
 #define JD_REG_SERVICE_DISABLED 0xff2
 #define _REG_(tp, v) (((tp) << 12) | (v))
-#define _REG_S8 0
+#define _REG_I8 0
 #define _REG_U8 1
-#define _REG_S16 2
+#define _REG_I16 2
 #define _REG_U16 3
-#define _REG_S32 4
+#define _REG_I32 4
 #define _REG_U32 5
 #define _REG_BYTE4 6
 #define _REG_BYTE8 7
 #define _REG_BIT 8
 #define _REG_BYTES 9
-#define REG_S8(v) _REG_(_REG_S8, (v))
+#define REG_I8(v) _REG_(_REG_I8, (v))
 #define REG_U8(v) _REG_(_REG_U8, (v))
-#define REG_S16(v) _REG_(_REG_S16, (v))
+#define REG_I16(v) _REG_(_REG_I16, (v))
 #define REG_U16(v) _REG_(_REG_U16, (v))
-#define REG_S32(v) _REG_(_REG_S32, (v))
+#define REG_I32(v) _REG_(_REG_I32, (v))
 #define REG_U32(v) _REG_(_REG_U32, (v))
 #define REG_BYTE4(v) _REG_(_REG_BYTE4, (v))
 #define REG_BYTE8(v) _REG_(_REG_BYTE8, (v))

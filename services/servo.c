@@ -29,13 +29,13 @@ struct srv_state {
 REG_DEFINITION(                   //
     servo_regs,                   //
     REG_SRV_BASE,                 //
-    REG_S32(JD_SERVO_REG_ANGLE),  // this must match the uint32_t type on 'angle' field in srv_state
-    REG_S32(JD_SERVO_REG_OFFSET), // ditto for 'offset'
+    REG_I32(JD_SERVO_REG_ANGLE),  // this must match the uint32_t type on 'angle' field in srv_state
+    REG_I32(JD_SERVO_REG_OFFSET), // ditto for 'offset'
     REG_U8(JD_REG_PADDING),       // pin
     REG_U8(JD_REG_PADDING),       // fixed
     REG_U8(JD_SERVO_REG_VARIANT), //
-    REG_S32(JD_SERVO_REG_MIN_ANGLE), //
-    REG_S32(JD_SERVO_REG_MAX_ANGLE), //
+    REG_I32(JD_SERVO_REG_MIN_ANGLE), //
+    REG_I32(JD_SERVO_REG_MAX_ANGLE), //
     REG_U16(JD_SERVO_REG_MIN_PULSE), //
     REG_U16(JD_SERVO_REG_MAX_PULSE), //
     REG_U8(JD_SERVO_REG_ENABLED),    // same, for 'uint8_t enabled'
