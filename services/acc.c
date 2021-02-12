@@ -223,6 +223,7 @@ void acc_process(srv_t *state) {
 #endif
 
     acc_hw_get(&sample.x);
+    acc_data_transform(&sample.x);
 
     process_events(state);
 

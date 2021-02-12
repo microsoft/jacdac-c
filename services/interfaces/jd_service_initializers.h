@@ -9,6 +9,7 @@
 
 // Accelerometer service. Uses I2C pins.
 void acc_init(void);
+void acc_data_transform(int32_t sample[3]);
 
 // Rotary encoder service; pin0/1 are connected to two pins of the encoder
 void crank_init(uint8_t pin0, uint8_t pin1);
