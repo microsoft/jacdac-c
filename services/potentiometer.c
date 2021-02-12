@@ -35,7 +35,7 @@ static void maybe_init(srv_t *state) {
     }
 }
 
-void slider_process(srv_t *state) {
+void potentiometer_process(srv_t *state) {
     maybe_init(state);
 
     if (jd_should_sample(&state->nextSample, 9000) && state->inited)
@@ -44,14 +44,14 @@ void slider_process(srv_t *state) {
     sensor_process_simple(state, &state->sample, sizeof(state->sample));
 }
 
-void slider_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void potentiometer_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &state->sample, sizeof(state->sample));
 }
 
-SRV_DEF(slider, JD_SERVICE_CLASS_POTENTIOMETER);
+SRV_DEF(potentiometer, JD_SERVICE_CLASS_POTENTIOMETER);
 
-void slider_init(uint8_t pinL, uint8_t pinM, uint8_t pinH) {
-    SRV_ALLOC(slider);
+void potentiometer_init(uint8_t pinL, uint8_t pinM, uint8_t pinH) {
+    SRV_ALLOC(potentiometer);
     state->pinL = pinL;
     state->pinM = pinM;
     state->pinH = pinH;

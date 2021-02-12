@@ -8,8 +8,8 @@
 #include "interfaces/jd_hw_pwr.h"
 #include "jacdac/dist/c/buzzer.h"
 
-#ifndef SND_OFF
-#define SND_OFF 1
+#ifndef BUZZER_OFF
+#define BUZZER_OFF 1
 #endif
 
 struct srv_state {
@@ -23,7 +23,7 @@ struct srv_state {
 };
 
 REG_DEFINITION(               //
-    snd_regs,                 //
+    buzzer_regs,              //
     REG_SRV_BASE,             //
     REG_U8(JD_REG_INTENSITY), //
 )
@@ -34,7 +34,7 @@ static void set_pwr(srv_t *state, int on) {
     if (on) {
         pwr_enter_tim();
     } else {
-        pin_set(state->pin, SND_OFF);
+        pin_set(state->pin, BUZZER_OFF);
         pwm_enable(state->pwm_pin, 0);
         pwr_leave_tim();
     }
@@ -43,14 +43,14 @@ static void set_pwr(srv_t *state, int on) {
 
 static void play_tone(srv_t *state, uint32_t period, uint32_t duty) {
     duty = (duty * state->volume) >> 8;
-#if SND_OFF == 1
+#if BUZZER_OFF == 1
     duty = period - duty;
 #endif
     set_pwr(state, 1);
     state->pwm_pin = pwm_init(state->pin, period, duty, cpu_mhz);
 }
 
-void snd_process(srv_t *state) {
+void buzzer_process(srv_t *state) {
     if (state->period && in_past(state->end_tone_time))
         state->period = 0;
 
@@ -60,9 +60,9 @@ void snd_process(srv_t *state) {
     }
 }
 
-void snd_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void buzzer_handle_packet(srv_t *state, jd_packet_t *pkt) {
     // if the packet was handled as a register read or write, no reason to continue
-    if (service_handle_register(state, pkt, snd_regs))
+    if (service_handle_register(state, pkt, buzzer_regs))
         return;
 
     switch (pkt->service_command) {
@@ -74,16 +74,16 @@ void snd_handle_packet(srv_t *state, jd_packet_t *pkt) {
             state->period = d->period;
             play_tone(state, state->period, d->duty);
         }
-        snd_process(state);
+        buzzer_process(state);
         break;
     }
 }
 
-SRV_DEF(snd, JD_SERVICE_CLASS_BUZZER);
-void snd_init(uint8_t pin) {
-    SRV_ALLOC(snd);
+SRV_DEF(buzzer, JD_SERVICE_CLASS_BUZZER);
+void buzzer_init(uint8_t pin) {
+    SRV_ALLOC(buzzer);
     state->pin = pin;
     state->volume = 255;
-    pin_set(state->pin, SND_OFF);
+    pin_set(state->pin, BUZZER_OFF);
     pin_setup_output(state->pin);
 }

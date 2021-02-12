@@ -71,9 +71,9 @@ typedef union {
     uint32_t val;
 } RGB;
 
-REG_DEFINITION(                             //
-    light_regs,                             //
-    REG_SRV_BASE,                           //
+REG_DEFINITION(                                 //
+    ledpixel_regs,                              //
+    REG_SRV_BASE,                               //
     REG_U8(JD_LED_PIXEL_REG_BRIGHTNESS),        //
     REG_U8(JD_LED_PIXEL_REG_ACTUAL_BRIGHTNESS), //
     REG_U8(JD_LED_PIXEL_REG_LIGHT_TYPE),        //
@@ -88,7 +88,7 @@ struct srv_state {
 
     uint8_t requested_intensity;
     uint8_t intensity;
-    uint8_t lighttype;
+    uint8_t ledpixel_type;
     uint16_t numpixels;
     uint16_t maxpower;
     uint16_t maxpixels;
@@ -556,10 +556,10 @@ static void alloc(srv_t *state) {
     state->pxbuffer = jd_alloc(PX_WORDS(state->maxpixels));
 }
 
-void light_process(srv_t *state) {
+void ledpixel_process(srv_t *state) {
     // it's important alloc() is called after all services have initalized (and allocated)
     // as it consumes all remaining RAM
-    // the light_process() function is always called a few times before any packet is handled
+    // the ledpixel_process() function is always called a few times before any packet is handled
     alloc(state);
 
     prog_process(state);
@@ -594,7 +594,7 @@ static void sync_config(srv_t *state) {
 
     if (!state->inited) {
         state->inited = true;
-        px_init(state->lighttype);
+        px_init(state->ledpixel_type);
     }
 
     jd_power_enable(1);
@@ -609,22 +609,22 @@ static void handle_run_cmd(srv_t *state, jd_packet_t *pkt) {
     sync_config(state);
 }
 
-void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void ledpixel_handle_packet(srv_t *state, jd_packet_t *pkt) {
     LOG("cmd: %x", pkt->service_command);
     switch (pkt->service_command) {
     case JD_LED_PIXEL_CMD_RUN:
         handle_run_cmd(state, pkt);
         break;
     default:
-#ifdef LIGHT_LOCK_TYPE
+#ifdef LED_PIXEL_LOCK_TYPE
         if (pkt->service_command == JD_SET(JD_LED_PIXEL_REG_LIGHT_TYPE))
             break;
 #endif
-#ifdef LIGHT_LOCK_NUM_PIXELS
+#ifdef LED_PIXEL_LOCK_NUM_PIXELS
         if (pkt->service_command == JD_SET(JD_LED_PIXEL_REG_NUM_PIXELS))
             break;
 #endif
-        switch (service_handle_register(state, pkt, light_regs)) {
+        switch (service_handle_register(state, pkt, ledpixel_regs)) {
         case JD_LED_PIXEL_REG_BRIGHTNESS:
             state->intensity = state->requested_intensity;
             break;
@@ -637,12 +637,12 @@ void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(light, JD_SERVICE_CLASS_LED_PIXEL);
-void light_init(uint8_t default_light_type, uint32_t default_num_pixels,
-                uint32_t default_max_power) {
-    SRV_ALLOC(light);
+SRV_DEF(ledpixel, JD_SERVICE_CLASS_LED_PIXEL);
+void ledpixel_init(uint8_t default_ledpixel_type, uint32_t default_num_pixels,
+                   uint32_t default_max_power) {
+    SRV_ALLOC(ledpixel);
     state_ = state; // there is global singleton state
-    state->lighttype = default_light_type;
+    state->ledpixel_type = default_ledpixel_type;
     state->numpixels = default_num_pixels;
     state->maxpower = default_max_power;
     state->num_repeats = 1;

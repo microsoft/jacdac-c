@@ -12,16 +12,18 @@ void acc_init(void);
 void acc_data_transform(int32_t sample[3]);
 
 // Rotary encoder service; pin0/1 are connected to two pins of the encoder
-void crank_init(uint8_t pin0, uint8_t pin1);
+void rotary_init(uint8_t pin0, uint8_t pin1);
 
-// Controller for RGB LED strips.
+// Controller for RGB LED strips (LED pixel service)
 // Supported: WS2812B, APA102, SK9822.
 // Uses SPI pins.
-// In board.h you can define LIGHT_LOCK_TYPE and/or LIGHT_LOCK_NUM_PIXELS to disable writes the respective registers.
-void light_init(uint8_t default_light_type, uint32_t default_num_pixels, uint32_t default_max_power);
+// In board.h you can define LED_PIXEL_LOCK_TYPE and/or LED_PIXEL_LOCK_NUM_PIXELS to disable writes
+// the respective registers.
+void ledpixel_init(uint8_t default_ledpixel_type, uint32_t default_num_pixels,
+                   uint32_t default_max_power);
 
-// Sound (buzzer) service on given pin. Uses SND_OFF config from board.h.
-void snd_init(uint8_t pin);
+// Sound (buzzer) service on given pin. Uses BUZZER_OFF config from board.h.
+void buzzer_init(uint8_t pin);
 
 typedef struct {
     uint8_t pin;
@@ -48,7 +50,7 @@ void humidity_init(void);
 // pinM is sampled, while pinL is set low, and pinH is set high.
 // When not sampling, pinL and pinH are left as inputs, reducing power consumption.
 // pinL and/or pinH can be -1 (it only really makes sense to use one of them).
-void slider_init(uint8_t pinL, uint8_t pinM, uint8_t pinH);
+void potentiometer_init(uint8_t pinL, uint8_t pinM, uint8_t pinH);
 
 // GamePad (arcade controls) service.
 // Pins are given in order: L U R D A B Menu MenuAlt Reset Exit
@@ -66,9 +68,9 @@ void motor_init(uint8_t pin1, uint8_t pin2, uint8_t pin_nSLEEP);
 // Shows "animations" on a single LED, or a strip of parallel-connected LEDs.
 void pwm_light_init(uint8_t pin);
 
-// A touch-sensing service with multiple inputs. pins is a '-1'-terminated array of ADC-enabled input pins.
-// Each pin should be connected to a separate capacitive touch electrode, and also pulled down with a 2M resistor.
-// This is very preliminary.
+// A touch-sensing service with multiple inputs. pins is a '-1'-terminated array of ADC-enabled
+// input pins. Each pin should be connected to a separate capacitive touch electrode, and also
+// pulled down with a 2M resistor. This is very preliminary.
 void multitouch_init(const uint8_t *pins);
 
 // A single-pin touch control; similar to the multi-touch one above.

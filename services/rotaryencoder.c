@@ -40,7 +40,7 @@ static void maybe_init(srv_t *state) {
     }
 }
 
-void crank_process(srv_t *state) {
+void rotary_process(srv_t *state) {
     maybe_init(state);
 
     if (jd_should_sample(&state->nextSample, 900) && state->inited)
@@ -49,15 +49,15 @@ void crank_process(srv_t *state) {
     sensor_process_simple(state, &state->sample, sizeof(state->sample));
 }
 
-void crank_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void rotary_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &state->sample, sizeof(state->sample));
 }
 
-SRV_DEF(crank, JD_SERVICE_CLASS_ROTARY_ENCODER);
+SRV_DEF(rotary, JD_SERVICE_CLASS_ROTARY_ENCODER);
 
 // specify pin0/1 so that clockwise rotations gives higher readings
-void crank_init(uint8_t pin0, uint8_t pin1) {
-    SRV_ALLOC(crank);
+void rotary_init(uint8_t pin0, uint8_t pin1) {
+    SRV_ALLOC(rotary);
     state->pin0 = pin0;
     state->pin1 = pin1;
 }

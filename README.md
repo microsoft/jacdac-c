@@ -14,8 +14,8 @@ This library is part of [JACDAC Module Development Kit](https://github.com/micro
 
 It's best to start from an existing service, and do a search-replace (eg., `servo -> rocket`)
 * [services/servo.c](services/servo.c) has a simple example of registers
-* [services/snd.c](services/snd.c) has a simple example of how a command is handled (in `snd_handle_packet()`)
-* [services/temp.c](services/temp.c) is a very simple sensor
+* [services/buzzer.c](services/buzzer.c) has a simple example of how a command is handled (in `buzzer_handle_packet()`)
+* [services/thermometer.c](services/thermometer.c) is a very simple sensor
 * [services/power.c](services/power.c) is a more involved sensor (with custom registers)
 
 Once you add a service, make sure to add its `*_init()` function to 
