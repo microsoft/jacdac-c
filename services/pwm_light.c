@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// Disabled for now, needs rewrite (service led.md)
+#if 0
+
 #include "jd_protocol.h"
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pwm.h"
@@ -132,3 +135,5 @@ void pwm_light_init(uint8_t pin) {
     state->max_iterations = 0xffff;
     state->intensity = 0;
 }
+
+#endif

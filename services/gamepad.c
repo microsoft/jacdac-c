@@ -4,7 +4,7 @@
 #include "jd_protocol.h"
 #include "interfaces/jd_sensor.h"
 #include "interfaces/jd_pins.h"
-#include "jacdac/dist/c/gamepad.h"
+#include "jacdac/dist/c/arcadegamepad.h"
 
 #define BUTTON_FLAGS 0
 #define NUM_PLAYERS 1
@@ -17,7 +17,6 @@ struct srv_state {
     uint8_t pin;
     uint8_t pressed;
     uint8_t prev_pressed;
-    uint8_t num_zero;
     uint8_t num_pins;
     uint8_t active;
     const uint8_t *button_pins;
@@ -59,7 +58,7 @@ static void update(srv_t *state) {
                 if (state->led_pins && state->led_pins[i] != 0xff)
                     pin_set(state->led_pins[i], isPressed);
                 uint32_t arg = i + 1;
-                jd_send_event_ext(state, isPressed ? JD_GAMEPAD_EV_DOWN : JD_GAMEPAD_EV_UP, &arg,
+                jd_send_event_ext(state, isPressed ? JD_ARCADE_GAMEPAD_EV_DOWN : JD_ARCADE_GAMEPAD_EV_UP, &arg,
                                   sizeof(arg));
             }
         }
@@ -68,13 +67,12 @@ static void update(srv_t *state) {
 }
 
 static void send_report(srv_t *state) {
-    jd_gamepad_buttons_t reports[state->num_pins], *report;
+    jd_arcade_gamepad_buttons_t reports[state->num_pins], *report;
     report = reports;
 
     for (int i = 0; i < state->num_pins; ++i) {
         if (state->btn_state & (1 << i)) {
             report->button = i + 1;
-            report->player_index = 0;
             report->pressure = 0xff;
             report++;
         }
@@ -85,25 +83,22 @@ static void send_report(srv_t *state) {
 }
 
 static void ad_data(srv_t *state) {
-    uint16_t addata[state->num_pins + 1];
-    uint16_t *dst = addata;
-    *dst++ = BUTTON_FLAGS | (NUM_PLAYERS << 8);
+    uint8_t addata[state->num_pins];
+    uint8_t *dst = addata;
     for (int i = 0; i < state->num_pins; ++i) {
         if (state->button_pins[i] != 0xff) {
             *dst++ = i + 1;
         }
     }
-    jd_send(state->service_number, JD_CMD_ANNOUNCE, addata, (uint8_t *)dst - (uint8_t *)addata);
+    jd_send(state->service_number, JD_GET(JD_ARCADE_GAMEPAD_REG_AVAILABLE_BUTTONS), addata, (uint8_t *)dst - (uint8_t *)addata);
 }
 
 void gamepad_process(srv_t *state) {
     if (jd_should_sample(&state->nextSample, 9000)) {
         update(state);
 
-        if (sensor_should_stream(state) && (state->btn_state || state->num_zero < 20)) {
-            state->num_zero++;
+        if (sensor_should_stream(state))
             send_report(state);
-        }
     }
 }
 
@@ -112,11 +107,11 @@ void gamepad_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     if (pkt->service_command == JD_GET(JD_REG_READING))
         send_report(state);
-    else if (pkt->service_command == JD_CMD_ANNOUNCE)
+    else if (pkt->service_command == JD_GET(JD_ARCADE_GAMEPAD_REG_AVAILABLE_BUTTONS))
         ad_data(state);
 }
 
-SRV_DEF(gamepad, JD_SERVICE_CLASS_GAMEPAD);
+SRV_DEF(gamepad, JD_SERVICE_CLASS_ARCADE_GAMEPAD);
 
 void gamepad_init(uint8_t num_pins, const uint8_t *pins, const uint8_t *ledPins) {
     SRV_ALLOC(gamepad);

@@ -4,13 +4,13 @@
 #include "jd_protocol.h"
 #include "interfaces/jd_pixel.h"
 #include "interfaces/jd_hw_pwr.h"
-#include "jacdac/dist/c/light.h"
+#include "jacdac/dist/c/ledpixel.h"
 #include "tinyhw.h"
 
-STATIC_ASSERT(LIGHT_TYPE_APA102 == JD_LIGHT_LIGHT_TYPE_APA102);
-STATIC_ASSERT(LIGHT_TYPE_APA_MASK == JD_LIGHT_LIGHT_TYPE_APA102);
-STATIC_ASSERT(LIGHT_TYPE_WS2812B_GRB == JD_LIGHT_LIGHT_TYPE_WS2812B_GRB);
-STATIC_ASSERT(LIGHT_TYPE_SK9822 == JD_LIGHT_LIGHT_TYPE_SK9822);
+STATIC_ASSERT(LIGHT_TYPE_APA102 == JD_LED_PIXEL_LIGHT_TYPE_APA102);
+STATIC_ASSERT(LIGHT_TYPE_APA_MASK == JD_LED_PIXEL_LIGHT_TYPE_APA102);
+STATIC_ASSERT(LIGHT_TYPE_WS2812B_GRB == JD_LED_PIXEL_LIGHT_TYPE_WS2812B_GRB);
+STATIC_ASSERT(LIGHT_TYPE_SK9822 == JD_LED_PIXEL_LIGHT_TYPE_SK9822);
 
 #define DEFAULT_INTENSITY 15
 
@@ -74,13 +74,13 @@ typedef union {
 REG_DEFINITION(                             //
     light_regs,                             //
     REG_SRV_BASE,                           //
-    REG_U8(JD_LIGHT_REG_BRIGHTNESS),        //
-    REG_U8(JD_LIGHT_REG_ACTUAL_BRIGHTNESS), //
-    REG_U8(JD_LIGHT_REG_LIGHT_TYPE),        //
-    REG_U16(JD_LIGHT_REG_NUM_PIXELS),       //
-    REG_U16(JD_LIGHT_REG_MAX_POWER),        //
-    REG_U16(JD_LIGHT_REG_MAX_PIXELS),       //
-    REG_U16(JD_LIGHT_REG_NUM_REPEATS),      //
+    REG_U8(JD_LED_PIXEL_REG_BRIGHTNESS),        //
+    REG_U8(JD_LED_PIXEL_REG_ACTUAL_BRIGHTNESS), //
+    REG_U8(JD_LED_PIXEL_REG_LIGHT_TYPE),        //
+    REG_U16(JD_LED_PIXEL_REG_NUM_PIXELS),       //
+    REG_U16(JD_LED_PIXEL_REG_MAX_POWER),        //
+    REG_U16(JD_LED_PIXEL_REG_MAX_PIXELS),       //
+    REG_U16(JD_LED_PIXEL_REG_NUM_REPEATS),      //
 )
 
 struct srv_state {
@@ -612,23 +612,23 @@ static void handle_run_cmd(srv_t *state, jd_packet_t *pkt) {
 void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
     LOG("cmd: %x", pkt->service_command);
     switch (pkt->service_command) {
-    case JD_LIGHT_CMD_RUN:
+    case JD_LED_PIXEL_CMD_RUN:
         handle_run_cmd(state, pkt);
         break;
     default:
 #ifdef LIGHT_LOCK_TYPE
-        if (pkt->service_command == JD_SET(JD_LIGHT_REG_LIGHT_TYPE))
+        if (pkt->service_command == JD_SET(JD_LED_PIXEL_REG_LIGHT_TYPE))
             break;
 #endif
 #ifdef LIGHT_LOCK_NUM_PIXELS
-        if (pkt->service_command == JD_SET(JD_LIGHT_REG_NUM_PIXELS))
+        if (pkt->service_command == JD_SET(JD_LED_PIXEL_REG_NUM_PIXELS))
             break;
 #endif
         switch (service_handle_register(state, pkt, light_regs)) {
-        case JD_LIGHT_REG_BRIGHTNESS:
+        case JD_LED_PIXEL_REG_BRIGHTNESS:
             state->intensity = state->requested_intensity;
             break;
-        case JD_LIGHT_REG_NUM_PIXELS:
+        case JD_LED_PIXEL_REG_NUM_PIXELS:
             if (state->numpixels > state->maxpixels)
                 state->numpixels = state->maxpixels;
             break;
@@ -637,7 +637,7 @@ void light_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(light, JD_SERVICE_CLASS_LIGHT);
+SRV_DEF(light, JD_SERVICE_CLASS_LED_PIXEL);
 void light_init(uint8_t default_light_type, uint32_t default_num_pixels,
                 uint32_t default_max_power) {
     SRV_ALLOC(light);
