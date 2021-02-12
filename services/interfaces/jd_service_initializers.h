@@ -22,8 +22,16 @@ void light_init(uint8_t default_light_type, uint32_t default_num_pixels, uint32_
 // Sound (buzzer) service on given pin. Uses SND_OFF config from board.h.
 void snd_init(uint8_t pin);
 
+typedef struct {
+    uint8_t pin;
+    int32_t min_angle;
+    int16_t min_pulse;
+    int32_t max_angle;
+    int16_t max_pulse;
+} servo_params_t;
+
 // Servo control service.
-void servo_init(uint8_t pin);
+void servo_init(const servo_params_t *params);
 
 // Button service.
 // The button is active-low if active==0, and active-low when active==1.
