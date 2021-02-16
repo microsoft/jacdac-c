@@ -33,7 +33,7 @@ static ctx_t state;
 
 static int read_data(void) {
     uint8_t data[3];
-    if (i2c_read_buf(TH02_ADDR, TH02_STATUS, data, 3) < 0)
+    if (i2c_read_reg_buf(TH02_ADDR, TH02_STATUS, data, 3) < 0)
         return -1;
     if (data[0] & 1) {
         //DMESG("miss");

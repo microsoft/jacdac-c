@@ -37,7 +37,7 @@ static void writeReg(uint8_t reg, uint8_t val) {
 }
 
 static void readData(uint8_t reg, uint8_t *dst, int len) {
-    i2c_read_buf(ACC_I2C_ADDR, reg, dst, len);
+    i2c_read_reg_buf(ACC_I2C_ADDR, reg, dst, len);
 }
 
 static int readReg(uint8_t reg) {
