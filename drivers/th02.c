@@ -25,25 +25,29 @@ typedef struct state {
     uint8_t inited;
     uint8_t in_temp;
     uint8_t in_humidity;
-    uint32_t humidity;
-    uint32_t temp;
+    env_reading_t humidity;
+    env_reading_t temperature;
     uint32_t nextsample;
 } ctx_t;
 static ctx_t state;
+
+static const int32_t humidity_error[] = {ERR_HUM(0, 3), ERR_HUM(80, 3), ERR_HUM(100, 5.5), ERR_END};
+
+static const int32_t temperature_error[] = {ERR_TEMP(-40, 3), ERR_TEMP(0, 0.5), ERR_TEMP(70, 0.5),
+                                            ERR_TEMP(125, 1.2), ERR_END};
 
 static int read_data(void) {
     uint8_t data[3];
     if (i2c_read_reg_buf(TH02_ADDR, TH02_STATUS, data, 3) < 0)
         return -1;
     if (data[0] & 1) {
-        //DMESG("miss");
+        // DMESG("miss");
         return -1;
     }
     return (data[1] << 8) | data[2];
 }
 
-static void weather_hw_process(void) {
-    ctx_t *ctx = &state;
+static int weather_hw_process(ctx_t *ctx) {
     if (!ctx->inited) {
         ctx->inited = 1;
         i2c_init();
@@ -51,6 +55,10 @@ static void weather_hw_process(void) {
         DMESG("TH02 id=%x", id);
         if (id < 0)
             hw_panic();
+        ctx->temperature.min_value = SCALE_TEMP(-40);
+        ctx->temperature.max_value = SCALE_TEMP(70);
+        ctx->humidity.min_value = SCALE_TEMP(0);
+        ctx->humidity.max_value = SCALE_TEMP(100);
     }
 
     // the 50ms here is just for readings, we actually sample at SAMPLING_MS
@@ -59,7 +67,8 @@ static void weather_hw_process(void) {
             int v = read_data();
             if (v >= 0) {
                 ctx->in_temp = 0;
-                ctx->temp = ((v << PRECISION) >> 7) - (50 << PRECISION);
+                env_set_value(&ctx->temperature, ((v << PRECISION) >> 7) - (50 << PRECISION),
+                              temperature_error);
                 ctx->in_humidity = 1;
                 i2c_write_reg(TH02_ADDR, TH02_CONFIG, TH02_CFG_START);
             }
@@ -67,25 +76,33 @@ static void weather_hw_process(void) {
             int v = read_data();
             if (v >= 0) {
                 ctx->in_humidity = 0;
-                ctx->humidity = ((v << PRECISION) >> 8) - (24 << PRECISION);
+                env_set_value(&ctx->humidity, ((v << PRECISION) >> 8) - (24 << PRECISION),
+                              humidity_error);
                 ctx->nextsample = now + SAMPLING_MS * 1000;
-                //DMESG("t=%dC h=%d%%", ctx->temp >> PRECISION, ctx->humidity >> PRECISION);
+                // DMESG("t=%dC h=%d%%", ctx->temp >> PRECISION, ctx->humidity >> PRECISION);
+                ctx->inited = 2;
             }
         } else {
             ctx->in_temp = 1;
             i2c_write_reg(TH02_ADDR, TH02_CONFIG, TH02_CFG_START | TH02_CFG_TEMP);
         }
     }
+
+    return ctx->inited >= 2;
 }
 
-uint32_t hw_temp(void) {
-    weather_hw_process();
-    return state.temp;
+const env_reading_t *env_temperature(void) {
+    ctx_t *ctx = &state;
+    if (weather_hw_process(ctx))
+        return &ctx->temperature;
+    return NULL;
 }
 
-uint32_t hw_humidity(void) {
-    weather_hw_process();
-    return state.humidity;
+const env_reading_t *env_humidity(void) {
+    ctx_t *ctx = &state;
+    if (weather_hw_process(ctx))
+        return &ctx->humidity;
+    return NULL;
 }
 
 #endif // TEMP_TH02

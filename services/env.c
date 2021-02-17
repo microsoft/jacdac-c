@@ -49,6 +49,11 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, env_function_t fn) 
     return -(pkt->service_command & 0xfff);
 }
 
+void env_set_value(env_reading_t *env, int32_t value, const int32_t *error_table) {
+    env->value = value;
+    env->error = env_extrapolate_error(value, error_table);
+}
+
 int32_t env_extrapolate_error(int32_t value, const int32_t *error_table) {
     if (value < error_table[0])
         return error_table[1];

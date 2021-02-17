@@ -27,6 +27,7 @@ void env_sensor_process(srv_t *state, env_function_t fn);
 #define ERR_END -1, -1
 
 int32_t env_extrapolate_error(int32_t value, const int32_t *error_table);
+void env_set_value(env_reading_t *env, int32_t value, const int32_t *error_table);
 
 const env_reading_t *env_humidity(void);
 const env_reading_t *env_temperature(void);

@@ -22,4 +22,5 @@ SRV_DEF(humidity, JD_SERVICE_CLASS_HUMIDITY);
 void humidity_init(void) {
     SRV_ALLOC(humidity);
     state->streaming_interval = 1000;
+    env_humidity(); // start the sensor
 }

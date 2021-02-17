@@ -80,17 +80,12 @@ static int weather_hw_process(ctx_t *ctx) {
                 hw_panic();
             uint16_t temp = (data[0] << 8) | data[1];
             uint16_t hum = (data[3] << 8) | data[4];
-            // DMESG("t:%x h:%x", temp, hum);
             send_cmd(SHTC3_SLEEP);
             ctx->read_issued = 0;
             ctx->nextsample = now + SAMPLING_MS * 1000;
-            ctx->humidity.value = 100 * hum >> 6; // u22.10 format for humidity
-            ctx->humidity.error = env_extrapolate_error(ctx->humidity.value, humidity_error);
-            ctx->temperature.value = (175 * temp >> 6) - (45 << 10); // i22.10 format
-            ctx->temperature.error =
-                env_extrapolate_error(ctx->temperature.value, temperature_error);
+            env_set_value(&ctx->humidity, 100 * hum >> 6, humidity_error);
+            env_set_value(&ctx->temperature, (175 * temp >> 6) - (45 << 10), temperature_error);
             ctx->inited = 2;
-            // DMESG("%d C %d %%", ctx->temp >> 10, ctx->humidity >> 10);
         }
     }
 

@@ -23,4 +23,5 @@ SRV_DEF(temp, JD_SERVICE_CLASS_THERMOMETER);
 void temp_init(void) {
     SRV_ALLOC(temp);
     state->streaming_interval = 1000;
+    env_temperature(); // start the sensor
 }
