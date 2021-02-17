@@ -10,6 +10,7 @@ struct srv_state {
     SENSOR_COMMON;
     uint8_t state, inited;
     uint8_t pin0, pin1;
+    uint16_t clicks_per_turn;
     int32_t sample, position;
     uint32_t nextSample;
 };
@@ -50,14 +51,18 @@ void rotary_process(srv_t *state) {
 }
 
 void rotary_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    sensor_handle_packet_simple(state, pkt, &state->sample, sizeof(state->sample));
+    if (pkt->service_command == JD_GET(JD_ROTARY_ENCODER_REG_CLICKS_PER_TURN))
+        jd_send(state->service_number, JD_GET(JD_ROTARY_ENCODER_REG_CLICKS_PER_TURN), &(state->clicks_per_turn), sizeof(uint16_t));
+    else
+        sensor_handle_packet_simple(state, pkt, &state->sample, sizeof(state->sample));
 }
 
 SRV_DEF(rotary, JD_SERVICE_CLASS_ROTARY_ENCODER);
 
 // specify pin0/1 so that clockwise rotations gives higher readings
-void rotary_init(uint8_t pin0, uint8_t pin1) {
+void rotary_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn) {
     SRV_ALLOC(rotary);
     state->pin0 = pin0;
     state->pin1 = pin1;
+    state->clicks_per_turn = clicks_per_turn;
 }
