@@ -11,13 +11,11 @@ struct srv_state {
 };
 
 void temp_process(srv_t *state) {
-    uint32_t temp = hw_temp();
-    sensor_process_simple(state, &temp, sizeof(temp));
+    env_sensor_process(state, env_temperature);
 }
 
 void temp_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    uint32_t temp = hw_temp();
-    sensor_handle_packet_simple(state, pkt, &temp, sizeof(temp));
+    env_sensor_handle_packet(state, pkt, env_temperature);
 }
 
 SRV_DEF(temp, JD_SERVICE_CLASS_THERMOMETER);

@@ -21,11 +21,17 @@
 typedef struct state {
     uint8_t inited;
     uint8_t read_issued;
-    uint32_t humidity;
-    uint32_t temp;
+    env_reading_t humidity;
+    env_reading_t temperature;
     uint32_t nextsample;
 } ctx_t;
 static ctx_t state;
+
+static const int32_t humidity_error[] = {ERR_HUM(0, 3.5), ERR_HUM(20, 2), ERR_HUM(80, 2),
+                                         ERR_HUM(100, 3.5), ERR_END};
+
+static const int32_t temperature_error[] = {ERR_TEMP(-40, 0.8), ERR_TEMP(5, 0.2), ERR_TEMP(60, 0.2),
+                                            ERR_TEMP(125, 0.8), ERR_END};
 
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg16_buf(SHTC3_ADDR, cmd, NULL, 0))
@@ -37,18 +43,29 @@ static void wake(void) {
     target_wait_us(300); // 200us seems minimum; play it safe with 300us
 }
 
-static void weather_hw_process(void) {
-    ctx_t *ctx = &state;
-    if (!ctx->inited) {
-        ctx->inited = 1;
-        i2c_init();
-        wake();
-        int id = i2c_read_reg16(SHTC3_ADDR, SHTC3_ID);
-        DMESG("SHTC3 id=%x", id);
-        if (id <= 0)
-            hw_panic();
-        send_cmd(SHTC3_SLEEP);
-    }
+static void init(ctx_t *ctx) {
+    if (ctx->inited)
+        return;
+
+    ctx->humidity.min_value = SCALE_HUM(0);
+    ctx->humidity.max_value = SCALE_HUM(100);
+    ctx->temperature.min_value = SCALE_TEMP(-40);
+    ctx->temperature.max_value = SCALE_TEMP(125);
+
+    ctx->nextsample = now;
+
+    ctx->inited = 1;
+    i2c_init();
+    wake();
+    int id = i2c_read_reg16(SHTC3_ADDR, SHTC3_ID);
+    DMESG("SHTC3 id=%x", id);
+    if (id <= 0)
+        hw_panic();
+    send_cmd(SHTC3_SLEEP);
+}
+
+static int weather_hw_process(ctx_t *ctx) {
+    init(ctx);
 
     // the 20ms here is just for readings, we actually sample at SAMPLING_MS
     // the datasheet says max reading time is 12.1ms; give a little more time
@@ -67,21 +84,31 @@ static void weather_hw_process(void) {
             send_cmd(SHTC3_SLEEP);
             ctx->read_issued = 0;
             ctx->nextsample = now + SAMPLING_MS * 1000;
-            ctx->humidity = 100 * hum >> 6;             // u22.10 format for humidity
-            ctx->temp = (175 * temp >> 6) - (45 << 10); // i22.10 format
+            ctx->humidity.value = 100 * hum >> 6; // u22.10 format for humidity
+            ctx->humidity.error = env_extrapolate_error(ctx->humidity.value, humidity_error);
+            ctx->temperature.value = (175 * temp >> 6) - (45 << 10); // i22.10 format
+            ctx->temperature.error =
+                env_extrapolate_error(ctx->temperature.value, temperature_error);
+            ctx->inited = 2;
             // DMESG("%d C %d %%", ctx->temp >> 10, ctx->humidity >> 10);
         }
     }
+
+    return ctx->inited >= 2;
 }
 
-uint32_t hw_temp(void) {
-    weather_hw_process();
-    return state.temp;
+const env_reading_t *env_temperature(void) {
+    ctx_t *ctx = &state;
+    if (weather_hw_process(ctx))
+        return &ctx->temperature;
+    return NULL;
 }
 
-uint32_t hw_humidity(void) {
-    weather_hw_process();
-    return state.humidity;
+const env_reading_t *env_humidity(void) {
+    ctx_t *ctx = &state;
+    if (weather_hw_process(ctx))
+        return &ctx->humidity;
+    return NULL;
 }
 
 #endif // TEMP_SHTC3
