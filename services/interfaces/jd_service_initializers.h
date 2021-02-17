@@ -12,7 +12,7 @@ void acc_init(void);
 void acc_data_transform(int32_t sample[3]);
 
 // Rotary encoder service; pin0/1 are connected to two pins of the encoder
-void rotary_init(uint8_t pin0, uint8_t pin1);
+void rotary_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn);
 
 // Controller for RGB LED strips (LED pixel service)
 // Supported: WS2812B, APA102, SK9822.
