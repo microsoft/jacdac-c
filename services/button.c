@@ -39,6 +39,7 @@ void btn_process(srv_t *state) {
     if (jd_should_sample(&state->nextSample, 9000)) {
         update(state);
     }
+    sensor_process_simple(state, &state->pressed, sizeof(state->pressed));
 }
 
 void btn_handle_packet(srv_t *state, jd_packet_t *pkt) {
