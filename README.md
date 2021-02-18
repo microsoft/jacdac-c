@@ -1,14 +1,14 @@
-# JACDAC firmware library
+# Jacdac firmware library
 
 
-This library implements platform-agnostic aspects of the  [JACDAC](https://aka.ms/jacdac) protocol.
+This library implements platform-agnostic aspects of the  [Jacdac](https://aka.ms/jacdac) protocol.
 It's meant to be included as submodule, and use the build system of the parent repository.
 
 It's currently used in the following projects:
 * https://github.com/microsoft/jacdac-stm32x0 (which has some better docs on building)
 * https://github.com/microsoft/jacdac-esp32 (which is quite experimental)
 
-This library is part of [JACDAC Module Development Kit](https://github.com/microsoft/jacdac-mdk).
+This library is part of [Jacdac Module Development Kit](https://github.com/microsoft/jacdac-mdk).
 
 ## Adding new services
 
@@ -19,7 +19,7 @@ It's best to start from an existing service, and do a search-replace (eg., `serv
 * [services/power.c](services/power.c) is a more involved sensor (with custom registers)
 
 Once you add a service, make sure to add its `*_init()` function to 
-[services/interfaces/jd_service_initializers.h](services/interfaces/jd_service_initializers.h).
+[services/jd_services.h](services/jd_services.h).
 
 
 ## Contributing
