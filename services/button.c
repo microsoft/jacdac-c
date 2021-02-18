@@ -12,26 +12,35 @@ struct srv_state {
     uint8_t pressed;
     uint8_t prev_pressed;
     uint8_t active;
+    uint32_t prev_presslen;
     uint32_t press_time;
     uint32_t nextSample;
 };
 
 static void update(srv_t *state) {
     state->pressed = pin_get(state->pin) == state->active;
+
     if (state->pressed != state->prev_pressed) {
         state->prev_pressed = state->pressed;
         pin_set(state->backlight_pin, state->pressed);
         if (state->pressed) {
             jd_send_event(state, JD_BUTTON_EV_DOWN);
             state->press_time = now;
+            state->prev_presslen = 0;
         } else {
             jd_send_event(state, JD_BUTTON_EV_UP);
-            uint32_t presslen = now - state->press_time;
-            if (presslen > 500000)
-                jd_send_event(state, JD_BUTTON_EV_LONG_CLICK);
-            else
+            if (state->prev_presslen < 500000)
                 jd_send_event(state, JD_BUTTON_EV_CLICK);
         }
+    }
+
+    if (state->pressed) {
+        uint32_t presslen = now - state->press_time;
+        if (presslen >= 500000 && state->prev_presslen < 500000)
+            jd_send_event(state, JD_BUTTON_EV_LONG_CLICK);
+        if (presslen >= 1500000 && state->prev_presslen < 1500000)
+            jd_send_event(state, JD_BUTTON_EV_HOLD);
+        state->prev_presslen = presslen;
     }
 }
 
