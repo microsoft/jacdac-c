@@ -58,6 +58,7 @@ struct ShakeHistory {
 struct srv_state {
     SENSOR_COMMON;
 
+    const acc_api_t *hw;
     uint8_t sigma;
     uint8_t impulseSigma;
     uint16_t g_events;
@@ -222,7 +223,7 @@ void acc_process(srv_t *state) {
         return;
 #endif
 
-    acc_hw_get(&sample.x);
+    state->hw->get_sample(&sample.x);
     acc_data_transform(&sample.x);
 
     process_events(state);
@@ -235,9 +236,10 @@ void acc_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(acc, JD_SERVICE_CLASS_ACCELEROMETER);
-void acc_init(void) {
+void acc_init(const acc_api_t *hw) {
     SRV_ALLOC(acc);
-    acc_hw_init();
+    state->hw = hw;
+    hw->init();
 #ifdef PIN_ACC_INT
     pin_setup_input(PIN_ACC_INT, -1);
     exti_set_callback(PIN_ACC_INT, acc_int, EXTI_RISING);

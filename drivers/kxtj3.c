@@ -1,7 +1,5 @@
 #include "jd_drivers.h"
 
-#ifdef ACC_KXTJ3
-
 #ifndef ACC_I2C_ADDR
 #define ACC_I2C_ADDR 0x0E
 #endif
@@ -62,7 +60,7 @@ static void init_chip(void) {
     writeReg(CTRL_REG1, 0b11100000 | RANGE); // write ctrl_reg1 last as it enables chip
 }
 
-void acc_hw_get(int32_t sample[3]) {
+static void kxtj3_get_sample(int32_t sample[3]) {
     int16_t data[3];
     readData(0x06, (uint8_t *)data, 6);
     sample[0] = data[1] << ACC_SHIFT;
@@ -70,11 +68,11 @@ void acc_hw_get(int32_t sample[3]) {
     sample[2] = -data[2] << ACC_SHIFT;
 }
 
-void acc_hw_sleep(void) {
-    writeReg(CTRL_REG1, 0x00);
-}
+// static void kxtj3_sleep(void) {
+//     writeReg(CTRL_REG1, 0x00);
+// }
 
-void acc_hw_init(void) {
+static void kxtj3_init(void) {
     i2c_init();
 
     int v = readReg(WHO_AM_I);
@@ -90,4 +88,7 @@ void acc_hw_init(void) {
     init_chip();
 }
 
-#endif
+const acc_api_t acc_kxtj3 = {
+    .init = kxtj3_init,
+    .get_sample = kxtj3_get_sample,
+};

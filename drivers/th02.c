@@ -1,8 +1,6 @@
 #include "jd_drivers.h"
 #include "jd_util.h"
 
-#ifdef TEMP_TH02
-
 #define SAMPLING_MS 500
 #define PRECISION 10
 
@@ -47,7 +45,7 @@ static int read_data(void) {
     return (data[1] << 8) | data[2];
 }
 
-static int weather_hw_process(ctx_t *ctx) {
+static int th02_process(ctx_t *ctx) {
     if (!ctx->inited) {
         ctx->inited = 1;
         i2c_init();
@@ -91,18 +89,16 @@ static int weather_hw_process(ctx_t *ctx) {
     return ctx->inited >= 2;
 }
 
-const env_reading_t *env_temperature(void) {
+const env_reading_t *th02_temperature(void) {
     ctx_t *ctx = &state;
-    if (weather_hw_process(ctx))
+    if (th02_process(ctx))
         return &ctx->temperature;
     return NULL;
 }
 
-const env_reading_t *env_humidity(void) {
+const env_reading_t *th02_humidity(void) {
     ctx_t *ctx = &state;
-    if (weather_hw_process(ctx))
+    if (th02_process(ctx))
         return &ctx->humidity;
     return NULL;
 }
-
-#endif // TEMP_TH02

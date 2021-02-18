@@ -1,8 +1,6 @@
 #include "jd_drivers.h"
 #include "jd_util.h"
 
-#ifdef TEMP_SHTC3
-
 #define SAMPLING_MS 500
 #define PRECISION 10
 
@@ -64,7 +62,7 @@ static void init(ctx_t *ctx) {
     send_cmd(SHTC3_SLEEP);
 }
 
-static int weather_hw_process(ctx_t *ctx) {
+static int shtc3_process(ctx_t *ctx) {
     init(ctx);
 
     // the 20ms here is just for readings, we actually sample at SAMPLING_MS
@@ -92,18 +90,16 @@ static int weather_hw_process(ctx_t *ctx) {
     return ctx->inited >= 2;
 }
 
-const env_reading_t *env_temperature(void) {
+const env_reading_t *shtc3_temperature(void) {
     ctx_t *ctx = &state;
-    if (weather_hw_process(ctx))
+    if (shtc3_process(ctx))
         return &ctx->temperature;
     return NULL;
 }
 
-const env_reading_t *env_humidity(void) {
+const env_reading_t *shtc3_humidity(void) {
     ctx_t *ctx = &state;
-    if (weather_hw_process(ctx))
+    if (shtc3_process(ctx))
         return &ctx->humidity;
     return NULL;
 }
-
-#endif // TEMP_SHTC3

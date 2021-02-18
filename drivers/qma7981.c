@@ -1,7 +1,5 @@
 #include "jd_drivers.h"
 
-#ifdef ACC_QMA7981
-
 #ifndef ACC_I2C_ADDR
 #define ACC_I2C_ADDR 0x12
 #endif
@@ -172,7 +170,7 @@ static void init_chip(void) {
     // 0xE2 260Hz
 }
 
-void acc_hw_get(int32_t sample[3]) {
+static void qma7981_get_sample(int32_t sample[3]) {
     int16_t data[3];
     readData(REG_DX, (uint8_t *)data, 6);
     sample[0] = data[1] << ACC_SHIFT;
@@ -180,11 +178,11 @@ void acc_hw_get(int32_t sample[3]) {
     sample[2] = -data[2] << ACC_SHIFT;
 }
 
-void acc_hw_sleep(void) {
-    writeReg(REG_PM, 0x00);
-}
+// void acc_hw_sleep(void) {
+//    writeReg(REG_PM, 0x00);
+// }
 
-void acc_hw_init(void) {
+static void qma7981_init(void) {
 #ifdef ACC_I2C
     i2c_init();
 #else
@@ -218,4 +216,8 @@ void acc_hw_init(void) {
     init_chip();
 }
 
-#endif
+
+const acc_api_t acc_qma7981 = {
+    .init = qma7981_init,
+    .get_sample = qma7981_get_sample,
+};

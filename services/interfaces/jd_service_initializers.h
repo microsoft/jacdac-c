@@ -4,11 +4,14 @@
 #ifndef __JD_SERVICE_INIT_H
 #define __JD_SERVICE_INIT_H
 
+#include "jd_accel.h"
+#include "jd_environment.h"
+
 // For pins where PWM or ADC is used, only certain pins are possible.
 // Best search for an existing call of the *_init() function and use the same pins.
 
 // Accelerometer service. Uses I2C pins.
-void acc_init(void);
+void acc_init(const acc_api_t *hw);
 void acc_data_transform(int32_t sample[3]);
 
 // Rotary encoder service; pin0/1 are connected to two pins of the encoder
@@ -46,8 +49,8 @@ void servo_init(const servo_params_t *params);
 void btn_init(uint8_t pin, bool active, uint8_t backlight_pin);
 
 // Temperature and humidity services; often from a single I2C sensor (defined in board.h)
-void temp_init(void);
-void humidity_init(void);
+void temp_init(env_function_t read);
+void humidity_init(env_function_t read);
 
 // Potentiometer service.
 // pinM is sampled, while pinL is set low, and pinH is set high.

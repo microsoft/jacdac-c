@@ -4,10 +4,12 @@
 #ifndef __JD_ACCEL_H
 #define __JD_ACCEL_H
 
-void acc_hw_init(void);
+typedef struct {
+    void (*init)(void);
+    void (*get_sample)(int32_t sample[3]);
+} acc_api_t;
 
-void acc_hw_sleep(void);
-
-void acc_hw_get(int32_t sample[3]);
+extern const acc_api_t acc_kxtj3;
+extern const acc_api_t acc_qma7981;
 
 #endif

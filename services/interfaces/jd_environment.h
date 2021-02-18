@@ -29,8 +29,10 @@ void env_sensor_process(srv_t *state, env_function_t fn);
 int32_t env_extrapolate_error(int32_t value, const int32_t *error_table);
 void env_set_value(env_reading_t *env, int32_t value, const int32_t *error_table);
 
-const env_reading_t *env_humidity(void);
-const env_reading_t *env_temperature(void);
-const env_reading_t *env_pressure(void);
+const env_reading_t *th02_temperature(void);
+const env_reading_t *th02_humidity(void);
+
+const env_reading_t *shtc3_temperature(void);
+const env_reading_t *shtc3_humidity(void);
 
 #endif
