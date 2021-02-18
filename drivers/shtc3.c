@@ -1,5 +1,4 @@
 #include "jd_drivers.h"
-#include "jd_util.h"
 
 #define SAMPLING_MS 500
 #define PRECISION 10

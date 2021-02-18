@@ -1,9 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/*
+ * A transmission queue for JD packets.
+ */
+
 #pragma once
 
-#include "jd_services.h"
+#include "jd_service_framework.h"
 
 void jd_tx_init(void);
 void jd_tx_flush(void);

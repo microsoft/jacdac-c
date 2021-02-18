@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "interfaces/jd_alloc.h"
-#include "jd_util.h"
-#include "interfaces/jd_hw.h"
+#include "jd_protocol.h"
 
 #define STACK_SIZE 512
 #define STACK_BASE ((uint32_t)&_estack)

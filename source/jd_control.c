@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_control.h"
-#include "jd_services.h"
-#include "jd_io.h"
-#include "interfaces/jd_tx.h"
-#include "interfaces/jd_hw.h"
+#include "jd_protocol.h"
+
 #if JD_CONFIG_CONTROL_FLOOD == 1
 #include "services/interfaces/jd_hw_pwr.h"
 #endif

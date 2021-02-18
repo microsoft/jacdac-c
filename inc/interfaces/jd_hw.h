@@ -3,10 +3,19 @@
 
 #pragma once
 
+/*
+ * Hardware abstraction layer.
+ */
+
 #include "jd_config.h"
 #include "jd_physical.h"
 
+uint64_t hw_device_id(void);
+void hw_panic(void);
+
 extern uint32_t now;
+
+#ifndef BL
 
 #ifdef JD_DEBUG_MODE
 void jd_debug_signal_error(int v);
@@ -43,10 +52,7 @@ void uart_flush_rx(void);
 uint16_t adc_read_temp(void);
 #endif
 
-uint64_t hw_device_id(void);
-void hw_panic(void);
-
-// only required by drivers/*.c
+// Things below are only required by drivers/*.c
 
 // i2c.c
 // addr are always 7bit
@@ -72,3 +78,4 @@ int i2c_read_reg16(uint8_t addr, uint16_t reg);
 int i2c_write_ex(uint8_t addr, const void *src, unsigned len, bool repeated);
 int i2c_read_ex(uint8_t addr, void *dst, unsigned len);
 
+#endif

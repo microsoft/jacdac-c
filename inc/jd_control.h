@@ -5,7 +5,7 @@
 
 #include "jd_config.h"
 #include "jd_physical.h"
-#include "jd_services.h"
+#include "jd_service_framework.h"
 
 #include "jacdac/dist/c/_base.h"
 #include "jacdac/dist/c/_system.h"

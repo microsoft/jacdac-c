@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_util.h"
-#include "interfaces/jd_hw.h"
+#include "jd_protocol.h"
 
 #define ALIGN(x) (((x) + 3) & ~3)
 

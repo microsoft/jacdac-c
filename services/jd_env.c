@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_protocol.h"
+#include "jd_services.h"
 #include "interfaces/jd_environment.h"
 
 struct srv_state {

@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_protocol.h"
-#include "interfaces/jd_sensor.h"
+#include "jd_services.h"
 #include "interfaces/jd_pins.h"
-
 #include "jacdac/dist/c/button.h"
 
 struct srv_state {

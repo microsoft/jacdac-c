@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_protocol.h"
-#include "interfaces/jd_sensor.h"
+#include "jd_services.h"
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_adc.h"
-#include "interfaces/jd_console.h"
+#include "jd_console.h"
 #include "jacdac/dist/c/multitouch.h"
 
 #define PIN_LOG 0

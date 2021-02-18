@@ -1,14 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_services.h"
-#include "jd_control.h"
-#include "jd_util.h"
-#include "interfaces/jd_tx.h"
-#include "interfaces/jd_rx.h"
-#include "interfaces/jd_hw.h"
-#include "interfaces/jd_app.h"
-#include "interfaces/jd_alloc.h"
+#include "jd_protocol.h"
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG

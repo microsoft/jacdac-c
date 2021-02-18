@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_protocol.h"
-#include "interfaces/jd_console.h"
+#include "jd_services.h"
+#include "jd_console.h"
 #include "jacdac/dist/c/logger.h"
 
 struct srv_state {

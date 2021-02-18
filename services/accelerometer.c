@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_protocol.h"
+#include "jd_services.h"
 #include "interfaces/jd_accel.h"
-#include "interfaces/jd_sensor.h"
-
 #include "jacdac/dist/c/accelerometer.h"
 
 #ifdef PIN_ACC_INT

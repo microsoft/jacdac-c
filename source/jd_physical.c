@@ -1,13 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_config.h"
-#include "jd_physical.h"
-#include "jd_util.h"
-#include "interfaces/jd_hw.h"
-
-#include "interfaces/jd_tx.h"
-#include "interfaces/jd_rx.h"
+#include "jd_protocol.h"
 
 // Enabling logging can cause delays and dropped packets!
 // #define LOG JD_LOG

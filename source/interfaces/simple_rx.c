@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jd_config.h"
-#include "interfaces/jd_rx.h"
+#include "jd_protocol.h"
 
 static jd_frame_t *frameToHandle;
 

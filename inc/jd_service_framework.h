@@ -140,5 +140,3 @@ uint32_t app_get_device_class(void);
 #define SRV_ALLOC(id)                                                                              \
     srv_t *state = jd_allocate_service(&id##_vt);                                                  \
     (void)state;
-
-#include "services/interfaces/jd_service_initializers.h"
