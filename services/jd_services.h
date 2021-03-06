@@ -33,7 +33,6 @@ void buzzer_init(uint8_t pin);
 typedef struct {
     uint8_t pin;
     uint8_t fixed; // if set min/max angle/pulse can't be modified by register writes
-    uint8_t variant; // JD_SERVO_VARIANT_*
     int32_t min_angle;
     int32_t max_angle;
     int16_t min_pulse;

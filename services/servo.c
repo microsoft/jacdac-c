@@ -32,7 +32,6 @@ REG_DEFINITION(                   //
     REG_I32(JD_SERVO_REG_OFFSET), // ditto for 'offset'
     REG_U8(JD_REG_PADDING),       // pin
     REG_U8(JD_REG_PADDING),       // fixed
-    REG_U8(JD_SERVO_REG_VARIANT), //
     REG_I32(JD_SERVO_REG_MIN_ANGLE), //
     REG_I32(JD_SERVO_REG_MAX_ANGLE), //
     REG_U16(JD_SERVO_REG_MIN_PULSE), //
