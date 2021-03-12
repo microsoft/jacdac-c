@@ -14,10 +14,9 @@
 typedef struct {
     uint8_t pin;
     uint8_t mult;
-    uint8_t pwm; // filled out at runtime
-} rgbled_channel_t;
+} rgbled_channel_cfg_t;
 typedef struct {
-    rgbled_channel_t r, g, b;
+    rgbled_channel_cfg_t r, g, b;
 } rgbled_params_t;
 
 void rgbled_init(const rgbled_params_t *params);

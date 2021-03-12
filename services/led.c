@@ -1,139 +1,134 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// Disabled for now, needs rewrite (service led.md)
-#if 0
-
-#include "jd_protocol.h"
-#include "interfaces/jd_sensor.h"
-#include "interfaces/jd_pwm.h"
+#include "jd_services.h"
 #include "interfaces/jd_pins.h"
+#include "interfaces/jd_pwm.h"
 #include "interfaces/jd_hw_pwr.h"
-#include "jacdac/dist/c/monolight.h"
+#include "jacdac/dist/c/led.h"
 
-#define DEFAULT_MAXPOWER 100
+#define PERIOD 600
+#define RGB_IN_TIM 0x01
 
-#define MAX_STEPS 10
-#define UPDATE_US 10000
-#define PWM_PERIOD_BITS 13 // at 12 bit you can still see the steps at the low end
-#define PWM_PERIOD (1 << PWM_PERIOD_BITS)
+#define FRAME_US 100000
+
+typedef struct {
+    uint16_t value;
+    int16_t speed;
+    uint8_t target;
+    uint8_t pin;
+    uint8_t pwm;
+    uint8_t mult;
+} channel_t;
 
 struct srv_state {
     SRV_COMMON;
-
-    uint16_t intensity;
-    uint16_t maxpower;
-    uint16_t curr_iteration;
-    uint16_t max_iterations;
-    uint8_t max_steps;
-    __attribute__((aligned(4))) jd_mono_light_steps_t steps[MAX_STEPS];
-
-    // internal state
-    uint32_t step_start_time;
-    uint32_t nextFrame;
-    uint8_t is_on;
-    uint8_t pwm_pin;
-    uint8_t pin;
+    uint8_t numleds;
+    uint8_t status;
+    uint32_t step_sample;
+    channel_t channels[3];
 };
 
-REG_DEFINITION(                                                                   //
-    pwm_light_regs,                                                               //
-    REG_SRV_BASE,                                                                 //
-    REG_U16(JD_MONO_LIGHT_REG_BRIGHTNESS),                                        //
-    REG_U16(JD_MONO_LIGHT_REG_MAX_POWER),                                         //
-    REG_U16(JD_MONO_LIGHT_REG_CURRENT_ITERATION),                                 //
-    REG_U16(JD_MONO_LIGHT_REG_MAX_ITERATIONS),                                    //
-    REG_U8(JD_MONO_LIGHT_REG_MAX_STEPS),                                          //
-    REG_BYTES(JD_MONO_LIGHT_REG_STEPS, MAX_STEPS * sizeof(jd_mono_light_steps_t)), //
+REG_DEFINITION(                   //
+    rgbled_regs,                  //
+    REG_SRV_BASE,                 //
+    REG_U8(JD_LED_REG_LED_COUNT), //
 )
 
-static const uint16_t stable[] = {0xffff, 10000, 0xffff, 0};
-
-static void set_pwr(srv_t *state, int on) {
-    if (state->is_on == on)
-        return;
-    if (on) {
-        pwr_enter_tim();
-        // set prescaler to 1 - as fast as possible
-        if (!state->pwm_pin)
-            state->pwm_pin = pwm_init(state->pin, PWM_PERIOD, PWM_PERIOD - 1, 1);
-        pwm_enable(state->pwm_pin, 1);
-    } else {
-        pin_set(state->pin, 1);
-        pwm_enable(state->pwm_pin, 0);
-        pwr_leave_tim();
-    }
-    state->is_on = on;
-}
-
-void pwm_light_process(srv_t *state) {
-    if (!jd_should_sample(&state->nextFrame, UPDATE_US))
-        return;
-
-    int step_intensity = -1;
-
-    while (state->curr_iteration <= state->max_iterations) {
-        uint32_t tm = tim_get_micros() >> 10;
-        uint32_t delta = tm - state->step_start_time;
-        uint32_t pos = 0;
-        jd_mono_light_steps_t *st = &state->steps[0];
-        for (int i = 0; i < MAX_STEPS; ++i) {
-            unsigned d = st[i].duration;
-            if (d == 0)
-                break;
-            pos += d;
-            int into = pos - delta;
-            if (into >= 0) {
-                int i0 = st[i].start_intensity;
-                int i1 = st[i + 1].start_intensity;
-                if (d == 0 || i0 == i1)
-                    step_intensity = i0;
-                else
-                    step_intensity = (unsigned)(i0 * into + i1 * (d - into)) / d;
-                break;
-            }
+static void rgbled_show(srv_t *state) {
+    int sum = 0;
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        int32_t c = ch->value;
+        c = (c * ch->mult) >> (7 + 8);
+        sum += c;
+        if (c == 0) {
+            pwm_enable(ch->pwm, 0);
+        } else {
+            c = PERIOD - c;
+            if (c < 0)
+                c = 0;
+            pwm_set_duty(ch->pwm, c);
+            pwm_enable(ch->pwm, 1);
         }
-        if (step_intensity >= 0 || pos == 0)
-            break;
-
-        state->curr_iteration++;
-        state->step_start_time = tm;
     }
 
-    if (step_intensity < 0)
-        step_intensity = 0;
-
-    step_intensity = ((uint32_t)step_intensity * state->intensity) >> 16;
-    int v = step_intensity >> (16 - PWM_PERIOD_BITS);
-
-    if (v == 0) {
-        set_pwr(state, 0);
-    } else {
-        set_pwr(state, 1);
-        pwm_set_duty(state->pwm_pin, PWM_PERIOD - v);
+    if (sum == 0 && (state->status & RGB_IN_TIM)) {
+        pwr_leave_tim();
+        state->status &= ~RGB_IN_TIM;
+    } else if (sum != 0 && !(state->status & RGB_IN_TIM)) {
+        pwr_enter_tim();
+        state->status |= RGB_IN_TIM;
     }
 }
 
-void pwm_light_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    switch (service_handle_register(state, pkt, pwm_light_regs)) {
-    case JD_MONO_LIGHT_REG_STEPS:
-        state->curr_iteration = 0;
-        state->step_start_time = tim_get_micros() >> 10;
+void rgbled_process(srv_t *state) {
+    if (!jd_should_sample(&state->step_sample, FRAME_US))
+        return;
+
+    int chg = 0;
+
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        int v0 = ch->value;
+        int v = v0 + ch->speed;
+        if (ch->speed == 0 ||                           // immediate
+            (ch->speed < 0 && (v >> 8) < ch->target) || // undershoot
+            (ch->speed > 0 && (v >> 8) > ch->target)    // overshoot
+        ) {
+            ch->speed = 0;
+            ch->value = ch->target << 8;
+        } else {
+            ch->value = v;
+        }
+        if (v0 != ch->value)
+            chg = 1;
+    }
+
+    if (chg)
+        rgbled_show(state);
+}
+
+static void rgbled_animate(srv_t *state, jd_led_animate_t *anim) {
+    uint8_t *to = &anim->to_red;
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        ch->target = to[i];
+        ch->speed = (((to[i] << 8) - ch->value) * anim->speed) >> 1;
+    }
+}
+
+void rgbled_handle_packet(srv_t *state, jd_packet_t *pkt) {
+    if (service_handle_register(state, pkt, rgbled_regs))
+        return;
+
+    switch (pkt->service_command) {
+    case JD_GET(JD_LED_REG_COLOR): {
+        uint8_t color[3];
+        for (int i = 0; i < 3; ++i)
+            color[i] = state->channels[i].value >> 8;
+        jd_send(state->service_number, pkt->service_command, color, sizeof(color));
+        break;
+    }
+    case JD_LED_CMD_ANIMATE:
+        if (pkt->service_size >= 4)
+            rgbled_animate(state, (jd_led_animate_t *)pkt->data);
         break;
     }
 }
 
-SRV_DEF(pwm_light, JD_SERVICE_CLASS_MONO_LIGHT);
-void pwm_light_init(uint8_t pin) {
-    SRV_ALLOC(pwm_light);
+SRV_DEF(rgbled, JD_SERVICE_CLASS_LED);
+void rgbled_init(const rgbled_params_t *params) {
+    SRV_ALLOC(rgbled);
+    const rgbled_channel_cfg_t *cfg = &params->r;
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        ch->pin = cfg->pin;
+        ch->mult = cfg->mult;
+        ch->pwm = pwm_init(ch->pin, PERIOD, 0, 1);
+        pin_set(ch->pin, 1);
+        pwm_enable(ch->pwm, 0);
+    }
 
-    state->pin = pin;
-    state->max_steps = MAX_STEPS;
-
-    memcpy(state->steps, stable, sizeof(stable));
-
-    state->max_iterations = 0xffff;
-    state->intensity = 0;
+    rgbled_show(state);
 }
-
-#endif
