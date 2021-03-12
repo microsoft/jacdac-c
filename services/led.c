@@ -7,10 +7,20 @@
 #include "interfaces/jd_hw_pwr.h"
 #include "jacdac/dist/c/led.h"
 
+#ifdef PIN_LED_R
+
 #define PERIOD 600
 #define RGB_IN_TIM 0x01
 
 #define FRAME_US 100000
+
+#ifndef LED_RGB_COMMON_CATHODE
+#define LED_OFF_STATE 0
+#define LED_ON_STATE 1
+#else
+#define LED_OFF_STATE 1
+#define LED_ON_STATE 0
+#endif
 
 typedef struct {
     uint16_t value;
@@ -43,11 +53,17 @@ static void rgbled_show(srv_t *state) {
         c = (c * ch->mult) >> (7 + 8);
         sum += c;
         if (c == 0) {
+            pin_set(ch->pin, LED_OFF_STATE);
             pwm_enable(ch->pwm, 0);
         } else {
+#ifndef LED_RGB_COMMON_CATHODE
             c = PERIOD - c;
             if (c < 0)
                 c = 0;
+#else
+            if (c >= PERIOD)
+                c = PERIOD - 1;
+#endif
             pwm_set_duty(ch->pwm, c);
             pwm_enable(ch->pwm, 1);
         }
@@ -118,17 +134,22 @@ void rgbled_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(rgbled, JD_SERVICE_CLASS_LED);
-void rgbled_init(const rgbled_params_t *params) {
+void rgbled_init() {
     SRV_ALLOC(rgbled);
-    const rgbled_channel_cfg_t *cfg = &params->r;
+
+    state->channels[0].pin = PIN_LED_R;
+    state->channels[0].mult = LED_R_MULT;
+    state->channels[1].pin = PIN_LED_G;
+    state->channels[1].mult = LED_G_MULT;
+    state->channels[2].pin = PIN_LED_B;
+    state->channels[2].mult = LED_B_MULT;
+
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
-        ch->pin = cfg->pin;
-        ch->mult = cfg->mult;
         ch->pwm = pwm_init(ch->pin, PERIOD, 0, 1);
-        pin_set(ch->pin, 1);
-        pwm_enable(ch->pwm, 0);
     }
 
     rgbled_show(state);
 }
+
+#endif

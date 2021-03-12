@@ -11,16 +11,7 @@
 // For pins where PWM or ADC is used, only certain pins are possible.
 // Best search for an existing call of the *_init() function and use the same pins.
 
-typedef struct {
-    uint8_t pin;
-    uint8_t mult;
-} rgbled_channel_cfg_t;
-typedef struct {
-    rgbled_channel_cfg_t r, g, b;
-} rgbled_params_t;
-
-void rgbled_init(const rgbled_params_t *params);
-void rgbled_set(uint32_t color);
+void rgbled_init(void);
 
 // Accelerometer service. Uses I2C pins.
 void acc_init(const acc_api_t *hw);
