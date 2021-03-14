@@ -68,9 +68,9 @@ static void kxtj3_get_sample(int32_t sample[3]) {
     sample[2] = -data[2] << ACC_SHIFT;
 }
 
-// static void kxtj3_sleep(void) {
-//     writeReg(CTRL_REG1, 0x00);
-// }
+static void kxtj3_sleep(void) {
+    writeReg(CTRL_REG1, 0x00);
+}
 
 static void kxtj3_init(void) {
     i2c_init();
@@ -91,4 +91,5 @@ static void kxtj3_init(void) {
 const acc_api_t acc_kxtj3 = {
     .init = kxtj3_init,
     .get_sample = kxtj3_get_sample,
+    .sleep = kxtj3_sleep,
 };

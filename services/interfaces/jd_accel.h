@@ -7,6 +7,7 @@
 typedef struct {
     void (*init)(void);
     void (*get_sample)(int32_t sample[3]);
+    void (*sleep)(void);
 } acc_api_t;
 
 extern const acc_api_t acc_kxtj3;

@@ -149,11 +149,11 @@ static void init_chip(void) {
     writeReg(REG_BW, 0xE2);                 // sample 100kHz/1935 = 51.7Hz
 #endif
 #else
-    writeReg(REG_PM, 0x80); // MCK 500kHz
+    writeReg(REG_PM, 0x80);                 // MCK 500kHz
 #ifdef ACC_100HZ
-    writeReg(REG_BW, 0xE1); // sample 500kHz/3855 =~ 130Hz
+    writeReg(REG_BW, 0xE1);                 // sample 500kHz/3855 =~ 130Hz
 #else
-    writeReg(REG_BW, 0xE0);                 // sample 100kHz/7695 = 65Hz
+    writeReg(REG_BW, 0xE0); // sample 100kHz/7695 = 65Hz
 #endif
 #endif
 
@@ -178,9 +178,9 @@ static void qma7981_get_sample(int32_t sample[3]) {
     sample[2] = -data[2] << ACC_SHIFT;
 }
 
-// void acc_hw_sleep(void) {
-//    writeReg(REG_PM, 0x00);
-// }
+static void qma7981_sleep(void) {
+    writeReg(REG_PM, 0x00);
+}
 
 static void qma7981_init(void) {
 #ifdef ACC_I2C
@@ -216,8 +216,8 @@ static void qma7981_init(void) {
     init_chip();
 }
 
-
 const acc_api_t acc_qma7981 = {
     .init = qma7981_init,
     .get_sample = qma7981_get_sample,
+    .sleep = qma7981_sleep,
 };
