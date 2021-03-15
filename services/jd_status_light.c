@@ -5,7 +5,9 @@
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_pwm.h"
 #include "interfaces/jd_hw_pwr.h"
-#include "jacdac/dist/c/led.h"
+#include "jacdac/dist/c/control.h"
+
+#if JD_CONFIG_STATUS == 1
 
 #ifdef PIN_LED_R
 
@@ -31,21 +33,15 @@ typedef struct {
     uint8_t mult;
 } channel_t;
 
-struct srv_state {
-    SRV_COMMON;
+typedef struct {
     uint8_t numleds;
     uint8_t status;
     uint32_t step_sample;
     channel_t channels[3];
-};
+} status_ctx_t;
+static status_ctx_t status_ctx;
 
-REG_DEFINITION(                   //
-    rgbled_regs,                  //
-    REG_SRV_BASE,                 //
-    REG_U8(JD_LED_REG_LED_COUNT), //
-)
-
-static void rgbled_show(srv_t *state) {
+static void rgbled_show(status_ctx_t *state) {
     int sum = 0;
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
@@ -78,7 +74,9 @@ static void rgbled_show(srv_t *state) {
     }
 }
 
-void rgbled_process(srv_t *state) {
+void jd_status_process() {
+    status_ctx_t *state = &status_ctx;
+
     if (!jd_should_sample(&state->step_sample, FRAME_US))
         return;
 
@@ -105,7 +103,7 @@ void rgbled_process(srv_t *state) {
         rgbled_show(state);
 }
 
-static void rgbled_animate(srv_t *state, jd_led_animate_t *anim) {
+static void rgbled_animate(status_ctx_t *state, jd_control_set_status_light_t *anim) {
     uint8_t *to = &anim->to_red;
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
@@ -114,28 +112,29 @@ static void rgbled_animate(srv_t *state, jd_led_animate_t *anim) {
     }
 }
 
-void rgbled_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (service_handle_register(state, pkt, rgbled_regs))
-        return;
+void jd_status_handle_packet(jd_packet_t *pkt) {
+    status_ctx_t *state = &status_ctx;
 
     switch (pkt->service_command) {
-    case JD_GET(JD_LED_REG_COLOR): {
+#if 0
+    case JD_GET(JD_CONTROL_REG_STATUS_COLOR): {
         uint8_t color[3];
         for (int i = 0; i < 3; ++i)
             color[i] = state->channels[i].value >> 8;
-        jd_send(state->service_number, pkt->service_command, color, sizeof(color));
+        jd_send(0, pkt->service_command, color, sizeof(color));
         break;
     }
-    case JD_LED_CMD_ANIMATE:
-        if (pkt->service_size >= 4)
-            rgbled_animate(state, (jd_led_animate_t *)pkt->data);
+#endif
+
+    case JD_CONTROL_CMD_SET_STATUS_LIGHT:
+        if (pkt->service_size >= sizeof(jd_control_set_status_light_t))
+            rgbled_animate(state, (jd_control_set_status_light_t *)pkt->data);
         break;
     }
 }
 
-SRV_DEF(rgbled, JD_SERVICE_CLASS_LED);
-void rgbled_init() {
-    SRV_ALLOC(rgbled);
+void jd_status_init() {
+    status_ctx_t *state = &status_ctx;
 
     state->channels[0].pin = PIN_LED_R;
     state->channels[0].mult = LED_R_MULT;
@@ -150,6 +149,26 @@ void rgbled_init() {
     }
 
     rgbled_show(state);
+}
+
+#endif
+
+/*
+need a led-off time
+should there be gradual led off? - depends on JD_STATUS_
+special case JD_STATUS_CONNECTED - low power mode?
+add JD_STATUS_FIRST_CONNECTED? maybe brain should do it?
+*/
+
+void jd_status(int status) {
+
+    switch (status) {
+    case JD_STATUS_OFF:
+    case JD_STATUS_STARTUP:
+    case JD_STATUS_CONNECTED:
+    case JD_STATUS_DISCONNECTED:
+    case JD_STATUS_IDENTIFY:
+    }
 }
 
 #endif
