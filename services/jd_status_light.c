@@ -24,6 +24,23 @@
 #define LED_ON_STATE 0
 #endif
 
+struct status_anim {
+    jd_control_set_status_light_t color;
+    uint32_t time;
+};
+
+static const struct status_anim jd_status_animations[] = {
+    {.color = {.to_red = 0, .to_green = 0, .to_blue = 0, .speed = 0}, .time = 0}, // OFF
+    {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 50},
+     .time = 1000 * 1000}, // STARTUP
+    // the time on CONNECTED is used in target_wait_us(); note that there's already a ~30us overhead
+    {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 0}, .time = 1}, // CONNECTED
+    {.color = {.to_red = 255, .to_green = 0, .to_blue = 0, .speed = 100},
+     .time = 500 * 1000}, // DICONNECTED
+    {.color = {.to_red = 0, .to_green = 0, .to_blue = 255, .speed = 0},
+     .time = 50 * 1000}, // CONNECTED
+};
+
 typedef struct {
     uint16_t value;
     int16_t speed;
@@ -35,8 +52,10 @@ typedef struct {
 
 typedef struct {
     uint8_t numleds;
-    uint8_t status;
+    uint8_t flags;
+    uint8_t jd_status; // JD_STATUS_*
     uint32_t step_sample;
+    uint32_t jd_status_stop;
     channel_t channels[3];
 } status_ctx_t;
 static status_ctx_t status_ctx;
@@ -65,12 +84,21 @@ static void rgbled_show(status_ctx_t *state) {
         }
     }
 
-    if (sum == 0 && (state->status & RGB_IN_TIM)) {
+    if (sum == 0 && (state->flags & RGB_IN_TIM)) {
         pwr_leave_tim();
-        state->status &= ~RGB_IN_TIM;
-    } else if (sum != 0 && !(state->status & RGB_IN_TIM)) {
+        state->flags &= ~RGB_IN_TIM;
+    } else if (sum != 0 && !(state->flags & RGB_IN_TIM)) {
         pwr_enter_tim();
-        state->status |= RGB_IN_TIM;
+        state->flags |= RGB_IN_TIM;
+    }
+}
+
+static void rgbled_animate(status_ctx_t *state, const jd_control_set_status_light_t *anim) {
+    const uint8_t *to = &anim->to_red;
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        ch->target = to[i];
+        ch->speed = ((to[i] - (ch->value >> 8)) * anim->speed) >> 1;
     }
 }
 
@@ -79,6 +107,13 @@ void jd_status_process() {
 
     if (!jd_should_sample(&state->step_sample, FRAME_US))
         return;
+
+    if (state->jd_status && in_past(state->jd_status_stop)) {
+        jd_control_set_status_light_t off_color = {
+            .speed = jd_status_animations[state->jd_status].color.speed};
+        rgbled_animate(state, &off_color);
+        state->jd_status = JD_STATUS_OFF;
+    }
 
     int chg = 0;
 
@@ -101,15 +136,6 @@ void jd_status_process() {
 
     if (chg)
         rgbled_show(state);
-}
-
-static void rgbled_animate(status_ctx_t *state, jd_control_set_status_light_t *anim) {
-    uint8_t *to = &anim->to_red;
-    for (int i = 0; i < 3; ++i) {
-        channel_t *ch = &state->channels[i];
-        ch->target = to[i];
-        ch->speed = (((to[i] << 8) - ch->value) * anim->speed) >> 1;
-    }
 }
 
 void jd_status_handle_packet(jd_packet_t *pkt) {
@@ -153,23 +179,24 @@ void jd_status_init() {
 
 #endif
 
-/*
-need a led-off time
-should there be gradual led off? - depends on JD_STATUS_
-special case JD_STATUS_CONNECTED - low power mode?
-add JD_STATUS_FIRST_CONNECTED? maybe brain should do it?
-*/
-
 void jd_status(int status) {
+    status_ctx_t *state = &status_ctx;
 
-    switch (status) {
-    case JD_STATUS_OFF:
-    case JD_STATUS_STARTUP:
-    case JD_STATUS_CONNECTED:
-    case JD_STATUS_DISCONNECTED:
-    case JD_STATUS_IDENTIFY:
-        break;
+    if (status == JD_STATUS_CONNECTED) {
+        // if the PWM is on, we ignore this one
+        if (state->flags & RGB_IN_TIM)
+            return;
+        channel_t *ch = &state->channels[1]; // green
+        pin_set(ch->pin, LED_ON_STATE);
+        pwm_enable(ch->pwm, 0);
+        target_wait_us(jd_status_animations[status].time);
+        pin_set(ch->pin, LED_OFF_STATE);
+        return;
     }
+
+    rgbled_animate(state, &jd_status_animations[status].color);
+    state->jd_status = status;
+    state->jd_status_stop = now + jd_status_animations[status].time;
 }
 
 #endif

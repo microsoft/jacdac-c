@@ -11,8 +11,6 @@
 // For pins where PWM or ADC is used, only certain pins are possible.
 // Best search for an existing call of the *_init() function and use the same pins.
 
-void rgbled_init(void);
-
 // Accelerometer service. Uses I2C pins.
 void acc_init(const acc_api_t *hw);
 void acc_data_transform(int32_t sample[3]);

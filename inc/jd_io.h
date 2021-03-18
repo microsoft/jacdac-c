@@ -15,6 +15,7 @@ void jd_status_process(void);
 void jd_status_handle_packet(jd_packet_t *pkt);
 #endif
 
+// sync with jd_status_animations[]
 #define JD_STATUS_OFF 0
 #define JD_STATUS_STARTUP 1
 #define JD_STATUS_CONNECTED 2

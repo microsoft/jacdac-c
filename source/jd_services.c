@@ -152,6 +152,9 @@ void jd_services_init() {
     app_init_services();
     services = jd_alloc(sizeof(void *) * num_services);
     memcpy(services, tmp, sizeof(void *) * num_services);
+
+    // don't flash red initially
+    lastDisconnectBlink = tim_get_micros() + 1000000;
 }
 
 void jd_services_packet_queued() {
@@ -221,7 +224,7 @@ void jd_services_tick() {
     if (jd_should_sample(&nextAnnounce, 500000))
         jd_services_announce();
 
-    if (jd_should_sample(&lastDisconnectBlink, 1000000)) {
+    if (jd_should_sample(&lastDisconnectBlink, 2000000)) {
         if (!lastMax || in_past(lastMax + 2000000)) {
             lastMax = 0;
             jd_status(JD_STATUS_DISCONNECTED);
