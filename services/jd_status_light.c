@@ -9,12 +9,15 @@
 
 #if JD_CONFIG_STATUS == 1
 
-#ifdef PIN_LED_R
-
 #define PERIOD 600
 #define RGB_IN_TIM 0x01
 
 #define FRAME_US 100000
+
+// assume a non-RGB LED is connected like this: MCU -|>- GND
+#ifndef PIN_LED_R
+#define LED_RGB_COMMON_CATHODE 1
+#endif
 
 #ifdef LED_RGB_COMMON_CATHODE
 #define LED_OFF_STATE 0
@@ -33,8 +36,8 @@ static const struct status_anim jd_status_animations[] = {
     {.color = {.to_red = 0, .to_green = 0, .to_blue = 0, .speed = 0}, .time = 0}, // OFF
     {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 50},
      .time = 1000 * 1000}, // STARTUP
-    // the time on CONNECTED is used in target_wait_us(); note that there's already a ~30us overhead
-    {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 0}, .time = 1}, // CONNECTED
+    // the time on CONNECTED is used in only used with a non-RGB LED; note that there's already a ~30us overhead
+    {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 0}, .time = 100}, // CONNECTED
     {.color = {.to_red = 255, .to_green = 0, .to_blue = 0, .speed = 100},
      .time = 500 * 1000}, // DICONNECTED
     {.color = {.to_red = 0, .to_green = 0, .to_blue = 255, .speed = 0},
@@ -61,6 +64,7 @@ typedef struct {
 static status_ctx_t status_ctx;
 
 static void rgbled_show(status_ctx_t *state) {
+#ifdef PIN_LED_R
     int sum = 0;
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
@@ -91,6 +95,21 @@ static void rgbled_show(status_ctx_t *state) {
         pwr_enter_tim();
         state->flags |= RGB_IN_TIM;
     }
+#else
+    int fl = 0;
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        if (ch->value >> 8)
+            fl = 1;
+    }
+    if (fl) {
+        state->flags |= RGB_IN_TIM;
+        pin_set(PIN_LED, LED_ON_STATE);
+    } else {
+        state->flags &= ~RGB_IN_TIM;
+        pin_set(PIN_LED, LED_OFF_STATE);
+    }
+#endif
 }
 
 static void rgbled_animate(status_ctx_t *state, const jd_control_set_status_light_t *anim) {
@@ -162,6 +181,7 @@ void jd_status_handle_packet(jd_packet_t *pkt) {
 void jd_status_init() {
     status_ctx_t *state = &status_ctx;
 
+#ifdef PIN_LED_R
     state->channels[0].pin = PIN_LED_R;
     state->channels[0].mult = LED_R_MULT;
     state->channels[1].pin = PIN_LED_G;
@@ -173,11 +193,16 @@ void jd_status_init() {
         channel_t *ch = &state->channels[i];
         ch->pwm = pwm_init(ch->pin, PERIOD, 0, 1);
     }
+#else
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        ch->pin = PIN_LED;
+        ch->mult = 100;
+    }
+#endif
 
     rgbled_show(state);
 }
-
-#endif
 
 void jd_status(int status) {
     status_ctx_t *state = &status_ctx;
@@ -188,8 +213,11 @@ void jd_status(int status) {
             return;
         channel_t *ch = &state->channels[1]; // green
         pin_set(ch->pin, LED_ON_STATE);
+#ifdef PIN_LED_R
         pwm_enable(ch->pwm, 0);
+#else
         target_wait_us(jd_status_animations[status].time);
+#endif
         pin_set(ch->pin, LED_OFF_STATE);
         return;
     }
