@@ -24,8 +24,6 @@ void jd_debug_signal_read(int v);
 #endif
 
 // io
-void led_set(int state);
-void led_blink(int us);
 void power_pin_enable(int en);
 
 void target_enable_irq(void);

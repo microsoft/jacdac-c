@@ -152,6 +152,9 @@ void jd_services_init() {
     app_init_services();
     services = jd_alloc(sizeof(void *) * num_services);
     memcpy(services, tmp, sizeof(void *) * num_services);
+
+    // don't flash red initially
+    lastDisconnectBlink = tim_get_micros() + 1000000;
 }
 
 void jd_services_packet_queued() {
@@ -183,7 +186,7 @@ static void handle_ctrl_tick(jd_packet_t *pkt) {
         if (pkt->device_identifier >= maxId) {
             maxId = pkt->device_identifier;
             lastMax = now;
-            led_blink(50);
+            jd_status(JD_STATUS_CONNECTED);
         }
     }
 }
@@ -221,9 +224,10 @@ void jd_services_tick() {
     if (jd_should_sample(&nextAnnounce, 500000))
         jd_services_announce();
 
-    if (jd_should_sample(&lastDisconnectBlink, 250000)) {
-        if (in_past(lastMax + 2000000)) {
-            led_blink(5000);
+    if (jd_should_sample(&lastDisconnectBlink, 2000000)) {
+        if (!lastMax || in_past(lastMax + 2000000)) {
+            lastMax = 0;
+            jd_status(JD_STATUS_DISCONNECTED);
         }
     }
 
@@ -232,6 +236,10 @@ void jd_services_tick() {
     }
 
     jd_process_event_queue();
+
+#if JD_CONFIG_STATUS == 1
+    jd_status_process();
+#endif
 
     jd_tx_flush();
 }

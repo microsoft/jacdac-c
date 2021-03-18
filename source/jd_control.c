@@ -30,7 +30,7 @@ static void identify(srv_t *state) {
         return;
 
     state->id_counter--;
-    jd_led_blink(50000);
+    jd_status(JD_STATUS_IDENTIFY);
 }
 
 #if JD_CONFIG_CONTROL_FLOOD == 1
@@ -72,6 +72,10 @@ static void send_value(jd_packet_t *pkt, uint32_t v) {
 }
 
 void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
+#if JD_CONFIG_STATUS == 1
+    jd_status_handle_packet(pkt);
+#endif
+
     switch (pkt->service_command) {
     case JD_CONTROL_CMD_SERVICES:
         jd_services_announce();
