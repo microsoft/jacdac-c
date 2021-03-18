@@ -9,7 +9,10 @@
 
 #if JD_CONFIG_STATUS == 1
 
-#define PERIOD 600
+#ifndef RGB_LED_PERIOD
+#define RGB_LED_PERIOD 600
+#endif
+
 #define RGB_IN_TIM 0x01
 
 #define FRAME_US 100000
@@ -75,10 +78,10 @@ static void rgbled_show(status_ctx_t *state) {
             pwm_enable(ch->pwm, 0);
         } else {
 #ifdef LED_RGB_COMMON_CATHODE
-            if (c >= PERIOD)
-                c = PERIOD - 1;
+            if (c >= RGB_LED_PERIOD)
+                c = RGB_LED_PERIOD - 1;
 #else
-            c = PERIOD - c;
+            c = RGB_LED_PERIOD - c;
             if (c < 0)
                 c = 0;
 #endif
@@ -190,7 +193,7 @@ void jd_status_init() {
 
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
-        ch->pwm = pwm_init(ch->pin, PERIOD, 0, 1);
+        ch->pwm = pwm_init(ch->pin, RGB_LED_PERIOD, 0, 1);
     }
 #else
     for (int i = 0; i < 3; ++i) {
