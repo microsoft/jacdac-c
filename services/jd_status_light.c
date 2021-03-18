@@ -32,16 +32,15 @@ struct status_anim {
     uint32_t time;
 };
 
+// .color is {R, G, B, speed}
 static const struct status_anim jd_status_animations[] = {
-    {.color = {.to_red = 0, .to_green = 0, .to_blue = 0, .speed = 0}, .time = 0}, // OFF
-    {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 150},
-     .time = 200 * 1000}, // STARTUP
-    // the time on CONNECTED is used in only used with a non-RGB LED; note that there's already a ~30us overhead
-    {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 0}, .time = 100}, // CONNECTED
-    {.color = {.to_red = 255, .to_green = 0, .to_blue = 0, .speed = 100},
-     .time = 500 * 1000}, // DICONNECTED
-    {.color = {.to_red = 0, .to_green = 0, .to_blue = 255, .speed = 0},
-     .time = 50 * 1000}, // CONNECTED
+    {.color = {0, 0, 0, 0}, .time = 0},              // OFF
+    {.color = {0, 255, 0, 150}, .time = 200 * 1000}, // STARTUP
+    // the time on CONNECTED is used in only used with a non-RGB LED; note that there's already a
+    // ~30us overhead
+    {.color = {0, 255, 0, 0}, .time = 100},          // CONNECTED
+    {.color = {255, 0, 0, 100}, .time = 500 * 1000}, // DICONNECTED
+    {.color = {0, 0, 255, 0}, .time = 50 * 1000},    // IDENTIFY
 };
 
 typedef struct {
