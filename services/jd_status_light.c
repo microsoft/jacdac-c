@@ -34,8 +34,8 @@ struct status_anim {
 
 static const struct status_anim jd_status_animations[] = {
     {.color = {.to_red = 0, .to_green = 0, .to_blue = 0, .speed = 0}, .time = 0}, // OFF
-    {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 50},
-     .time = 1000 * 1000}, // STARTUP
+    {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 150},
+     .time = 200 * 1000}, // STARTUP
     // the time on CONNECTED is used in only used with a non-RGB LED; note that there's already a ~30us overhead
     {.color = {.to_red = 0, .to_green = 255, .to_blue = 0, .speed = 0}, .time = 100}, // CONNECTED
     {.color = {.to_red = 255, .to_green = 0, .to_blue = 0, .speed = 100},
