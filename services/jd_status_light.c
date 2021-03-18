@@ -16,7 +16,7 @@
 
 #define FRAME_US 100000
 
-#ifndef LED_RGB_COMMON_CATHODE
+#ifdef LED_RGB_COMMON_CATHODE
 #define LED_OFF_STATE 0
 #define LED_ON_STATE 1
 #else
@@ -52,13 +52,13 @@ static void rgbled_show(status_ctx_t *state) {
             pin_set(ch->pin, LED_OFF_STATE);
             pwm_enable(ch->pwm, 0);
         } else {
-#ifndef LED_RGB_COMMON_CATHODE
+#ifdef LED_RGB_COMMON_CATHODE
+            if (c >= PERIOD)
+                c = PERIOD - 1;
+#else
             c = PERIOD - c;
             if (c < 0)
                 c = 0;
-#else
-            if (c >= PERIOD)
-                c = PERIOD - 1;
 #endif
             pwm_set_duty(ch->pwm, c);
             pwm_enable(ch->pwm, 1);
@@ -168,6 +168,7 @@ void jd_status(int status) {
     case JD_STATUS_CONNECTED:
     case JD_STATUS_DISCONNECTED:
     case JD_STATUS_IDENTIFY:
+        break;
     }
 }
 
