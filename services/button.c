@@ -18,11 +18,11 @@ struct srv_state {
     uint32_t nextSample;
 };
 
-REG_DEFINITION(                   //
-    button_regs,                   //
-    REG_SENSOR_COMMON,                 //
-    REG_U32(JD_BUTTON_REG_CLICK_HOLD_TIME),   //
-    REG_U8(JD_BUTTON_REG_PRESSED),   //
+REG_DEFINITION(                             //
+    button_regs,                            //
+    REG_SENSOR_COMMON,                      //
+    REG_U32(JD_BUTTON_REG_CLICK_HOLD_TIME), //
+    REG_U8(JD_BUTTON_REG_PRESSED),          //
 )
 
 static void update(srv_t *state) {
@@ -33,19 +33,21 @@ static void update(srv_t *state) {
         pin_set(state->backlight_pin, state->pressed);
         if (state->pressed) {
             jd_send_event(state, JD_BUTTON_EV_DOWN);
-            state->press_time = now ;
+            state->press_time = now;
             state->prev_presslen = 0;
         } else {
             jd_send_event(state, JD_BUTTON_EV_UP);
             if ((state->prev_presslen / 1000) < state->click_hold_time) {
-                jd_send_event_ext(state, JD_BUTTON_EV_CLICK, &(state->prev_presslen), sizeof(state->prev_presslen));
+                jd_send_event_ext(state, JD_BUTTON_EV_CLICK, &(state->prev_presslen),
+                                  sizeof(state->prev_presslen));
             }
         }
     }
 
     if (state->pressed) {
         uint32_t presslen = now - state->press_time;
-        if ((presslen / 1000) >= state->click_hold_time && (state->prev_presslen / 1000) < state->click_hold_time)
+        if ((presslen / 1000) >= state->click_hold_time &&
+            (state->prev_presslen / 1000) < state->click_hold_time)
             jd_send_event(state, JD_BUTTON_EV_HOLD);
         state->prev_presslen = presslen;
     }
@@ -62,8 +64,8 @@ void btn_handle_packet(srv_t *state, jd_packet_t *pkt) {
     if (sensor_handle_packet_simple(state, pkt, &state->pressed, sizeof(state->pressed)))
         return;
 
-    switch(service_handle_register(state, pkt, button_regs)) {
-        case JD_BUTTON_REG_CLICK_HOLD_TIME:
+    switch (service_handle_register(state, pkt, button_regs)) {
+    case JD_BUTTON_REG_CLICK_HOLD_TIME:
         if (state->click_hold_time < 500)
             state->click_hold_time = 500;
         break;
