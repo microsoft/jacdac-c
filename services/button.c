@@ -33,19 +33,19 @@ static void update(srv_t *state) {
         pin_set(state->backlight_pin, state->pressed);
         if (state->pressed) {
             jd_send_event(state, JD_BUTTON_EV_DOWN);
-            state->press_time = now / 1000;
+            state->press_time = now ;
             state->prev_presslen = 0;
         } else {
             jd_send_event(state, JD_BUTTON_EV_UP);
-            if (state->prev_presslen < state->click_hold_time) {
+            if ((state->prev_presslen / 1000) < state->click_hold_time) {
                 jd_send_event_ext(state, JD_BUTTON_EV_CLICK, &(state->prev_presslen), sizeof(state->prev_presslen));
             }
         }
     }
 
     if (state->pressed) {
-        uint32_t presslen = (now / 1000) - state->press_time;
-        if (presslen >= state->click_hold_time && state->prev_presslen < state->click_hold_time)
+        uint32_t presslen = now - state->press_time;
+        if ((presslen / 1000) >= state->click_hold_time && (state->prev_presslen / 1000) < state->click_hold_time)
             jd_send_event(state, JD_BUTTON_EV_HOLD);
         state->prev_presslen = presslen;
     }
@@ -59,6 +59,9 @@ void btn_process(srv_t *state) {
 }
 
 void btn_handle_packet(srv_t *state, jd_packet_t *pkt) {
+    if (sensor_handle_packet_simple(state, pkt, &state->pressed, sizeof(state->pressed)))
+        return;
+
     switch(service_handle_register(state, pkt, button_regs)) {
         case JD_BUTTON_REG_CLICK_HOLD_TIME:
         if (state->click_hold_time < 500)
