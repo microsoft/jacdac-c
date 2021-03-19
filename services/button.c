@@ -32,20 +32,18 @@ static void update(srv_t *state) {
         pin_set(state->backlight_pin, state->pressed);
         if (state->pressed) {
             jd_send_event(state, JD_BUTTON_EV_DOWN);
-            state->press_time = now;
+            state->press_time = now / 1000;
             state->prev_presslen = 0;
         } else {
             jd_send_event(state, JD_BUTTON_EV_UP);
             if (state->prev_presslen < state->click_hold_time) {
-                // convert to ms
-                uint16_t time_pressed = (state->prev_presslen / 1000);
-                jd_send_event_ext(state, JD_BUTTON_EV_CLICK, &time_pressed, sizeof(time_pressed));
+                jd_send_event_ext(state, JD_BUTTON_EV_CLICK, &(state->prev_presslen), sizeof(state->prev_presslen));
             }
         }
     }
 
     if (state->pressed) {
-        uint32_t presslen = now - state->press_time;
+        uint32_t presslen = (now / 1000) - state->press_time;
         if (presslen >= state->click_hold_time && state->prev_presslen < state->click_hold_time)
             jd_send_event(state, JD_BUTTON_EV_HOLD);
         state->prev_presslen = presslen;
