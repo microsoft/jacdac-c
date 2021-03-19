@@ -7,6 +7,7 @@
 
 struct srv_state {
     SENSOR_COMMON;
+    uint32_t click_hold_time;
     uint8_t pin;
     uint8_t backlight_pin;
     uint8_t pressed;
@@ -16,6 +17,12 @@ struct srv_state {
     uint32_t press_time;
     uint32_t nextSample;
 };
+
+REG_DEFINITION(                   //
+    button_regs,                   //
+    REG_SENSOR_COMMON,                 //
+    REG_U32(JD_BUTTON_REG_CLICK_HOLD_TIME),   //
+)
 
 static void update(srv_t *state) {
     state->pressed = pin_get(state->pin) == state->active;
@@ -29,16 +36,17 @@ static void update(srv_t *state) {
             state->prev_presslen = 0;
         } else {
             jd_send_event(state, JD_BUTTON_EV_UP);
-            if (state->prev_presslen < 500000)
-                jd_send_event(state, JD_BUTTON_EV_CLICK);
+            if (state->prev_presslen < state->click_hold_time) {
+                // convert to ms
+                uint16_t time_pressed = (state->prev_presslen / 1000);
+                jd_send_event_ext(state, JD_BUTTON_EV_CLICK, &time_pressed, sizeof(time_pressed));
+            }
         }
     }
 
     if (state->pressed) {
         uint32_t presslen = now - state->press_time;
-        if (presslen >= 500000 && state->prev_presslen < 500000)
-            jd_send_event(state, JD_BUTTON_EV_LONG_CLICK);
-        if (presslen >= 1500000 && state->prev_presslen < 1500000)
+        if (presslen >= state->click_hold_time && state->prev_presslen < state->click_hold_time)
             jd_send_event(state, JD_BUTTON_EV_HOLD);
         state->prev_presslen = presslen;
     }
@@ -52,7 +60,15 @@ void btn_process(srv_t *state) {
 }
 
 void btn_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    sensor_handle_packet_simple(state, pkt, &state->pressed, sizeof(state->pressed));
+    if (sensor_handle_packet_simple(state, pkt, &state->pressed, sizeof(state->pressed)))
+        return;
+
+    switch(service_handle_register(state, pkt, button_regs)) {
+        case JD_BUTTON_REG_CLICK_HOLD_TIME:
+        if (state->click_hold_time < 500)
+            state->click_hold_time = 500;
+        break;
+    }
 }
 
 SRV_DEF(btn, JD_SERVICE_CLASS_BUTTON);

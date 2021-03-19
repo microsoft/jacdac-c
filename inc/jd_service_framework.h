@@ -55,7 +55,7 @@ typedef struct _srv_vt srv_vt_t;
     const srv_vt_t *vt;                                                                            \
     uint8_t service_number;                                                                        \
     uint8_t padding0;
-#define REG_SRV_BASE REG_BYTES(JD_REG_PADDING, 6)
+#define REG_SRV_COMMON REG_BYTES(JD_REG_PADDING, 6)
 
 struct srv_state_common {
     SRV_COMMON;

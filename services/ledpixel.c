@@ -73,7 +73,7 @@ typedef union {
 
 REG_DEFINITION(                                 //
     ledpixel_regs,                              //
-    REG_SRV_BASE,                               //
+    REG_SRV_COMMON,                               //
     REG_U8(JD_LED_PIXEL_REG_BRIGHTNESS),        //
     REG_U8(JD_LED_PIXEL_REG_ACTUAL_BRIGHTNESS), //
     REG_U8(JD_LED_PIXEL_REG_LIGHT_TYPE),        //
