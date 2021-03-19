@@ -8,9 +8,9 @@
 struct srv_state {
     SENSOR_COMMON;
     uint32_t click_hold_time;
+    uint8_t pressed;
     uint8_t pin;
     uint8_t backlight_pin;
-    uint8_t pressed;
     uint8_t prev_pressed;
     uint8_t active;
     uint32_t prev_presslen;
@@ -22,6 +22,7 @@ REG_DEFINITION(                   //
     button_regs,                   //
     REG_SENSOR_COMMON,                 //
     REG_U32(JD_BUTTON_REG_CLICK_HOLD_TIME),   //
+    REG_U8(JD_BUTTON_REG_PRESSED),   //
 )
 
 static void update(srv_t *state) {
@@ -58,9 +59,6 @@ void btn_process(srv_t *state) {
 }
 
 void btn_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (sensor_handle_packet_simple(state, pkt, &state->pressed, sizeof(state->pressed)))
-        return;
-
     switch(service_handle_register(state, pkt, button_regs)) {
         case JD_BUTTON_REG_CLICK_HOLD_TIME:
         if (state->click_hold_time < 500)
@@ -73,6 +71,7 @@ SRV_DEF(btn, JD_SERVICE_CLASS_BUTTON);
 
 void btn_init(uint8_t pin, bool active, uint8_t backlight_pin) {
     SRV_ALLOC(btn);
+    state->click_hold_time = 500;
     state->pin = pin;
     state->backlight_pin = backlight_pin;
     state->active = active;

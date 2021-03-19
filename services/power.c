@@ -43,7 +43,7 @@ struct srv_state {
 
 REG_DEFINITION(                                   //
     power_regs,                                   //
-    REG_SENSOR_BASE,                              //
+    REG_SENSOR_COMMON,                              //
     REG_U8(JD_POWER_REG_ENABLED),                 //
     REG_U8(JD_POWER_REG_OVERLOAD),                //
     REG_U16(JD_POWER_REG_MAX_POWER),              //
