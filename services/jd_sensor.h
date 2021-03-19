@@ -11,7 +11,7 @@
     uint8_t got_query : 1;                                                                         \
     uint32_t streaming_interval;                                                                   \
     uint32_t next_streaming
-#define REG_SENSOR_BASE REG_BYTES(JD_REG_PADDING, 16)
+#define REG_SENSOR_COMMON REG_BYTES(JD_REG_PADDING, 16)
 
 int sensor_handle_packet(srv_t *state, jd_packet_t *pkt);
 int sensor_should_stream(srv_t *state);

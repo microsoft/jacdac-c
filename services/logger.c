@@ -12,7 +12,7 @@ struct srv_state {
 
 REG_DEFINITION(                         //
     jdcon_regs,                         //
-    REG_SRV_BASE,                       //
+    REG_SRV_COMMON,                       //
     REG_U8(JD_LOGGER_REG_MIN_PRIORITY), //
 )
 

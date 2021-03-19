@@ -27,7 +27,7 @@ struct srv_state {
 
 REG_DEFINITION(                   //
     servo_regs,                   //
-    REG_SRV_BASE,                 //
+    REG_SRV_COMMON,                 //
     REG_I32(JD_SERVO_REG_ANGLE),  // this must match the uint32_t type on 'angle' field in srv_state
     REG_I32(JD_SERVO_REG_OFFSET), // ditto for 'offset'
     REG_U8(JD_REG_PADDING),       // pin
