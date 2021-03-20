@@ -10,7 +10,11 @@
 #if JD_CONFIG_STATUS == 1
 
 #ifndef RGB_LED_PERIOD
-#define RGB_LED_PERIOD 600
+#define RGB_LED_PERIOD 512
+#endif
+
+#if RGB_LED_PERIOD < 512
+#error "RGB_LED_PERIOD must be at least 512"
 #endif
 
 #define RGB_IN_TIM 0x01
