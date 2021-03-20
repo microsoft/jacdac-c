@@ -37,7 +37,7 @@ static void update(srv_t *state) {
             state->prev_presslen = 0;
         } else {
             jd_send_event(state, JD_BUTTON_EV_UP);
-            if ((state->prev_presslen / 1000) < state->click_hold_time) {
+            if (state->prev_presslen < state->click_hold_time * 1000) {
                 jd_send_event_ext(state, JD_BUTTON_EV_CLICK, &(state->prev_presslen),
                                   sizeof(state->prev_presslen));
             }
@@ -46,8 +46,8 @@ static void update(srv_t *state) {
 
     if (state->pressed) {
         uint32_t presslen = now - state->press_time;
-        if ((presslen / 1000) >= state->click_hold_time &&
-            (state->prev_presslen / 1000) < state->click_hold_time)
+        if (presslen >= state->click_hold_time * 1000 &&
+            state->prev_presslen < state->click_hold_time * 1000)
             jd_send_event(state, JD_BUTTON_EV_HOLD);
         state->prev_presslen = presslen;
     }
