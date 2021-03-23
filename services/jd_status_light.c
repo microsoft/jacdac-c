@@ -46,8 +46,9 @@ static const struct status_anim jd_status_animations[] = {
     // the time on CONNECTED is used in only used with a non-RGB LED; note that there's already a
     // ~30us overhead
     {.color = {0, 255, 0, 0}, .time = 100},          // CONNECTED
-    {.color = {255, 0, 0, 100}, .time = 500 * 1000}, // DICONNECTED
+    {.color = {255, 0, 0, 100}, .time = 500 * 1000}, // DISCONNECTED
     {.color = {0, 0, 255, 0}, .time = 50 * 1000},    // IDENTIFY
+    {.color = {255, 255, 0, 100}, .time = 500 * 1000},    // UNKNOWN STATE
 };
 
 typedef struct {
@@ -210,6 +211,7 @@ void jd_status_init() {
     rgbled_show(state);
 }
 
+// definitions for @status are contained in jd_io.h
 void jd_status(int status) {
     status_ctx_t *state = &status_ctx;
 

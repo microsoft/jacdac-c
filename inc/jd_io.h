@@ -21,6 +21,7 @@ void jd_status_handle_packet(jd_packet_t *pkt);
 #define JD_STATUS_CONNECTED 2
 #define JD_STATUS_DISCONNECTED 3
 #define JD_STATUS_IDENTIFY 4
+#define JD_STATUS_UNKNOWN_STATE 5
 
 // if disabled with JD_CONFIG_STATUS==0, the user has to provide their own impl.
 void jd_status(int status);
