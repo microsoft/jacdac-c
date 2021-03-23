@@ -46,6 +46,10 @@
 #define JD_CONFIG_STATUS 1
 #endif
 
+#ifndef JD_CONFIG_APP_PROCESS_HOOK
+#define JD_CONFIG_APP_PROCESS_HOOK 0
+#endif
+
 #define CONCAT_1(a, b) a##b
 #define CONCAT_0(a, b) CONCAT_1(a, b)
 #ifndef STATIC_ASSERT
