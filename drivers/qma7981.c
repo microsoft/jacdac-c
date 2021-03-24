@@ -75,9 +75,6 @@
 #define ACC_I2C 1
 #endif
 
-void bspi_send(const void *src, uint32_t len);
-void bspi_recv(void *dst, uint32_t len);
-
 static void writeReg(uint8_t reg, uint8_t val) {
 #ifdef ACC_I2C
     i2c_write_reg(ACC_I2C_ADDR, reg, val);
@@ -186,11 +183,7 @@ static void qma7981_init(void) {
 #ifdef ACC_I2C
     i2c_init();
 #else
-    pin_setup_output(PIN_ACC_MOSI);
-    pin_setup_output(PIN_ACC_SCK);
-    pin_setup_input(PIN_ACC_MISO, -1);
-    pin_setup_output(PIN_ACC_CS);
-    pin_set(PIN_ACC_CS, 1);
+    bspi_init();
 #endif
 
 #ifdef PIN_ACC_VCC

@@ -11,6 +11,7 @@ typedef struct {
 } acc_api_t;
 
 extern const acc_api_t acc_kxtj3;
+extern const acc_api_t acc_kx023;
 extern const acc_api_t acc_qma7981;
 
 #endif

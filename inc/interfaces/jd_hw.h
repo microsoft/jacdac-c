@@ -76,4 +76,9 @@ int i2c_read_reg16(uint8_t addr, uint16_t reg);
 int i2c_write_ex(uint8_t addr, const void *src, unsigned len, bool repeated);
 int i2c_read_ex(uint8_t addr, void *dst, unsigned len);
 
+// bitbang_spi.c
+void bspi_send(const void *src, uint32_t len);
+void bspi_recv(void *dst, uint32_t len);
+void bspi_init(void);
+
 #endif
