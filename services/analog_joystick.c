@@ -24,9 +24,6 @@ static void update(srv_t *state) {
     uint16_t x = adc_read_pin(state->pinX) - 2048;
     uint16_t y = adc_read_pin(state->pinY) - 2048;
 
-    // x = x / (2^15);
-    // y = y / (2^15);
-
     state->direction.x = x << 4;
     state->direction.y = y << 4;
 
