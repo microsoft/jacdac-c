@@ -28,14 +28,15 @@ static void update(srv_t *state) {
             state->press_time = now;
             state->next_hold = 500000;
         } else {
-            jd_send_event(state, JD_BUTTON_EV_UP);
+            uint32_t presslen = now - state->press_time;
+            jd_send_event_ext(state, JD_BUTTON_EV_UP, &presslen, sizeof(uint32_t));
         }
     }
 
     if (state->pressed) {
         uint32_t presslen = now - state->press_time;
         if (presslen >= state->next_hold) {
-            jd_send_event(state, JD_BUTTON_EV_HOLD);
+            jd_send_event_ext(state, JD_BUTTON_EV_HOLD, &presslen, sizeof(uint32_t));
             state->next_hold = presslen + 500000;
         }
     }
