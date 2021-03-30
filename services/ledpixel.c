@@ -73,10 +73,11 @@ typedef union {
 
 REG_DEFINITION(                                 //
     ledpixel_regs,                              //
-    REG_SRV_COMMON,                               //
+    REG_SRV_COMMON,                             //
     REG_U8(JD_LED_PIXEL_REG_BRIGHTNESS),        //
     REG_U8(JD_LED_PIXEL_REG_ACTUAL_BRIGHTNESS), //
     REG_U8(JD_LED_PIXEL_REG_LIGHT_TYPE),        //
+    REG_U8(JD_LED_PIXEL_REG_VARIANT),           //
     REG_U16(JD_LED_PIXEL_REG_NUM_PIXELS),       //
     REG_U16(JD_LED_PIXEL_REG_MAX_POWER),        //
     REG_U16(JD_LED_PIXEL_REG_MAX_PIXELS),       //
@@ -89,6 +90,7 @@ struct srv_state {
     uint8_t requested_intensity;
     uint8_t intensity;
     uint8_t ledpixel_type;
+    uint8_t variant;
     uint16_t numpixels;
     uint16_t maxpower;
     uint16_t maxpixels;
@@ -639,12 +641,13 @@ void ledpixel_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 SRV_DEF(ledpixel, JD_SERVICE_CLASS_LED_PIXEL);
 void ledpixel_init(uint8_t default_ledpixel_type, uint32_t default_num_pixels,
-                   uint32_t default_max_power) {
+                   uint32_t default_max_power, uint8_t variant) {
     SRV_ALLOC(ledpixel);
     state_ = state; // there is global singleton state
     state->ledpixel_type = default_ledpixel_type;
     state->numpixels = default_num_pixels;
     state->maxpower = default_max_power;
+    state->variant = variant;
     state->num_repeats = 1;
     state->intensity = state->requested_intensity = DEFAULT_INTENSITY;
 }

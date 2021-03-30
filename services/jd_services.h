@@ -24,7 +24,7 @@ void rotary_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn);
 // In board.h you can define LED_PIXEL_LOCK_TYPE and/or LED_PIXEL_LOCK_NUM_PIXELS to disable writes
 // the respective registers.
 void ledpixel_init(uint8_t default_ledpixel_type, uint32_t default_num_pixels,
-                   uint32_t default_max_power);
+                   uint32_t default_max_power, uint8_t variant);
 
 // Sound (buzzer) service on given pin. Uses BUZZER_OFF config from board.h.
 void buzzer_init(uint8_t pin);
