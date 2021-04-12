@@ -169,7 +169,17 @@ void jd_services_announce() {
         dst[i] = services[i]->vt->service_class;
     if (reset_counter < 0xf)
         reset_counter++;
-    dst[0] = reset_counter | JD_ADVERTISEMENT_0_ACK_SUPPORTED | ((packets_sent + 1) << 16);
+    dst[0] = reset_counter | JD_ADVERTISEMENT_0_IDENTIFIER_IS_SERVICE_CLASS_SUPPORTED |
+             JD_ADVERTISEMENT_0_FRAMES_SUPPORTED | JD_ADVERTISEMENT_0_ACK_SUPPORTED |
+#if JD_CONFIG_STATUS == 1
+#ifdef PIN_LED_R
+             JD_ADVERTISEMENT_0_STATUS_LIGHT_RGB_FADE |
+#else
+             JD_ADVERTISEMENT_0_STATUS_LIGHT_MONO |
+#endif
+#endif
+             ((packets_sent + 1) << 16);
+
     if (jd_send(JD_SERVICE_NUMBER_CONTROL, JD_CONTROL_CMD_SERVICES, dst, num_services * 4) == 0) {
         packets_sent = 0;
     }
