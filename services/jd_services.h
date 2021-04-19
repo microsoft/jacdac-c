@@ -40,7 +40,7 @@ typedef struct {
 } servo_params_t;
 
 // Servo control service.
-void servo_init(const servo_params_t *params);
+void servo_init(const servo_params_t *params, uint8_t power_pin);
 
 // Button service.
 // The button is active-low if active==0, and active-low when active==1.
