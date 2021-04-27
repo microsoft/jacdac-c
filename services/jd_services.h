@@ -12,11 +12,11 @@
 // Best search for an existing call of the *_init() function and use the same pins.
 
 // Accelerometer service. Uses I2C pins.
-void acc_init(const acc_api_t *hw);
-void acc_data_transform(int32_t sample[3]);
+void accelerometer_init(const accelerometer_api_t *hw);
+void accelerometer_data_transform(int32_t sample[3]);
 
 // Rotary encoder service; pin0/1 are connected to two pins of the encoder
-void rotary_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn);
+void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn);
 
 // Controller for RGB LED strips (LED pixel service)
 // Supported: WS2812B, APA102, SK9822.
@@ -46,10 +46,10 @@ void servo_init(const servo_params_t *params);
 // The button is active-low if active==0, and active-low when active==1.
 // An internal pull-up/down is setup correspondingly.
 // backlight_pin is active low, and can be disabled with -1.
-void btn_init(uint8_t pin, bool active, uint8_t backlight_pin);
+void button_init(uint8_t pin, bool active, uint8_t backlight_pin);
 
 // Temperature and humidity services; often from a single I2C sensor (defined in board.h)
-void temp_init(env_function_t read);
+void thermometer_init(env_function_t read);
 void humidity_init(env_function_t read);
 
 // Potentiometer service.

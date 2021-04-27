@@ -209,7 +209,7 @@ static void qma7981_init(void) {
     init_chip();
 }
 
-const acc_api_t acc_qma7981 = {
+const accelerometer_api_t accelerometer_qma7981 = {
     .init = qma7981_init,
     .get_sample = qma7981_get_sample,
     .sleep = qma7981_sleep,
