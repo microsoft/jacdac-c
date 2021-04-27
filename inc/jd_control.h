@@ -14,18 +14,6 @@
 
 #define JD_ADVERTISEMENT_0_COUNTER_MASK 0x0000000F
 
-#define JD_ADVERTISEMENT_0_STATUS_LIGHT_MASK 0x00000030
-#define JD_ADVERTISEMENT_0_STATUS_LIGHT_NONE 0x00000000 // or status_light cmd not supported
-#define JD_ADVERTISEMENT_0_STATUS_LIGHT_MONO 0x00000010
-#define JD_ADVERTISEMENT_0_STATUS_LIGHT_RGB_NO_FADE 0x00000020
-#define JD_ADVERTISEMENT_0_STATUS_LIGHT_RGB_FADE 0x00000030
-
-#define JD_ADVERTISEMENT_0_ACK_SUPPORTED 0x00000100
-#define JD_ADVERTISEMENT_0_IDENTIFIER_IS_SERVICE_CLASS_SUPPORTED                                   \
-    0x00000200                                         // "broadcast" frame flag
-#define JD_ADVERTISEMENT_0_FRAMES_SUPPORTED 0x00000400 // can have multiple packets per frame
-#define JD_ADVERTISEMENT_0_IS_CLIENT 0x00000800        // typically a brain
-
 #define JD_GET(reg) (JD_CMD_GET_REGISTER | (reg))
 #define JD_SET(reg) (JD_CMD_SET_REGISTER | (reg))
 

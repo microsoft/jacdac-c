@@ -58,6 +58,10 @@ static void process_flood(srv_t *state) {
 static void process_flood(srv_t *state) {}
 #endif
 
+#if JD_CONFIG_DEV_SPEC_URL == 1
+extern const char app_spec_url[];
+#endif
+
 void jd_ctrl_process(srv_t *state) {
     identify(state);
     process_flood(state);
@@ -122,6 +126,13 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
         jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, &t, sizeof(t));
         break;
     }
+
+#if JD_CONFIG_DEV_SPEC_URL == 1
+    case JD_GET(JD_CONTROL_REG_DEVICE_SPECIFICATION_URL):
+        jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, app_spec_url,
+                strlen(app_spec_url));
+        break;
+#endif
 
 #if JD_CONFIG_WATCHDOG == 1
     case JD_GET(JD_CONTROL_REG_RESET_IN): {
