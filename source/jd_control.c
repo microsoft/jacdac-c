@@ -11,8 +11,10 @@
 
 struct srv_state {
     SRV_COMMON;
+#if JD_CONFIG_IDENTIFY == 1
     uint32_t nextblink;
     uint8_t id_counter;
+#endif
 #if JD_CONFIG_WATCHDOG == 1
     uint32_t watchdog;
 #endif
@@ -23,6 +25,7 @@ struct srv_state {
 #endif
 };
 
+#if JD_CONFIG_IDENTIFY == 1
 static void identify(srv_t *state) {
     if (!state->id_counter)
         return;
@@ -32,6 +35,7 @@ static void identify(srv_t *state) {
     state->id_counter--;
     jd_status(JD_STATUS_IDENTIFY);
 }
+#endif
 
 #if JD_CONFIG_CONTROL_FLOOD == 1
 static void set_flood(srv_t *state, uint32_t num) {
@@ -63,7 +67,9 @@ extern const char app_spec_url[];
 #endif
 
 void jd_ctrl_process(srv_t *state) {
+#if JD_CONFIG_IDENTIFY == 1
     identify(state);
+#endif
     process_flood(state);
 #if JD_CONFIG_WATCHDOG == 1
     if (state->watchdog && in_past(state->watchdog))
@@ -85,11 +91,13 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
         jd_services_announce();
         break;
 
+#if JD_CONFIG_IDENTIFY == 1
     case JD_CONTROL_CMD_IDENTIFY:
         state->id_counter = 7;
         state->nextblink = now;
         identify(state);
         break;
+#endif
 
     case JD_CONTROL_CMD_RESET:
         target_reset();
