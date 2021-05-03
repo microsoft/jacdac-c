@@ -8,28 +8,75 @@
 
 struct srv_state {
     SENSOR_COMMON;
+    joystick_params_t params;
     uint8_t inited;
-    uint8_t variant;
-    uint8_t pinH, pinL, pinX, pinY;
     jd_joystick_direction_t direction;
     uint32_t nextSample;
 };
 
+REG_DEFINITION(                                 //
+    analog_joystick_regs,                       //
+    REG_SENSOR_COMMON,                          //
+    REG_U32(JD_JOYSTICK_REG_BUTTONS_AVAILABLE), //
+    REG_U8(JD_JOYSTICK_REG_VARIANT),            //
+)
+
+#define THRESHOLD_SWITCH 0x3000
+#define THRESHOLD_KEEP 0x2000
+
 static void update(srv_t *state) {
-    pin_setup_output(state->pinH);
-    pin_set(state->pinH, 1);
-    pin_setup_output(state->pinL);
-    pin_set(state->pinL, 0);
+    uint32_t btns0 = state->direction.buttons;
+    uint32_t btns = 0;
 
-    uint16_t x = adc_read_pin(state->pinX) - 2048;
-    uint16_t y = adc_read_pin(state->pinY) - 2048;
+    for (unsigned i = 0; i < sizeof(state->params.pinBtns); ++i) {
+        if ((1 << i) & state->params.buttons_available) {
+            if (pin_get(state->params.pinBtns[i]) == 0) {
+                btns |= 1 << i;
+            }
+        }
+    }
 
-    state->direction.x = x << 4;
-    state->direction.y = y << 4;
+    if (state->params.pinX == 0xff) {
+        state->direction.x = (btns & JD_JOYSTICK_BUTTONS_LEFT)    ? -0x8000
+                             : (btns & JD_JOYSTICK_BUTTONS_RIGHT) ? 0x7fff
+                                                                  : 0;
+        state->direction.y = (btns & JD_JOYSTICK_BUTTONS_UP)     ? -0x8000
+                             : (btns & JD_JOYSTICK_BUTTONS_DOWN) ? 0x7fff
+                                                                 : 0;
+    } else {
+        pin_setup_output(state->params.pinH);
+        pin_set(state->params.pinH, 1);
+        pin_setup_output(state->params.pinL);
+        pin_set(state->params.pinL, 0);
 
-    // save power
-    pin_setup_analog_input(state->pinH);
-    pin_setup_analog_input(state->pinL);
+        uint16_t x = adc_read_pin(state->params.pinX) - 2048;
+        uint16_t y = adc_read_pin(state->params.pinY) - 2048;
+
+        // save power
+        pin_setup_analog_input(state->params.pinH);
+        pin_setup_analog_input(state->params.pinL);
+
+        state->direction.x = x << 4;
+        state->direction.y = y << 4;
+
+        if (state->direction.x <
+            ((btns0 & JD_JOYSTICK_BUTTONS_LEFT) ? -THRESHOLD_KEEP : -THRESHOLD_SWITCH))
+            btns |= JD_JOYSTICK_BUTTONS_LEFT;
+        if (state->direction.x >
+            ((btns0 & JD_JOYSTICK_BUTTONS_RIGHT) ? THRESHOLD_KEEP : THRESHOLD_SWITCH))
+            btns |= JD_JOYSTICK_BUTTONS_RIGHT;
+        if (state->direction.y <
+            ((btns0 & JD_JOYSTICK_BUTTONS_UP) ? -THRESHOLD_KEEP : -THRESHOLD_SWITCH))
+            btns |= JD_JOYSTICK_BUTTONS_UP;
+        if (state->direction.y >
+            ((btns0 & JD_JOYSTICK_BUTTONS_DOWN) ? THRESHOLD_KEEP : THRESHOLD_SWITCH))
+            btns |= JD_JOYSTICK_BUTTONS_DOWN;
+    }
+
+    if (btns0 != btns) {
+        state->direction.buttons = btns;
+        jd_send_event_ext(state, JD_JOYSTICK_EV_BUTTONS_CHANGED, &state->direction.buttons, 4);
+    }
 }
 
 static void maybe_init(srv_t *state) {
@@ -53,24 +100,13 @@ void analog_joystick_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     if (r)
         return;
-    
-    switch (pkt->service_command) {
-        case JD_GET(JD_JOYSTICK_REG_VARIANT):
-            jd_send(pkt->service_number, pkt->service_command, &state->variant, 1);
-            break;
-        case JD_GET(JD_JOYSTICK_REG_DIGITAL):
-            jd_send(pkt->service_number, pkt->service_command, 0, 1);
-            break;
-    }
+
+    service_handle_register(state, pkt, analog_joystick_regs);
 }
 
 SRV_DEF(analog_joystick, JD_SERVICE_CLASS_JOYSTICK);
 
-void analog_joystick_init(uint8_t pinL, uint8_t pinH, uint8_t pinX, uint8_t pinY, uint8_t variant) {
+void analog_joystick_init(const joystick_params_t *params) {
     SRV_ALLOC(analog_joystick);
-    state->pinL = pinL;
-    state->pinH = pinH;
-    state->pinX = pinX;
-    state->pinY = pinY;
-    state->variant = variant;
+    state->params = *params;
 }

@@ -92,10 +92,25 @@ void jdcon_init(void);
 // Not implemented.
 void oled_init(void);
 
-// Initialises a joystick service, in particular an analog version.
+
 // pinX/pinY are the wipers for the two potentiometers on the joystick
-// pinL is the lower reference voltage and pinH is the higher reference voltage.
+// pinL is the lower reference voltage and pinH is the higher reference voltage (usually you only want one)
+// if the joystick is digital, set pinX to NO_PIN (other pin* don't matter)
+// for every bit (1<<X) set in buttons_available, the corresponding pinBtns[X] must be set properly
+typedef struct {
+    // sync these with REG_DEFINITION() in joystick.c !
+    uint32_t buttons_available;
+    uint8_t variant;
+    // these don't need to be synced
+    uint8_t pinL;
+    uint8_t pinH;
+    uint8_t pinX;
+    uint8_t pinY;
+    uint8_t pinBtns[32];
+} joystick_params_t;
+
+// Initialises a joystick service, in particular an analog version.
 // variant is set according to the service specification. See joystick.h
-void analog_joystick_init(uint8_t pinL, uint8_t pinH, uint8_t pinX, uint8_t pinY, uint8_t variant);
+void analog_joystick_init(const joystick_params_t *params);
 
 #endif
