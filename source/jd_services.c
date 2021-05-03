@@ -167,22 +167,23 @@ void jd_services_announce() {
     uint32_t dst[num_services];
     for (int i = 0; i < num_services; ++i)
         dst[i] = services[i]->vt->service_class;
-    if (reset_counter < 0xf)
+    if (reset_counter < JD_CONTROL_ANNOUNCE_FLAGS_RESTART_COUNTER_STEADY)
         reset_counter++;
-    uint8_t reset_light = reset_counter;
+
+    uint16_t adflags = reset_counter;
 #if JD_CONFIG_STATUS == 1
 #ifdef PIN_LED_R
-    reset_light |= JD_CONTROL_RESTART_LIGHT_FLAGS_STATUS_LIGHT_RGB_FADE;
+    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_STATUS_LIGHT_RGB_FADE;
 #else
-    reset_light |= JD_CONTROL_RESTART_LIGHT_FLAGS_STATUS_LIGHT_MONO;
+    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_STATUS_LIGHT_MONO;
 #endif
 #endif
 
-    uint8_t adflags = JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_ACK |
-                      JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_BROADCAST |
-                      JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_FRAMES;
+    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_ACK |
+               JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_BROADCAST |
+               JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_FRAMES;
 
-    dst[0] = reset_light | (adflags << 8) | ((packets_sent + 1) << 16);
+    dst[0] = adflags | ((packets_sent + 1) << 16);
 
     if (jd_send(JD_SERVICE_NUMBER_CONTROL, JD_CONTROL_CMD_SERVICES, dst, num_services * 4) == 0) {
         packets_sent = 0;
