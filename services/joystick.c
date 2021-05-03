@@ -15,7 +15,7 @@ struct srv_state {
 };
 
 REG_DEFINITION(                                 //
-    joystick_regs,                       //
+    joystick_regs,                              //
     REG_SENSOR_COMMON,                          //
     REG_U32(JD_JOYSTICK_REG_BUTTONS_AVAILABLE), //
     REG_U8(JD_JOYSTICK_REG_VARIANT),            //
@@ -30,7 +30,7 @@ static void update(srv_t *state) {
 
     for (unsigned i = 0; i < sizeof(state->params.pinBtns); ++i) {
         if ((1 << i) & state->params.buttons_available) {
-            if (pin_get(state->params.pinBtns[i]) == 0) {
+            if (pin_get(state->params.pinBtns[i]) == state->params.active_level) {
                 btns |= 1 << i;
             }
         }
@@ -76,12 +76,26 @@ static void update(srv_t *state) {
     if (btns0 != btns) {
         state->direction.buttons = btns;
         jd_send_event_ext(state, JD_JOYSTICK_EV_BUTTONS_CHANGED, &state->direction.buttons, 4);
+
+        for (unsigned i = 0; i < sizeof(state->params.pinLeds); ++i) {
+            if ((1 << i) & state->params.buttons_available) {
+                pin_set(state->params.pinLeds[i], btns & (1 << i) ? 0 : 1);
+            }
+        }
     }
 }
 
 static void maybe_init(srv_t *state) {
     if (state->got_query && !state->inited) {
         state->inited = true;
+        for (unsigned i = 0; i < sizeof(state->params.pinBtns); ++i) {
+            if ((1 << i) & state->params.buttons_available) {
+                pin_setup_input(state->params.pinBtns[i],
+                                state->params.active_level ? PIN_PULL_DOWN : PIN_PULL_UP);
+                pin_setup_output(state->params.pinLeds[i]);
+            }
+        }
+
         update(state);
     }
 }
@@ -109,4 +123,13 @@ SRV_DEF(joystick, JD_SERVICE_CLASS_JOYSTICK);
 void joystick_init(const joystick_params_t *params) {
     SRV_ALLOC(joystick);
     state->params = *params;
+
+    for (unsigned i = 0; i < sizeof(state->params.pinBtns); ++i) {
+        if ((1 << i) & state->params.buttons_available) {
+            if (state->params.pinBtns[i] == NO_PIN) {
+                // not connected? clear the flag
+                state->params.buttons_available &= ~(1 << i);
+            }
+        }
+    }
 }

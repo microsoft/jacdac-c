@@ -58,12 +58,6 @@ void humidity_init(env_function_t read);
 // pinL and/or pinH can be NO_PIN (it only really makes sense to use one of them).
 void potentiometer_init(uint8_t pinL, uint8_t pinM, uint8_t pinH);
 
-// GamePad (arcade controls) service.
-// Pins are given in order: L U R D A B Menu MenuAlt Reset Exit
-// Missing pins can be given as NO_PIN.
-// led_pins is the same size as pins, and is used to light-up arcade buttons. Can be NULL.
-void gamepad_init(uint8_t num_pins, const uint8_t *pins, const uint8_t *led_pins);
-
 // Motor (H-Bridge) control.
 // pin1/pin2 are active-high PWM-based input pins.
 // pin_nSLEEP is active-low sleep pin (or equivalently active-high EN pin).
@@ -92,21 +86,24 @@ void jdcon_init(void);
 // Not implemented.
 void oled_init(void);
 
-
+#define JD_JOYSTICK_BUTTONS_INFER_12 0xfff
 // pinX/pinY are the wipers for the two potentiometers on the joystick
-// pinL is the lower reference voltage and pinH is the higher reference voltage (usually you only want one)
-// if the joystick is digital, set pinX to NO_PIN (other pin* don't matter)
-// for every bit (1<<X) set in buttons_available, the corresponding pinBtns[X] must be set properly
+// pinL is the lower reference voltage and pinH is the higher reference voltage (usually you only
+// want one) if the joystick is digital, set pinX to NO_PIN (other pin* don't matter) for every bit
+// (1<<X) set in buttons_available, the corresponding pinBtns[X] and ledPins[X] must be set properly
+// (possibly to NO_PIN)
 typedef struct {
     // sync these with REG_DEFINITION() in joystick.c !
     uint32_t buttons_available;
     uint8_t variant;
     // these don't need to be synced
+    bool active_level;
     uint8_t pinL;
     uint8_t pinH;
     uint8_t pinX;
     uint8_t pinY;
-    uint8_t pinBtns[32];
+    uint8_t pinBtns[16];
+    uint8_t pinLeds[16];
 } joystick_params_t;
 
 // Initialises a joystick service, in particular an analog version.
