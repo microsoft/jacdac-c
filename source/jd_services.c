@@ -11,7 +11,6 @@
 static srv_t **services;
 static uint8_t num_services, reset_counter, packets_sent;
 
-static uint64_t maxId;
 static uint32_t lastMax, lastDisconnectBlink, nextAnnounce;
 
 struct srv_state {
@@ -192,14 +191,8 @@ void jd_services_announce() {
 
 static void handle_ctrl_tick(jd_packet_t *pkt) {
     if (pkt->service_command == JD_CONTROL_CMD_SERVICES) {
-        // if we have not seen maxId for 1.1s, find a new maxId
-        if (pkt->device_identifier < maxId && in_past(lastMax + 1100000)) {
-            maxId = pkt->device_identifier;
-        }
-
-        // maxId? blink!
-        if (pkt->device_identifier >= maxId) {
-            maxId = pkt->device_identifier;
+        // client? blink!
+        if (pkt->service_size >= 4 && pkt->data[1] & (JD_CONTROL_ANNOUNCE_FLAGS_IS_CLIENT >> 8)) {
             lastMax = now;
             jd_status(JD_STATUS_CONNECTED);
         }
