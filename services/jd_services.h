@@ -45,7 +45,7 @@ void servo_init(const servo_params_t *params);
 // Button service.
 // The button is active-low if active==0, and active-low when active==1.
 // An internal pull-up/down is setup correspondingly.
-// backlight_pin is active low, and can be disabled with -1.
+// backlight_pin is active low, and can be disabled with NO_PIN.
 void button_init(uint8_t pin, bool active, uint8_t backlight_pin);
 
 // Temperature and humidity services; often from a single I2C sensor (defined in board.h)
@@ -55,12 +55,12 @@ void humidity_init(env_function_t read);
 // Potentiometer service.
 // pinM is sampled, while pinL is set low, and pinH is set high.
 // When not sampling, pinL and pinH are left as inputs, reducing power consumption.
-// pinL and/or pinH can be -1 (it only really makes sense to use one of them).
+// pinL and/or pinH can be NO_PIN (it only really makes sense to use one of them).
 void potentiometer_init(uint8_t pinL, uint8_t pinM, uint8_t pinH);
 
 // GamePad (arcade controls) service.
 // Pins are given in order: L U R D A B Menu MenuAlt Reset Exit
-// Missing pins can be given as -1.
+// Missing pins can be given as NO_PIN.
 // led_pins is the same size as pins, and is used to light-up arcade buttons. Can be NULL.
 void gamepad_init(uint8_t num_pins, const uint8_t *pins, const uint8_t *led_pins);
 
