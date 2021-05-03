@@ -111,6 +111,6 @@ typedef struct {
 
 // Initialises a joystick service, in particular an analog version.
 // variant is set according to the service specification. See joystick.h
-void analog_joystick_init(const joystick_params_t *params);
+void joystick_init(const joystick_params_t *params);
 
 #endif

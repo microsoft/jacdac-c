@@ -15,7 +15,7 @@ struct srv_state {
 };
 
 REG_DEFINITION(                                 //
-    analog_joystick_regs,                       //
+    joystick_regs,                       //
     REG_SENSOR_COMMON,                          //
     REG_U32(JD_JOYSTICK_REG_BUTTONS_AVAILABLE), //
     REG_U8(JD_JOYSTICK_REG_VARIANT),            //
@@ -86,7 +86,7 @@ static void maybe_init(srv_t *state) {
     }
 }
 
-void analog_joystick_process(srv_t *state) {
+void joystick_process(srv_t *state) {
     maybe_init(state);
 
     if (jd_should_sample(&state->nextSample, 9000) && state->inited)
@@ -95,18 +95,18 @@ void analog_joystick_process(srv_t *state) {
     sensor_process_simple(state, &state->direction, sizeof(state->direction));
 }
 
-void analog_joystick_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void joystick_handle_packet(srv_t *state, jd_packet_t *pkt) {
     int r = sensor_handle_packet_simple(state, pkt, &state->direction, sizeof(state->direction));
 
     if (r)
         return;
 
-    service_handle_register(state, pkt, analog_joystick_regs);
+    service_handle_register(state, pkt, joystick_regs);
 }
 
-SRV_DEF(analog_joystick, JD_SERVICE_CLASS_JOYSTICK);
+SRV_DEF(joystick, JD_SERVICE_CLASS_JOYSTICK);
 
-void analog_joystick_init(const joystick_params_t *params) {
-    SRV_ALLOC(analog_joystick);
+void joystick_init(const joystick_params_t *params) {
+    SRV_ALLOC(joystick);
     state->params = *params;
 }
