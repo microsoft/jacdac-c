@@ -239,7 +239,7 @@ void accelerometer_init(const accelerometer_api_t *hw) {
     state->hw = hw;
     hw->init();
 #ifdef PIN_ACC_INT
-    pin_setup_input(PIN_ACC_INT, -1);
+    pin_setup_input(PIN_ACC_INT, PIN_PULL_DOWN);
     exti_set_callback(PIN_ACC_INT, accelerometer_int, EXTI_RISING);
 #endif
 }

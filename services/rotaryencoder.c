@@ -34,8 +34,8 @@ static void maybe_init(srv_t *state) {
     if (state->got_query && !state->inited) {
         state->inited = true;
         tim_max_sleep = 1000;
-        pin_setup_input(state->pin0, 1);
-        pin_setup_input(state->pin1, 1);
+        pin_setup_input(state->pin0, PIN_PULL_UP);
+        pin_setup_input(state->pin1, PIN_PULL_UP);
         update(state);
     }
 }

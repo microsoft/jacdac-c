@@ -62,6 +62,6 @@ void button_init(uint8_t pin, bool active, uint8_t backlight_pin) {
     state->backlight_pin = backlight_pin;
     state->active = active;
     pin_setup_output(backlight_pin);
-    pin_setup_input(state->pin, state->active == 0 ? 1 : -1);
+    pin_setup_input(state->pin, state->active == 0 ? PIN_PULL_UP : PIN_PULL_DOWN);
     update(state);
 }

@@ -42,6 +42,6 @@ SRV_DEF(touch, JD_SERVICE_CLASS_TOUCHBUTTON);
 void touch_init(uint8_t pin) {
     SRV_ALLOC(touch);
     state->pin = pin;
-    pin_setup_input(state->pin, 0);
+    pin_setup_input(state->pin, PIN_PULL_NONE);
     update(state);
 }
