@@ -110,4 +110,27 @@ typedef struct {
 // variant is set according to the service specification. See joystick.h
 void joystick_init(const joystick_params_t *params);
 
+// all mult_* values default to 0xff
+typedef struct {
+    // these registers are optional - if you leave them at 0, the service will not respond to them
+    // keep in sync with REG_DEFINITION() in led.c!
+    uint8_t variant;
+    uint16_t wave_length;
+    uint16_t led_count;
+    uint16_t max_power;
+    uint16_t luminous_intensity;
+
+    // these are settings, not registers
+    uint8_t pin_r; // also used for monochrome
+    uint8_t mult_r;
+    uint8_t pin_g; // use NO_PIN for monochrome
+    uint8_t mult_g;
+    uint8_t pin_b; // use NO_PIN for monochrome
+    uint8_t mult_b;
+    uint8_t active_high; // common cathode
+    uint16_t pwm_period; // defaults to 512; can't be less than 512
+} led_params_t;
+void led_service_init(const led_params_t *params);
+
+
 #endif
