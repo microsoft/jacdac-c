@@ -14,7 +14,7 @@
 #define CON_LOG 0
 #endif
 
-#define PRESS_THRESHOLD 70
+#define PRESS_THRESHOLD (70 * 16)
 #define PRESS_TICKS 2
 
 #define SAMPLING_US 500

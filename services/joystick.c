@@ -49,15 +49,15 @@ static void update(srv_t *state) {
         pin_setup_output(state->params.pinL);
         pin_set(state->params.pinL, 0);
 
-        uint16_t x = adc_read_pin(state->params.pinX) - 2048;
-        uint16_t y = adc_read_pin(state->params.pinY) - 2048;
+        int x = adc_read_pin(state->params.pinX) - 0x8000;
+        int y = adc_read_pin(state->params.pinY) - 0x8000;
 
         // save power
         pin_setup_analog_input(state->params.pinH);
         pin_setup_analog_input(state->params.pinL);
 
-        state->direction.x = x << 4;
-        state->direction.y = y << 4;
+        state->direction.x = x;
+        state->direction.y = y;
 
         if (state->direction.x <
             ((btns0 & JD_JOYSTICK_BUTTONS_LEFT) ? -THRESHOLD_KEEP : -THRESHOLD_SWITCH))
