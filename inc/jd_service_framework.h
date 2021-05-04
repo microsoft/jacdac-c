@@ -25,12 +25,18 @@
 #define _REG_BYTE8 7
 #define _REG_BIT 8
 #define _REG_BYTES 9
+#define _REG_OPT8 10
+#define _REG_OPT16 11
+#define _REG_OPT32 12
 #define REG_I8(v) _REG_(_REG_I8, (v))
 #define REG_U8(v) _REG_(_REG_U8, (v))
 #define REG_I16(v) _REG_(_REG_I16, (v))
 #define REG_U16(v) _REG_(_REG_U16, (v))
 #define REG_I32(v) _REG_(_REG_I32, (v))
 #define REG_U32(v) _REG_(_REG_U32, (v))
+#define REG_OPT8(v) _REG_(_REG_OPT8, (v))
+#define REG_OPT16(v) _REG_(_REG_OPT16, (v))
+#define REG_OPT32(v) _REG_(_REG_OPT32, (v))
 #define REG_BYTE4(v) _REG_(_REG_BYTE4, (v))
 #define REG_BYTE8(v) _REG_(_REG_BYTE8, (v))
 #define REG_BIT(v) _REG_(_REG_BIT, (v))

@@ -18,7 +18,15 @@ struct srv_state {
 };
 
 #define REG_IS_SIGNED(r) ((r) <= 4 && !((r)&1))
-static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1};
+#define REG_IS_OPT(r) ((r) >= _REG_OPT8)
+static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1, 0, 1, 2, 4};
+
+static int is_zero(const uint8_t *p, uint32_t sz) {
+    while (sz--)
+        if (*p++ != 0x00)
+            return 0;
+    return 1;
+}
 
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]) {
     bool is_get = (pkt->service_command >> 12) == (JD_CMD_GET_REGISTER >> 12);
@@ -71,7 +79,9 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
                     uint8_t v = *sptr & (1 << bitoffset) ? 1 : 0;
                     jd_send(pkt->service_number, pkt->service_command, &v, 1);
                 } else {
-                    jd_send(pkt->service_number, pkt->service_command, sptr, regSize[tp]);
+                    if (REG_IS_OPT(tp) && is_zero(sptr, regsz))
+                        return 0;
+                    jd_send(pkt->service_number, pkt->service_command, sptr, regsz);
                 }
                 return -reg;
             } else {
