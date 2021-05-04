@@ -19,7 +19,7 @@
 
 #define RGB_IN_TIM 0x01
 
-#define FRAME_US 100000
+#define FRAME_US 65536
 
 // assume a non-RGB LED is connected like this: MCU -|>- GND
 #ifndef PIN_LED_R
