@@ -168,7 +168,7 @@ void jd_line_falling() {
     uart_start_rx(rxFrame, sizeof(*rxFrame));
     // log_pin_set(1, 0);
 
-    tim_set_timer(100, setup_rx_timeout);
+    tim_set_timer(200, setup_rx_timeout);
 
     // target_enable_irq();
 }
