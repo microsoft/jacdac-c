@@ -37,10 +37,11 @@ typedef struct {
     int32_t max_angle;
     int16_t min_pulse;
     int16_t max_pulse;
+    uint8_t power_pin;
 } servo_params_t;
 
 // Servo control service.
-void servo_init(const servo_params_t *params, uint8_t power_pin);
+void servo_init(const servo_params_t *params);
 
 // Button service.
 // The button is active-low if active==0, and active-low when active==1.

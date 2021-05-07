@@ -38,6 +38,7 @@ REG_DEFINITION(                   //
     REG_U16(JD_SERVO_REG_MIN_PULSE), //
     REG_U16(JD_SERVO_REG_MAX_PULSE), //
     REG_U8(JD_SERVO_REG_ENABLED),    // same, for 'uint8_t enabled'
+    REG_U8(JD_REG_PADDING),       // power pin
 )
 
 static void set_pwr(srv_t *state, int on) {
@@ -115,9 +116,8 @@ void servo_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(servo, JD_SERVICE_CLASS_SERVO);
-void servo_init(const servo_params_t *params, uint8_t power_pin) {
+void servo_init(const servo_params_t *params) {
     SRV_ALLOC(servo);
     state->params = *params;
     state->params0 = params;
-    state->power_pin = power_pin;
 }
