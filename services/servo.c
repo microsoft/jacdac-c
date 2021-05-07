@@ -23,7 +23,6 @@ struct srv_state {
     uint8_t is_on;
     const servo_params_t *params0;
     uint32_t pulse;
-    uint8_t power_pin;
 };
 
 REG_DEFINITION(                   //
@@ -45,18 +44,15 @@ static void set_pwr(srv_t *state, int on) {
     if (state->is_on == on)
         return;
     if (on) {
-        if (state->power_pin != 0xff) {
-            pin_setup_output(state->power_pin);
-            pin_set(state->power_pin,0);
-        }
+        pin_setup_output(state->params.power_pin);
+        pin_set(state->params.power_pin,0);
         pwr_enter_pll();
         // configure at 1MHz
         if (!state->pwm_pin)
             state->pwm_pin = pwm_init(state->params.pin, SERVO_PERIOD, 0, cpu_mhz);
         pwm_enable(state->pwm_pin, 1);
     } else {
-        if (state->power_pin != 0xff)
-            pin_setup_input(state->power_pin, 0);
+        pin_setup_input(state->params.power_pin, 0);
         pin_set(state->params.pin, 0);
         pwm_enable(state->pwm_pin, 0);
         pwr_leave_pll();
