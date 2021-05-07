@@ -114,7 +114,7 @@ static void kx023_init(void) {
     init_chip();
 }
 
-const acc_api_t acc_kx023 = {
+const accelerometer_api_t accelerometer_kx023 = {
     .init = kx023_init,
     .get_sample = kx023_get_sample,
     .sleep = kx023_sleep,

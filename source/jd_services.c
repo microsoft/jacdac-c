@@ -11,7 +11,6 @@
 static srv_t **services;
 static uint8_t num_services, reset_counter, packets_sent;
 
-static uint64_t maxId;
 static uint32_t lastMax, lastDisconnectBlink, nextAnnounce;
 
 struct srv_state {
@@ -19,7 +18,15 @@ struct srv_state {
 };
 
 #define REG_IS_SIGNED(r) ((r) <= 4 && !((r)&1))
-static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1};
+#define REG_IS_OPT(r) ((r) >= _REG_OPT8)
+static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1, 0, 1, 2, 4};
+
+static int is_zero(const uint8_t *p, uint32_t sz) {
+    while (sz--)
+        if (*p++ != 0x00)
+            return 0;
+    return 1;
+}
 
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]) {
     bool is_get = (pkt->service_command >> 12) == (JD_CMD_GET_REGISTER >> 12);
@@ -72,7 +79,9 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
                     uint8_t v = *sptr & (1 << bitoffset) ? 1 : 0;
                     jd_send(pkt->service_number, pkt->service_command, &v, 1);
                 } else {
-                    jd_send(pkt->service_number, pkt->service_command, sptr, regSize[tp]);
+                    if (REG_IS_OPT(tp) && is_zero(sptr, regsz))
+                        return 0;
+                    jd_send(pkt->service_number, pkt->service_command, sptr, regsz);
                 }
                 return -reg;
             } else {
@@ -167,22 +176,23 @@ void jd_services_announce() {
     uint32_t dst[num_services];
     for (int i = 0; i < num_services; ++i)
         dst[i] = services[i]->vt->service_class;
-    if (reset_counter < 0xf)
+    if (reset_counter < JD_CONTROL_ANNOUNCE_FLAGS_RESTART_COUNTER_STEADY)
         reset_counter++;
-    uint8_t reset_light = reset_counter;
+
+    uint16_t adflags = reset_counter;
 #if JD_CONFIG_STATUS == 1
 #ifdef PIN_LED_R
-    reset_light |= JD_CONTROL_RESTART_LIGHT_FLAGS_STATUS_LIGHT_RGB_FADE;
+    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_STATUS_LIGHT_RGB_FADE;
 #else
-    reset_light |= JD_CONTROL_RESTART_LIGHT_FLAGS_STATUS_LIGHT_MONO;
+    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_STATUS_LIGHT_MONO;
 #endif
 #endif
 
-    uint8_t adflags = JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_ACK |
-                      JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_BROADCAST |
-                      JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_FRAMES;
+    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_ACK |
+               JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_BROADCAST |
+               JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_FRAMES;
 
-    dst[0] = reset_light | (adflags << 8) | ((packets_sent + 1) << 16);
+    dst[0] = adflags | ((packets_sent + 1) << 16);
 
     if (jd_send(JD_SERVICE_NUMBER_CONTROL, JD_CONTROL_CMD_SERVICES, dst, num_services * 4) == 0) {
         packets_sent = 0;
@@ -191,14 +201,8 @@ void jd_services_announce() {
 
 static void handle_ctrl_tick(jd_packet_t *pkt) {
     if (pkt->service_command == JD_CONTROL_CMD_SERVICES) {
-        // if we have not seen maxId for 1.1s, find a new maxId
-        if (pkt->device_identifier < maxId && in_past(lastMax + 1100000)) {
-            maxId = pkt->device_identifier;
-        }
-
-        // maxId? blink!
-        if (pkt->device_identifier >= maxId) {
-            maxId = pkt->device_identifier;
+        // client? blink!
+        if (pkt->service_size >= 4 && pkt->data[1] & (JD_CONTROL_ANNOUNCE_FLAGS_IS_CLIENT >> 8)) {
             lastMax = now;
             jd_status(JD_STATUS_CONNECTED);
         }

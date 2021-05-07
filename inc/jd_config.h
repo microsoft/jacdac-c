@@ -46,6 +46,14 @@
 #define JD_CONFIG_STATUS 1
 #endif
 
+#ifndef JD_CONFIG_IDENTIFY
+#if JD_CONFIG_STATUS == 1
+#define JD_CONFIG_IDENTIFY 0
+#else
+#define JD_CONFIG_IDENTIFY 1
+#endif
+#endif
+
 #ifndef JD_CONFIG_APP_PROCESS_HOOK
 #define JD_CONFIG_APP_PROCESS_HOOK 0
 #endif

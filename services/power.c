@@ -89,7 +89,7 @@ static void turn_on_power(srv_t *state) {
     uint32_t t0 = tim_get_micros();
     jd_power_enable(1);
     for (int i = 0; i < 1000; ++i) {
-        int gnd = adc_convert();
+        int gnd = adc_convert() >> 4;
         readings[rp++] = gnd;
         if (rp == READING_WINDOW)
             rp = 0;
@@ -134,8 +134,8 @@ void power_process(srv_t *state) {
         }
     }
 
-    int gnd = adc_read_pin(state->pin_gnd_sense);
-    int pre = adc_read_pin(state->pin_pre_sense);
+    int gnd = adc_read_pin(state->pin_gnd_sense) >> 4;
+    int pre = adc_read_pin(state->pin_pre_sense) >> 4;
 
     uint16_t sortedReadings[READING_WINDOW];
     memcpy(sortedReadings + 1, state->readings, sizeof(state->readings));

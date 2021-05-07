@@ -20,7 +20,7 @@ static void update(srv_t *state) {
     pin_setup_output(state->pinL);
     pin_set(state->pinL, 0);
 
-    state->sample = adc_read_pin(state->pinM) << 4;
+    state->sample = adc_read_pin(state->pinM);
 
     // save power
     pin_setup_analog_input(state->pinH);

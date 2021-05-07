@@ -43,25 +43,25 @@ static void update(srv_t *state) {
     }
 }
 
-void btn_process(srv_t *state) {
+void button_process(srv_t *state) {
     if (jd_should_sample(&state->nextSample, 9000)) {
         update(state);
     }
     sensor_process_simple(state, &state->pressed, sizeof(state->pressed));
 }
 
-void btn_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void button_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &state->pressed, sizeof(state->pressed));
 }
 
-SRV_DEF(btn, JD_SERVICE_CLASS_BUTTON);
+SRV_DEF(button, JD_SERVICE_CLASS_BUTTON);
 
-void btn_init(uint8_t pin, bool active, uint8_t backlight_pin) {
-    SRV_ALLOC(btn);
+void button_init(uint8_t pin, bool active, uint8_t backlight_pin) {
+    SRV_ALLOC(button);
     state->pin = pin;
     state->backlight_pin = backlight_pin;
     state->active = active;
     pin_setup_output(backlight_pin);
-    pin_setup_input(state->pin, state->active == 0 ? 1 : -1);
+    pin_setup_input(state->pin, state->active == 0 ? PIN_PULL_UP : PIN_PULL_DOWN);
     update(state);
 }

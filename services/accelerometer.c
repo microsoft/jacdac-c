@@ -25,9 +25,9 @@ Standing on bottom edge: 0,1000,0
 #define DEFAULT_RANGE 8
 
 #ifdef PIN_ACC_INT
-static uint8_t got_acc_int;
-static void acc_int(void) {
-    got_acc_int = 1;
+static uint8_t got_accelerometer_int;
+static void accelerometer_int(void) {
+    got_accelerometer_int = 1;
 }
 #endif
 
@@ -56,7 +56,7 @@ struct ShakeHistory {
 struct srv_state {
     SENSOR_COMMON;
 
-    const acc_api_t *hw;
+    const accelerometer_api_t *hw;
     uint8_t sigma;
     uint8_t impulseSigma;
     uint16_t g_events;
@@ -211,35 +211,35 @@ static void process_events(srv_t *state) {
     }
 }
 
-void acc_process(srv_t *state) {
+void accelerometer_process(srv_t *state) {
 #ifdef PIN_ACC_INT
-    if (!got_acc_int)
+    if (!got_accelerometer_int)
         return;
-    got_acc_int = 0;
+    got_accelerometer_int = 0;
 #else
     if (!jd_should_sample(&state->nextSample, SAMPLING_PERIOD))
         return;
 #endif
 
     state->hw->get_sample(&sample.x);
-    acc_data_transform(&sample.x);
+    accelerometer_data_transform(&sample.x);
 
     process_events(state);
 
     sensor_process_simple(state, &sample, sizeof(sample));
 }
 
-void acc_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void accelerometer_handle_packet(srv_t *state, jd_packet_t *pkt) {
     sensor_handle_packet_simple(state, pkt, &sample, sizeof(sample));
 }
 
-SRV_DEF(acc, JD_SERVICE_CLASS_ACCELEROMETER);
-void acc_init(const acc_api_t *hw) {
-    SRV_ALLOC(acc);
+SRV_DEF(accelerometer, JD_SERVICE_CLASS_ACCELEROMETER);
+void accelerometer_init(const accelerometer_api_t *hw) {
+    SRV_ALLOC(accelerometer);
     state->hw = hw;
     hw->init();
 #ifdef PIN_ACC_INT
-    pin_setup_input(PIN_ACC_INT, -1);
-    exti_set_callback(PIN_ACC_INT, acc_int, EXTI_RISING);
+    pin_setup_input(PIN_ACC_INT, PIN_PULL_DOWN);
+    exti_set_callback(PIN_ACC_INT, accelerometer_int, EXTI_RISING);
 #endif
 }

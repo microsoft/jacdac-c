@@ -14,7 +14,7 @@
 #define CON_LOG 0
 #endif
 
-#define PRESS_THRESHOLD 70
+#define PRESS_THRESHOLD (70 * 16)
 #define PRESS_TICKS 2
 
 #define SAMPLING_US 500
@@ -244,7 +244,7 @@ void multitouch_init(const uint8_t *pins) {
 
     for (int i = 0; i < state->numpins; ++i) {
         state->pins[i].pin = pins[i];
-        pin_setup_input(pins[i], 0);
+        pin_setup_input(pins[i], PIN_PULL_NONE);
 #if PIN_LOG
         pin_setup_output(logpins[i]);
         pin_setup_output(LOG_SW);

@@ -10,6 +10,6 @@ bool adc_can_read_pin(uint8_t pin);
 void adc_prep_read_pin(uint8_t pin);
 uint16_t adc_convert(void);
 void adc_disable(void);
-uint16_t adc_read_pin(uint8_t pin); // equivalent to the three steps above
+uint16_t adc_read_pin(uint8_t pin); // equivalent to the three steps above; result is always scaled to 16 bits
 
 #endif

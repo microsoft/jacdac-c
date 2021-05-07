@@ -88,7 +88,7 @@ static void kxtj3_init(void) {
     init_chip();
 }
 
-const acc_api_t acc_kxtj3 = {
+const accelerometer_api_t accelerometer_kxtj3 = {
     .init = kxtj3_init,
     .get_sample = kxtj3_get_sample,
     .sleep = kxtj3_sleep,
