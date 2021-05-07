@@ -27,7 +27,7 @@ struct srv_state {
 
 REG_DEFINITION(                   //
     servo_regs,                   //
-    REG_SRV_COMMON,                 //
+    REG_SRV_COMMON,               //
     REG_I32(JD_SERVO_REG_ANGLE),  // this must match the uint32_t type on 'angle' field in srv_state
     REG_I32(JD_SERVO_REG_OFFSET), // ditto for 'offset'
     REG_U8(JD_REG_PADDING),       // pin
@@ -45,14 +45,14 @@ static void set_pwr(srv_t *state, int on) {
         return;
     if (on) {
         pin_setup_output(state->params.power_pin);
-        pin_set(state->params.power_pin,0);
+        pin_set(state->params.power_pin, 0);
         pwr_enter_pll();
         // configure at 1MHz
         if (!state->pwm_pin)
             state->pwm_pin = pwm_init(state->params.pin, SERVO_PERIOD, 0, cpu_mhz);
         pwm_enable(state->pwm_pin, 1);
     } else {
-        pin_setup_input(state->params.power_pin, 0);
+        pin_setup_input(state->params.power_pin, PIN_PULL_NONE);
         pin_set(state->params.pin, 0);
         pwm_enable(state->pwm_pin, 0);
         pwr_leave_pll();
@@ -86,8 +86,8 @@ void servo_handle_packet(srv_t *state, jd_packet_t *pkt) {
             *p = *state->params0;
         } else {
             // otherwise, clamp the supplied user config
-            // the clamping values are chosen so that the multiplication in pulse computation doesn't overflow
-            // we take a larger positive max_angle for linear servos
+            // the clamping values are chosen so that the multiplication in pulse computation
+            // doesn't overflow we take a larger positive max_angle for linear servos
             p->min_angle = clamp(-360 << 16, p->min_angle, 1024 << 16);
             p->max_angle = clamp(-360 << 16, p->max_angle, 1024 << 16);
             p->min_pulse = clamp(0, p->min_pulse, 6000);
