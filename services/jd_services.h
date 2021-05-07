@@ -33,11 +33,11 @@ void buzzer_init(uint8_t pin);
 typedef struct {
     uint8_t pin;
     uint8_t fixed; // if set min/max angle/pulse can't be modified by register writes
+    uint8_t power_pin;
     int32_t min_angle;
     int32_t max_angle;
     int16_t min_pulse;
     int16_t max_pulse;
-    uint8_t power_pin;
 } servo_params_t;
 
 // Servo control service.
