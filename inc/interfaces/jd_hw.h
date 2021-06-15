@@ -58,6 +58,7 @@ void i2c_init(void);
 int i2c_setup_write(uint8_t addr, unsigned len, bool repeated);
 int i2c_write(uint8_t c);
 int i2c_finish_write(bool repeated);
+void i2c_reset(void);
 
 // utilities, 8-bit register addresses
 int i2c_write_reg_buf(uint8_t addr, uint8_t reg, const void *src, unsigned len);
