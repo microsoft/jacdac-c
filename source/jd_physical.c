@@ -126,13 +126,17 @@ static void rx_timeout(void) {
 }
 
 static void setup_rx_timeout(void) {
-    uart_flush_rx();
-    uint32_t *p = (uint32_t *)rxFrame;
-    if (p[0] == 0 && p[1] == 0) {
-        rx_timeout(); // didn't get any data after lo-pulse
-    } else {
-        // got the size - set timeout for whole packet
-        tim_set_timer(JD_FRAME_SIZE(rxFrame) * 12 + 60, rx_timeout);
+    // It's possible this only gets executed after the entire reception process has finished.
+    // In that case, we don't want to set any additional timers.
+    if (status & JD_STATUS_RX_ACTIVE) {
+        uart_flush_rx();
+        uint32_t *p = (uint32_t *)rxFrame;
+        if (p[0] == 0 && p[1] == 0) {
+            rx_timeout(); // didn't get any data after lo-pulse
+        } else {
+            // got the size - set timeout for whole packet
+            tim_set_timer(JD_FRAME_SIZE(rxFrame) * 12 + 60, rx_timeout);
+        }
     }
 }
 
