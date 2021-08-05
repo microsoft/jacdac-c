@@ -254,12 +254,12 @@ static float rgb_to_hsl ( float red, float green, float blue )
     float fmin;
     float hue_value;
     float saturation_value;
-    float luminance_value;
+    // float luminance_value;
 
     fmax = max_color( max_color( red, green ), blue );
     fmin = min_color( min_color( red, green ), blue );
 
-    luminance_value = fmax;
+    // luminance_value = fmax;
 
     if ( fmax > 0 )
     {
