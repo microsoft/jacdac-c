@@ -47,3 +47,40 @@ typedef int err_t;
 #endif
 
 #define MIKROBUS(mikrobus, pin) pin
+
+static inline void Delay_1us(void) {
+    jd_services_sleep_us(1);
+}
+static inline void Delay_10us(void) {
+    jd_services_sleep_us(10);
+}
+static inline void Delay_22us(void) {
+    jd_services_sleep_us(22);
+}
+static inline void Delay_50us(void) {
+    jd_services_sleep_us(50);
+}
+static inline void Delay_80us(void) {
+    jd_services_sleep_us(80);
+}
+static inline void Delay_500us(void) {
+    jd_services_sleep_us(500);
+}
+static inline void Delay_1ms(void) {
+    jd_services_sleep_us(1000);
+}
+static inline void Delay_5ms(void) {
+    jd_services_sleep_us(5000);
+}
+static inline void Delay_8ms(void) {
+    jd_services_sleep_us(8000);
+}
+static inline void Delay_10ms(void) {
+    jd_services_sleep_us(10000);
+}
+static inline void Delay_100ms(void) {
+    jd_services_sleep_us(100000);
+}
+static inline void Delay_1sec(void) {
+    jd_services_sleep_us(1000000);
+}
