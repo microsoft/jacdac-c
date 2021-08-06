@@ -6,6 +6,7 @@
 
 #include "jd_sensor.h"
 #include "interfaces/jd_accel.h"
+#include "interfaces/jd_color.h"
 #include "interfaces/jd_environment.h"
 
 // For pins where PWM or ADC is used, only certain pins are possible.
@@ -133,5 +134,7 @@ typedef struct {
 } led_params_t;
 void led_service_init(const led_params_t *params);
 
+// Color sensor service.
+void color_init(const color_api_t *api);
 
 #endif
