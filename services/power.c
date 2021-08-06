@@ -6,6 +6,9 @@
 #include "interfaces/jd_adc.h"
 #include "jacdac/dist/c/power.h"
 
+// this is using outdated service spec
+#if 0
+
 #define LOG JD_LOG
 // #define LOG JD_NOLOG
 
@@ -205,3 +208,5 @@ void power_init(uint8_t pre_sense, uint8_t gnd_sense, uint8_t overload, uint8_t 
     pin_setup_output(overload);
     pin_setup_output(pulse);
 }
+
+#endif
