@@ -23,6 +23,7 @@ typedef struct {
 } i2c_master_t;
 
 static inline void i2c_master_configure_default(i2c_master_config_t *config) {
+    config->addr = 0;
     // the rest is ignored or needs to be set anyways
     config->timeout_pass_count = 10000;
 }
@@ -30,6 +31,7 @@ static inline void i2c_master_configure_default(i2c_master_config_t *config) {
 static inline int i2c_master_open(i2c_master_t *obj, i2c_master_config_t *config) {
     obj->address = config->addr;
     obj->timeout_pass_count = config->timeout_pass_count;
+    i2c_init();
     return 0;
 }
 
