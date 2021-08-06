@@ -218,7 +218,7 @@ void air_quality4_get_h2_and_ethon ( airquality4_t *ctx, uint16_t *value );
  * to buffer determined by pointer in parametar of function.
  * This data should be stored on an external memory.
  */
-void air_quality4_get_baseline ( airquality4_t *ctx,  uint16_t *read_air);
+void air_quality4_get_baseline ( airquality4_t *ctx,  uint8_t *read_air);
 
 /**
  * @brief Set Baseline function.
