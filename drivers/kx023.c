@@ -116,6 +116,6 @@ static void kx023_init(void) {
 
 const accelerometer_api_t accelerometer_kx023 = {
     .init = kx023_init,
-    .get_sample = kx023_get_sample,
+    .get_sample = (get_sample_t)kx023_get_sample,
     .sleep = kx023_sleep,
 };

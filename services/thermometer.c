@@ -7,22 +7,23 @@
 
 struct srv_state {
     SENSOR_COMMON;
-    env_function_t read;
+    const env_sensor_api_t *api;
 };
 
 void thermometer_process(srv_t *state) {
-    env_sensor_process(state, state->read);
+    env_sensor_process(state, state->api);
 }
 
 void thermometer_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    env_sensor_handle_packet(state, pkt, state->read);
+    env_sensor_handle_packet(state, pkt, state->api);
 }
 
 SRV_DEF(thermometer, JD_SERVICE_CLASS_THERMOMETER);
 
-void thermometer_init(env_function_t read) {
+void thermometer_init(const env_sensor_api_t *api) {
     SRV_ALLOC(thermometer);
     state->streaming_interval = 1000;
-    state->read = read;
-    read(); // start the sensor
+    state->api = api;
+    if (api->init)
+        api->init(); // start the sensor
 }

@@ -44,19 +44,24 @@ static int read_data(void) {
     return (data[1] << 8) | data[2];
 }
 
-static int th02_process(ctx_t *ctx) {
-    if (!ctx->inited) {
-        ctx->inited = 1;
-        i2c_init();
-        int id = i2c_read_reg(TH02_ADDR, TH02_ID);
-        DMESG("TH02 id=%x", id);
-        if (id < 0)
-            hw_panic();
-        ctx->temperature.min_value = SCALE_TEMP(-40);
-        ctx->temperature.max_value = SCALE_TEMP(70);
-        ctx->humidity.min_value = SCALE_TEMP(0);
-        ctx->humidity.max_value = SCALE_TEMP(100);
-    }
+static void th02_init(void) {
+    ctx_t *ctx = &state;
+    if (ctx->inited)
+        return;
+    ctx->inited = 1;
+    i2c_init();
+    int id = i2c_read_reg(TH02_ADDR, TH02_ID);
+    DMESG("TH02 id=%x", id);
+    if (id < 0)
+        hw_panic();
+    ctx->temperature.min_value = SCALE_TEMP(-40);
+    ctx->temperature.max_value = SCALE_TEMP(70);
+    ctx->humidity.min_value = SCALE_TEMP(0);
+    ctx->humidity.max_value = SCALE_TEMP(100);
+}
+
+static void th02_process(void) {
+    ctx_t *ctx = &state;
 
     // the 50ms here is just for readings, we actually sample at SAMPLING_MS
     if (jd_should_sample(&ctx->nextsample, 50000)) {
@@ -84,20 +89,30 @@ static int th02_process(ctx_t *ctx) {
             i2c_write_reg(TH02_ADDR, TH02_CONFIG, TH02_CFG_START | TH02_CFG_TEMP);
         }
     }
-
-    return ctx->inited >= 2;
 }
 
-const env_reading_t *th02_temperature(void) {
+static const env_reading_t *th02_temperature(void) {
     ctx_t *ctx = &state;
-    if (th02_process(ctx))
-        return &ctx->temperature;
-    return NULL;
+    if (ctx->inited < 2)
+        return NULL;
+    return &ctx->temperature;
 }
 
-const env_reading_t *th02_humidity(void) {
+static const env_reading_t *th02_humidity(void) {
     ctx_t *ctx = &state;
-    if (th02_process(ctx))
-        return &ctx->humidity;
-    return NULL;
+    if (ctx->inited < 2)
+        return NULL;
+    return &ctx->humidity;
 }
+
+const env_sensor_api_t temperature_th02 = {
+    .init = th02_init,
+    .process = th02_process,
+    .get_reading = th02_temperature,
+};
+
+const env_sensor_api_t humidity_th02 = {
+    .init = th02_init,
+    .process = th02_process,
+    .get_reading = th02_humidity,
+};

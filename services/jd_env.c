@@ -8,15 +8,18 @@ struct srv_state {
     SENSOR_COMMON;
 };
 
-void env_sensor_process(srv_t *state, env_function_t fn) {
+void env_sensor_process(srv_t *state, const env_sensor_api_t *api) {
+    if (api->process)
+        api->process();
+
     if (sensor_should_stream(state)) {
-        const env_reading_t *env = fn();
+        const env_reading_t *env = api->get_reading();
         if (env)
             jd_send(state->service_number, JD_GET(JD_REG_READING), &env->value, sizeof(env->value));
     }
 }
 
-int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, env_function_t fn) {
+int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_api_t *api) {
     int off;
 
     int r = sensor_handle_packet(state, pkt);
@@ -40,7 +43,7 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, env_function_t fn) 
         return 0;
     }
 
-    const env_reading_t *env = fn();
+    const env_reading_t *env = api->get_reading();
     if (env == NULL)
         return 0;
 

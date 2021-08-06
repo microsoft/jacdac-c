@@ -28,6 +28,9 @@ static void glue_color_get_sample(uint32_t sample[4]) {
     sample[3] = color_read_data(&ctx, COLOR_COLOR_DATA_CLEAR) << 16;
 }
 
-const color_api_t color_click = {.init = glue_color_init, .get_sample = glue_color_get_sample};
+const color_api_t color_click = {
+    .init = glue_color_init,
+    .get_sample = (get_sample_t)glue_color_get_sample,
+};
 
 #endif

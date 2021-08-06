@@ -167,7 +167,8 @@ static uint16_t instantaneousPosture(srv_t *state, uint32_t force) {
 #define G(g) ((g * 1024) * (g * 1024))
 static void process_events(srv_t *state) {
     // works up to 16g
-    uint32_t force = (sample.x >> 10) * (sample.x >> 10) + (sample.y >> 10) * (sample.y >> 10) + (sample.z >> 10) * (sample.z >> 10);
+    uint32_t force = (sample.x >> 10) * (sample.x >> 10) + (sample.y >> 10) * (sample.y >> 10) +
+                     (sample.z >> 10) * (sample.z >> 10);
 
     if (force > G(2)) {
         state->impulseSigma = 0;
@@ -220,6 +221,8 @@ void accelerometer_process(srv_t *state) {
     if (!jd_should_sample(&state->nextSample, SAMPLING_PERIOD))
         return;
 #endif
+    if (state->hw->process)
+        state->hw->process();
 
     state->hw->get_sample(&sample.x);
     accelerometer_data_transform(&sample.x);

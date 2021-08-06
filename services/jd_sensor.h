@@ -27,10 +27,10 @@ typedef struct {
     int32_t max_value;
 } env_reading_t;
 
-typedef const env_reading_t *(*env_function_t)(void);
+typedef struct env_sensor_api env_sensor_api_t;
 
-int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, env_function_t fn);
-void env_sensor_process(srv_t *state, env_function_t fn);
+int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_api_t *api);
+void env_sensor_process(srv_t *state, const env_sensor_api_t *api);
 
 #define SCALE_TEMP(x) (int)((x)*1024.0 + 0.5)
 #define SCALE_HUM(x) (int)((x)*1024.0 + 0.5)
