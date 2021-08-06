@@ -309,7 +309,7 @@ void color_cfg_setup ( color_cfg_t *cfg );
  * 
  * @description This function initializes all necessary pins and peripherals used for this click.
  */
-COLOR_RETVAL color_init ( color_t *ctx, color_cfg_t *cfg );
+COLOR_RETVAL color_init_ ( color_t *ctx, color_cfg_t *cfg );
 
 /**
  * @brief Click Default Configuration function.

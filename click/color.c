@@ -56,7 +56,7 @@ void color_cfg_setup ( color_cfg_t *cfg )
     cfg->i2c_address = COLOR_SLAVE_ADDRESS;
 }
 
-COLOR_RETVAL color_init ( color_t *ctx, color_cfg_t *cfg )
+COLOR_RETVAL color_init_ ( color_t *ctx, color_cfg_t *cfg )
 {
      i2c_master_config_t i2c_cfg;
 
