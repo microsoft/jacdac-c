@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 #include "jd_services.h"
-#include "interfaces/jd_environment.h"
+#include "interfaces/jd_sensor_api.h"
 #include "jacdac/dist/c/humidity.h"
 
 struct srv_state {

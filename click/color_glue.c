@@ -1,5 +1,5 @@
 #include "color.h"
-#include "interfaces/jd_color.h"
+#include "interfaces/jd_sensor_api.h"
 
 #ifdef MIKROBUS_AVAILABLE
 

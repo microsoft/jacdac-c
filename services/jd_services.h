@@ -5,9 +5,7 @@
 #define __JD_SERVICE_INIT_H
 
 #include "jd_sensor.h"
-#include "interfaces/jd_accel.h"
-#include "interfaces/jd_color.h"
-#include "interfaces/jd_environment.h"
+#include "interfaces/jd_sensor_api.h"
 
 // For pins where PWM or ADC is used, only certain pins are possible.
 // Best search for an existing call of the *_init() function and use the same pins.
