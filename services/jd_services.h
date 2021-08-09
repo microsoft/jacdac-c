@@ -133,5 +133,19 @@ typedef struct {
 } led_params_t;
 void led_service_init(const led_params_t *params);
 
+// initialises a relay service. 
+// relay state is the driver pin, some relays also have a feedback pin to show whether they are active or not (relay_feedback)
+// in some cases, hw mfrs may want to light an LED when relay is active (relay_status)
+// For variant values, please see relay.h
+typedef struct {
+    uint8_t relay_variant;
+    uint32_t max_switching_current;
+    uint8_t pin_relay_drive;
+    uint8_t pin_relay_feedback;
+    uint8_t pin_relay_led;
+    uint8_t drive_active_lo;
+    uint8_t led_active_lo;
+} relay_params_t;
+void relay_service_init(const relay_params_t *params);
 
 #endif
