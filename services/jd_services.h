@@ -52,6 +52,10 @@ void button_init(uint8_t pin, bool active, uint8_t backlight_pin);
 void thermometer_init(const env_sensor_api_t *api);
 void humidity_init(const env_sensor_api_t *api);
 
+// Air quality sensors
+void eco2_init(const env_sensor_api_t *api);
+void tvoc_init(const env_sensor_api_t *api);
+
 // Potentiometer service.
 // pinM is sampled, while pinL is set low, and pinH is set high.
 // When not sampling, pinL and pinH are left as inputs, reducing power consumption.

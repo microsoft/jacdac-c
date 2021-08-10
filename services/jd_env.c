@@ -3,6 +3,7 @@
 
 #include "jd_services.h"
 #include "interfaces/jd_sensor_api.h"
+#include "jacdac/dist/c/eco2.h"
 
 struct srv_state {
     SENSOR_COMMON;
@@ -21,6 +22,7 @@ void env_sensor_process(srv_t *state, const env_sensor_api_t *api) {
 
 int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_api_t *api) {
     int off;
+    int32_t tmp;
 
     int r = sensor_handle_packet(state, pkt);
     if (r)
@@ -39,6 +41,13 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
     case JD_GET(JD_REG_MAX_READING):
         off = 3;
         break;
+    case JD_GET(JD_E_CO2_REG_CONDITIONING_PERIOD):
+        if (api->conditioning_period) {
+            tmp = api->conditioning_period();
+            goto send_it;
+        } else {
+            return 0;
+        }
     default:
         return 0;
     }
@@ -46,9 +55,10 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
     const env_reading_t *env = api->get_reading();
     if (env == NULL)
         return 0;
+    tmp = (&env->value)[off];
 
-    jd_send(pkt->service_number, pkt->service_command, &env->value + off, 4);
-
+send_it:
+    jd_send(pkt->service_number, pkt->service_command, &tmp, 4);
     return -(pkt->service_command & 0xfff);
 }
 

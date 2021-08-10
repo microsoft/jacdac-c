@@ -72,16 +72,22 @@ static const env_reading_t *tvoc_reading(void) {
     return numsamples > 15 ? &tvoc : NULL;
 }
 
+static uint32_t aq4_conditioning_period(void) {
+    return 15;
+}
+
 ENV_INIT_DUAL(aq4_init, aq4_sleep)
 
 const env_sensor_api_t eco2_airquality4 = {
     .get_reading = eco2_reading,
     .process = aq4_process,
+    .conditioning_period = aq4_conditioning_period,
     ENV_INIT_PTRS(0),
 };
 
 const env_sensor_api_t tvoc_airquality4 = {
     .get_reading = tvoc_reading,
     .process = aq4_process,
+    .conditioning_period = aq4_conditioning_period,
     ENV_INIT_PTRS(1),
 };

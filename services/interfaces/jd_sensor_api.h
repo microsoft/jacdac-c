@@ -19,6 +19,7 @@ struct env_sensor_api {
     void (*process)(void);
     void (*sleep)(void);
     const env_reading_t *(*get_reading)(void);
+    uint32_t (*conditioning_period)(void);
 };
 
 typedef sensor_api_t accelerometer_api_t;
