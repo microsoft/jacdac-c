@@ -41,3 +41,7 @@ void env_sensor_process(srv_t *state, const env_sensor_api_t *api);
 
 int32_t env_extrapolate_error(int32_t value, const int32_t *error_table);
 void env_set_value(env_reading_t *env, int32_t value, const int32_t *error_table);
+
+// relative->absolute humidity conversion; 
+// all args are i22.10; temp is C, humidity %, result g/m3
+int32_t env_absolute_humidity(int32_t temp, int32_t humidity);

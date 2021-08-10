@@ -87,3 +87,17 @@ int32_t env_extrapolate_error(int32_t value, const int32_t *error_table) {
         idx += 2;
     }
 }
+
+#define ABSHUM(t, h) (int)(t * (1 << 10)), (int)(h * (1 << 10))
+static const int32_t abs_hum[] = {
+    ABSHUM(-25, 0.6), ABSHUM(-20, 0.9), ABSHUM(-15, 1.6), ABSHUM(-10, 2.3), ABSHUM(-5, 3.4),
+    ABSHUM(0, 4.8),   ABSHUM(5, 6.8),   ABSHUM(10, 9.4),  ABSHUM(15, 12.8), ABSHUM(20, 17.3),
+    ABSHUM(25, 23),   ABSHUM(30, 30.4), ABSHUM(35, 39.6), ABSHUM(40, 51.1), ABSHUM(45, 65.4),
+    ABSHUM(50, 83),   ERR_END,
+};
+
+// result is i22.10 g/m3
+int32_t env_absolute_humidity(int32_t temp, int32_t humidity) {
+    int32_t maxval = env_extrapolate_error(temp, abs_hum);
+    return (maxval * humidity / 100) >> 10;
+}
