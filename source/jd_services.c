@@ -9,6 +9,7 @@
 #define MAX_SERV 32
 
 #define IN_SERV_INIT 0xff
+#define IN_SERV_SLEEP 0xfe
 
 static srv_t **services;
 static uint8_t num_services, reset_counter, packets_sent;
@@ -254,13 +255,17 @@ void jd_services_tick() {
         }
     }
 
-    for (int i = 0; i < num_services; ++i) {
-        if (!(services[i]->srv_flags & SRV_FLAG_IN_SLEEP)) {
+    // do ctrl process regardless of sleep status
+    services[0]->vt->process(services[0]);
+
+    // while in sleep state, do not run any more nested process()
+    if (curr_service_process != IN_SERV_SLEEP) {
+        for (int i = 1; i < num_services; ++i) {
             curr_service_process = i;
             services[i]->vt->process(services[i]);
         }
+        curr_service_process = 0;
     }
-    curr_service_process = 0;
 
     jd_process_event_queue();
 
@@ -301,20 +306,18 @@ void jd_services_sleep_us(uint32_t delta) {
         return;
     }
 
-    if (!curr_serv) {
+    if (!curr_serv || curr_serv == IN_SERV_SLEEP) {
         // not allowed outside of regular (non-ctrl) service process() callback
         DMESG("sleep outside of process()");
         jd_panic();
     }
-    services[curr_serv]->srv_flags |= SRV_FLAG_IN_SLEEP;
-    curr_service_process = 0;
+    curr_service_process = IN_SERV_SLEEP;
     refresh_now();
     uint32_t end_time = now + delta;
     while (in_future(end_time)) {
         jd_process_everything_core();
         refresh_now();
     }
-    services[curr_serv]->srv_flags &= ~SRV_FLAG_IN_SLEEP;
     curr_service_process = curr_serv;
 }
 

@@ -57,8 +57,6 @@ struct _srv_vt {
 };
 typedef struct _srv_vt srv_vt_t;
 
-#define SRV_FLAG_IN_SLEEP 0x01
-
 #define SRV_COMMON                                                                                 \
     const srv_vt_t *vt;                                                                            \
     uint8_t service_number;                                                                        \
