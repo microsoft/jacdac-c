@@ -19,7 +19,8 @@ struct env_sensor_api {
     void (*process)(void);
     void (*sleep)(void);
     const env_reading_t *(*get_reading)(void);
-    uint32_t (*conditioning_period)(void);
+    uint32_t (*conditioning_period)(void); // for eco2 and tvoc
+    void (*set_temp_humidity)(int32_t temp, int32_t humidity);
 };
 
 typedef sensor_api_t accelerometer_api_t;
@@ -41,4 +42,3 @@ extern const env_sensor_api_t humidity_shtc3;
 // SG30 sensor on airquality4 click
 extern const env_sensor_api_t eco2_airquality4;
 extern const env_sensor_api_t tvoc_airquality4;
-

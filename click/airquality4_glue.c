@@ -6,6 +6,7 @@ static uint32_t nextsample;
 static uint32_t numsamples;
 static env_reading_t eco2;
 static env_reading_t tvoc;
+static uint8_t hum_comp[3];
 
 // This macros to be used when a single sensor implements two (or more) services
 #define ENV_INIT_N(finit, fsleep, n)                                                               \
@@ -30,6 +31,19 @@ static env_reading_t tvoc;
 
 #define ENV_INIT_PTRS(n) .init = init##n, .sleep = sleep##n
 
+static uint8_t crc8(const uint8_t *data, int len) {
+    uint8_t res = 0xff;
+    while (len--) {
+        res ^= *data++;
+        for (int i = 0; i < 8; ++i)
+            if (res & 0x80)
+                res = (res << 1) ^ 0x31;
+            else
+                res = (res << 1);
+    }
+    return res;
+}
+
 static void aq4_init(void) {
     airquality4_cfg_t cfg;
     airquality4_cfg_setup(&cfg);
@@ -42,13 +56,29 @@ static void aq4_init(void) {
     eco2.max_value = 60000 << 10;
     tvoc.min_value = 0 << 10;
     tvoc.max_value = 60000 << 10;
+
+    // "Test vector" from datasheet
+    uint8_t tmp[2] = {0xbe, 0xef};
+    if (crc8(tmp, 2) != 0x92)
+        hw_panic();
+}
+
+static void aq4_set_temp_humidity(int32_t temp, int32_t humidity) {
+    // TODO convert to g/m3; big endian!
+    hum_comp[2] = crc8(hum_comp, 2);
 }
 
 static void aq4_process(void) {
     if (jd_should_sample(&nextsample, 1000000)) {
-        numsamples++;
+        if (hum_comp[0] || hum_comp[1]) {
+            i2c_write_reg16_buf(0x58, 0x2061, hum_comp, 3);
+            jd_services_sleep_us(10000);
+        }
+
         uint16_t vals[2];
         air_quality4_get_co2_and_tvoc(&ctx, vals);
+
+        numsamples++;
 
         eco2.value = vals[0] << 10;
         eco2.error = vals[0] << 6; // just a wild guess
@@ -82,6 +112,7 @@ const env_sensor_api_t eco2_airquality4 = {
     .get_reading = eco2_reading,
     .process = aq4_process,
     .conditioning_period = aq4_conditioning_period,
+    .set_temp_humidity = aq4_set_temp_humidity,
     ENV_INIT_PTRS(0),
 };
 
@@ -89,5 +120,6 @@ const env_sensor_api_t tvoc_airquality4 = {
     .get_reading = tvoc_reading,
     .process = aq4_process,
     .conditioning_period = aq4_conditioning_period,
+    .set_temp_humidity = aq4_set_temp_humidity,
     ENV_INIT_PTRS(1),
 };
