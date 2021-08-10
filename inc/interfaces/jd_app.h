@@ -11,7 +11,6 @@
  */
 void app_init_services(void);
 
-#if JD_CONFIG_APP_PROCESS_HOOK == 1
 /**
  * This is an optionally implementable callback invoked in main.c.
  * It allows apps to perform meta-level configuration detection.
@@ -19,4 +18,3 @@ void app_init_services(void);
  * hardware changes at runtime (e.g. XAC module).
  */
 void app_process(void);
-#endif

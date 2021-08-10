@@ -277,10 +277,7 @@ static void jd_process_everything_core(void) {
         jd_services_process_frame(fr);
 
     jd_services_tick();
-
-#if JD_CONFIG_APP_PROCESS_HOOK == 1
     app_process();
-#endif
 }
 
 static void refresh_now(void) {
@@ -325,3 +322,5 @@ void dump_pkt(jd_packet_t *pkt, const char *msg) {
     LOG("pkt[%s]; s#=%d sz=%d %x", msg, pkt->service_number, pkt->service_size,
         pkt->service_command);
 }
+
+__attribute__((weak)) void app_process(void) {}
