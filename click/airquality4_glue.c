@@ -24,7 +24,9 @@ static uint8_t crc8(const uint8_t *data, int len) {
 static void aq4_init(void) {
     airquality4_cfg_t cfg;
     airquality4_cfg_setup(&cfg);
+#ifdef MIKROBUS_AVAILABLE
     AIRQUALITY4_MAP_MIKROBUS(cfg, NA);
+#endif
     if (airquality4_init(&ctx, &cfg) != AIRQUALITY4_OK)
         hw_panic();
     airquality4_default_cfg(&ctx);
