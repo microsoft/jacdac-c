@@ -1,5 +1,6 @@
 #include "airquality4.h"
 #include "interfaces/jd_sensor_api.h"
+#include <math.h>
 
 static airquality4_t ctx;
 static uint32_t nextsample;
@@ -64,7 +65,14 @@ static void aq4_init(void) {
 }
 
 static void aq4_set_temp_humidity(int32_t temp, int32_t humidity) {
-    // TODO convert to g/m3; big endian!
+    float t = temp / (float)(1 << 10);
+    float rh = humidity / (float)(1 << 10);
+    // https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/
+    float absh = (13.247f * expf((17.67f * t) / (t + 243.5f)) * rh) / (273.15f + t);
+    DMESG("absH: %d g/m3", (int)absh);
+    uint16_t scaled = (uint16_t)(absh * 256);
+    hum_comp[0] = scaled >> 8;
+    hum_comp[1] = scaled & 0xff;
     hum_comp[2] = crc8(hum_comp, 2);
 }
 
