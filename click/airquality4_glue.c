@@ -65,7 +65,6 @@ static void aq4_init(void) {
 
 static void aq4_set_temp_humidity(int32_t temp, int32_t humidity) {
     uint16_t scaled = env_absolute_humidity(temp, humidity) >> 2;
-    DMESG("absH: %d/256 g/m3", scaled);
     hum_comp[0] = scaled >> 8;
     hum_comp[1] = scaled & 0xff;
     hum_comp[2] = crc8(hum_comp, 2);
@@ -86,8 +85,8 @@ static void aq4_process(void) {
         eco2.value = vals[0] << 10;
         eco2.error = vals[0] << 6; // just a wild guess
 
-        tvoc.value = vals[0] << 10;
-        tvoc.error = vals[0] << 6; // just a wild guess
+        tvoc.value = vals[1] << 10;
+        tvoc.error = vals[1] << 6; // just a wild guess
     }
 }
 
