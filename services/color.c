@@ -22,6 +22,7 @@ static void update(srv_t *state) {
             max = state->sample_raw[i];
     int d = (max >> 15);
     // int d = 1 << 16;
+    // TODO update this when color service is updated to use 32 bits
     state->sample[0] = state->sample_raw[0] / d;
     state->sample[1] = state->sample_raw[1] / d;
     state->sample[2] = state->sample_raw[2] / d;
@@ -51,6 +52,5 @@ SRV_DEF(color, JD_SERVICE_CLASS_COLOR);
 
 void color_init(const color_api_t *api) {
     SRV_ALLOC(color);
-    state->got_query = 1; // TODO remove me
     state->api = api;
 }
