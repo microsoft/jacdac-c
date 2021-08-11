@@ -24,6 +24,4 @@ void eco2_init(const env_sensor_api_t *api) {
     SRV_ALLOC(eco2);
     state->streaming_interval = 1000;
     state->api = api;
-    if (api->init)
-        api->init(); // start the sensor
 }

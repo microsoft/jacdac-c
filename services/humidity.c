@@ -23,7 +23,4 @@ void humidity_init(const env_sensor_api_t *api) {
     SRV_ALLOC(humidity);
     state->streaming_interval = 1000;
     state->api = api;
-    // start the sensor
-    if (api->init)
-        api->init();
 }

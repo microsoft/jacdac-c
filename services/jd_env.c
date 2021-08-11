@@ -9,7 +9,18 @@ struct srv_state {
     SENSOR_COMMON;
 };
 
+static void maybe_init(srv_t *state, const env_sensor_api_t *api) {
+    if (!state->inited) {
+        if (api->init)
+            api->init();
+        state->inited = true;
+    }
+}
+
 void env_sensor_process(srv_t *state, const env_sensor_api_t *api) {
+    if (!state->got_query)
+        return;
+    maybe_init(state, api);
     if (api->process)
         api->process();
 
@@ -51,6 +62,9 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
     default:
         return 0;
     }
+
+    state->got_query = 1;
+    maybe_init(state, api);
 
     const env_reading_t *env = api->get_reading();
     if (env == NULL)
