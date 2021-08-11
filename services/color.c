@@ -11,7 +11,6 @@ struct srv_state {
     uint32_t sample_raw[4];
     uint16_t sample[3];
     uint32_t nextSample;
-    uint8_t inited;
 };
 
 static void update(srv_t *state) {
