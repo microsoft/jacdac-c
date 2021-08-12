@@ -91,14 +91,14 @@ static void th02_process(void) {
     }
 }
 
-static const env_reading_t *th02_temperature(void) {
+static void *th02_temperature(void) {
     ctx_t *ctx = &state;
     if (ctx->inited < 2)
         return NULL;
     return &ctx->temperature;
 }
 
-static const env_reading_t *th02_humidity(void) {
+static void *th02_humidity(void) {
     ctx_t *ctx = &state;
     if (ctx->inited < 2)
         return NULL;

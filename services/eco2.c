@@ -7,15 +7,14 @@
 
 struct srv_state {
     SENSOR_COMMON;
-    const env_sensor_api_t *api;
 };
 
 void eco2_process(srv_t *state) {
-    env_sensor_process(state, state->api);
+    env_sensor_process(state);
 }
 
 void eco2_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    env_sensor_handle_packet(state, pkt, state->api);
+    env_sensor_handle_packet(state, pkt);
 }
 
 SRV_DEF(eco2, JD_SERVICE_CLASS_E_CO2);
