@@ -16,9 +16,14 @@ jd_frame_t *jd_tx_get_frame(void);
 void jd_tx_frame_sent(jd_frame_t *frame);
 
 int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsigned service_size);
+static inline int jd_send_u8(unsigned service_num, unsigned service_cmd, uint8_t v) {
+    return jd_send(service_num, service_cmd, &v, sizeof(v));
+}
+static inline int jd_send_u32(unsigned service_num, unsigned service_cmd, uint32_t v) {
+    return jd_send(service_num, service_cmd, &v, sizeof(v));
+}
 void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t data_bytes);
 static inline void jd_send_event(srv_t *srv, uint32_t eventid) {
     jd_send_event_ext(srv, eventid, 0, 0);
 }
 void jd_process_event_queue(void);
-

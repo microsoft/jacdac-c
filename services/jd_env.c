@@ -52,6 +52,23 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
     case JD_GET(JD_REG_MAX_READING):
         off = 3;
         break;
+    case JD_GET(JD_REG_INTENSITY):
+        jd_send_u8(pkt->service_number, pkt->service_command, state->inited ? 1 : 0);
+        return -JD_REG_INTENSITY;
+    case JD_SET(JD_REG_INTENSITY):
+        if (pkt->data[0]) {
+            // this will make it initialize soon
+            state->got_query = 1;
+        } else {
+            state->got_query = 0;
+            state->streaming_samples = 0;
+            // if sensor supports sleep and was already initialized, put it to sleep
+            if (api->sleep && state->inited) {
+                state->inited = 0;
+                api->sleep();
+            }
+        }
+        return JD_REG_INTENSITY;
     case JD_GET(JD_E_CO2_REG_CONDITIONING_PERIOD):
         if (api->conditioning_period) {
             tmp = api->conditioning_period();
