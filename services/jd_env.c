@@ -9,11 +9,36 @@ struct srv_state {
     SENSOR_COMMON;
 };
 
+// this really should return jd_system_status_code_t but that structure is also 32 bits and starts
+// with the status code enum, so for simplicity we just use uint32_t
+static uint32_t get_status_code(srv_t *state) {
+    if (!state->inited)
+        return JD_STATUS_CODES_SLEEPING;
+    if (!state->got_env_reading)
+        return JD_STATUS_CODES_INITIALIZING;
+    return JD_STATUS_CODES_READY;
+}
+
+static void send_status(srv_t *state) {
+    uint32_t payload = get_status_code(state);
+    // DMESG("status: s=%d st=%d", state->service_number, payload);
+    jd_send_event_ext(state, JD_EV_STATUS_CODE_CHANGED, &payload, sizeof(payload));
+}
+
+static void got_reading(srv_t *state) {
+    if (!state->got_env_reading) {
+        state->got_env_reading = 1;
+        send_status(state);
+    }
+}
+
 static void maybe_init(srv_t *state, const env_sensor_api_t *api) {
     if (!state->inited) {
+        state->got_env_reading = 0;
         if (api->init)
             api->init();
         state->inited = true;
+        send_status(state);
     }
 }
 
@@ -26,8 +51,10 @@ void env_sensor_process(srv_t *state, const env_sensor_api_t *api) {
 
     if (sensor_should_stream(state)) {
         const env_reading_t *env = api->get_reading();
-        if (env)
+        if (env) {
+            got_reading(state);
             jd_send(state->service_number, JD_GET(JD_REG_READING), &env->value, sizeof(env->value));
+        }
     }
 }
 
@@ -53,8 +80,11 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
         off = 3;
         break;
     case JD_GET(JD_REG_INTENSITY):
-        jd_send_u8(pkt->service_number, pkt->service_command, state->inited ? 1 : 0);
+        jd_respond_u8(pkt, state->inited ? 1 : 0);
         return -JD_REG_INTENSITY;
+    case JD_GET(JD_REG_STATUS_CODE):
+        jd_respond_u32(pkt, get_status_code(state));
+        return -JD_REG_STATUS_CODE;
     case JD_SET(JD_REG_INTENSITY):
         if (pkt->data[0]) {
             // this will make it initialize soon
@@ -64,8 +94,10 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
             state->streaming_samples = 0;
             // if sensor supports sleep and was already initialized, put it to sleep
             if (api->sleep && state->inited) {
+                state->got_env_reading = 0;
                 state->inited = 0;
                 api->sleep();
+                send_status(state);
             }
         }
         return JD_REG_INTENSITY;
@@ -81,11 +113,13 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
     }
 
     state->got_query = 1;
-    maybe_init(state, api);
+    if (!state->inited)
+        return 0;
 
     const env_reading_t *env = api->get_reading();
     if (env == NULL)
         return 0;
+    got_reading(state);
     tmp = (&env->value)[off];
 
 send_it:
