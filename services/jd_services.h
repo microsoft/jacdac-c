@@ -5,8 +5,7 @@
 #define __JD_SERVICE_INIT_H
 
 #include "jd_sensor.h"
-#include "interfaces/jd_accel.h"
-#include "interfaces/jd_environment.h"
+#include "interfaces/jd_sensor_api.h"
 
 // For pins where PWM or ADC is used, only certain pins are possible.
 // Best search for an existing call of the *_init() function and use the same pins.
@@ -50,8 +49,12 @@ void servo_init(const servo_params_t *params);
 void button_init(uint8_t pin, bool active, uint8_t backlight_pin);
 
 // Temperature and humidity services; often from a single I2C sensor (defined in board.h)
-void thermometer_init(env_function_t read);
-void humidity_init(env_function_t read);
+void thermometer_init(const env_sensor_api_t *api);
+void humidity_init(const env_sensor_api_t *api);
+
+// Air quality sensors
+void eco2_init(const env_sensor_api_t *api);
+void tvoc_init(const env_sensor_api_t *api);
 
 // Potentiometer service.
 // pinM is sampled, while pinL is set low, and pinH is set high.
@@ -133,7 +136,10 @@ typedef struct {
 } led_params_t;
 void led_service_init(const led_params_t *params);
 
-// initialises a relay service. 
+// Color sensor service.
+void color_init(const color_api_t *api);
+
+// initialises a relay service.
 // relay state is the driver pin, some relays also have a feedback pin to show whether they are active or not (relay_feedback)
 // in some cases, hw mfrs may want to light an LED when relay is active (relay_status)
 // For variant values, please see relay.h

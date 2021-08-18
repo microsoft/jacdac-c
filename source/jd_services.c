@@ -8,9 +8,12 @@
 
 #define MAX_SERV 32
 
+#define IN_SERV_INIT 0xff
+#define IN_SERV_SLEEP 0xfe
+
 static srv_t **services;
 static uint8_t num_services, reset_counter, packets_sent;
-
+static uint8_t curr_service_process;
 static uint32_t lastMax, lastDisconnectBlink, nextAnnounce;
 
 struct srv_state {
@@ -144,6 +147,8 @@ srv_t *jd_allocate_service(const srv_vt_t *vt) {
     srv_t *r = jd_alloc(vt->state_size);
     r->vt = vt;
     r->service_number = num_services;
+    // sleeping is allowed in service init
+    curr_service_process = IN_SERV_INIT;
     services[num_services++] = r;
 
     return r;
@@ -159,6 +164,7 @@ void jd_services_init() {
     jdcon_init();
 #endif
     app_init_services();
+    curr_service_process = 0;
     services = jd_alloc(sizeof(void *) * num_services);
     memcpy(services, tmp, sizeof(void *) * num_services);
 
@@ -249,8 +255,16 @@ void jd_services_tick() {
         }
     }
 
-    for (int i = 0; i < num_services; ++i) {
-        services[i]->vt->process(services[i]);
+    // do ctrl process regardless of sleep status
+    services[0]->vt->process(services[0]);
+
+    // while in sleep state, do not run any more nested process()
+    if (curr_service_process != IN_SERV_SLEEP) {
+        for (int i = 1; i < num_services; ++i) {
+            curr_service_process = i;
+            services[i]->vt->process(services[i]);
+        }
+        curr_service_process = 0;
     }
 
     jd_process_event_queue();
@@ -262,7 +276,54 @@ void jd_services_tick() {
     jd_tx_flush();
 }
 
+static void jd_process_everything_core(void) {
+    jd_frame_t *fr = jd_rx_get_frame();
+    if (fr)
+        jd_services_process_frame(fr);
+
+    jd_services_tick();
+    app_process();
+}
+
+static void refresh_now(void) {
+    uint64_t now_long = tim_get_micros();
+    now = (uint32_t)now_long;
+}
+
+void jd_process_everything() {
+    refresh_now();
+    jd_process_everything_core();
+}
+
+void jd_services_sleep_us(uint32_t delta) {
+    if (delta <= 1)
+        return; // already done...
+
+    uint8_t curr_serv = curr_service_process;
+    // short sleeps and ones on init are always all right
+    if (delta < 50 || curr_serv == IN_SERV_INIT) {
+        target_wait_us(delta);
+        return;
+    }
+
+    if (!curr_serv || curr_serv == IN_SERV_SLEEP) {
+        // not allowed outside of regular (non-ctrl) service process() callback
+        DMESG("sleep outside of process()");
+        jd_panic();
+    }
+    curr_service_process = IN_SERV_SLEEP;
+    refresh_now();
+    uint32_t end_time = now + delta;
+    while (in_future(end_time)) {
+        jd_process_everything_core();
+        refresh_now();
+    }
+    curr_service_process = curr_serv;
+}
+
 void dump_pkt(jd_packet_t *pkt, const char *msg) {
     LOG("pkt[%s]; s#=%d sz=%d %x", msg, pkt->service_number, pkt->service_size,
         pkt->service_command);
 }
+
+__attribute__((weak)) void app_process(void) {}

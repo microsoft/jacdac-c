@@ -82,12 +82,14 @@ static void init_chip(void) {
     writeReg(CNTL1, cntl1); // write CNTL1 last as it enables chip
 }
 
-static void kx023_get_sample(int32_t sample[3]) {
+static void *kx023_get_sample(void) {
+    static int32_t sample[3];
     int16_t data[3];
     readData(0x06, (uint8_t *)data, 6);
     sample[0] = data[1] << ACC_SHIFT;
     sample[1] = -data[0] << ACC_SHIFT;
     sample[2] = -data[2] << ACC_SHIFT;
+    return sample;
 }
 
 static void kx023_sleep(void) {
@@ -116,6 +118,6 @@ static void kx023_init(void) {
 
 const accelerometer_api_t accelerometer_kx023 = {
     .init = kx023_init,
-    .get_sample = kx023_get_sample,
+    .get_reading = kx023_get_sample,
     .sleep = kx023_sleep,
 };

@@ -8,7 +8,6 @@
 
 struct srv_state {
     SENSOR_COMMON;
-    uint8_t inited;
     uint8_t pinH, pinL, pinM;
     uint16_t sample;
     uint32_t nextSample;

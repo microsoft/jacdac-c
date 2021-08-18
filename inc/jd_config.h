@@ -54,10 +54,6 @@
 #endif
 #endif
 
-#ifndef JD_CONFIG_APP_PROCESS_HOOK
-#define JD_CONFIG_APP_PROCESS_HOOK 0
-#endif
-
 #ifndef JD_CONFIG_DEV_SPEC_URL
 #define JD_CONFIG_DEV_SPEC_URL 0
 #endif

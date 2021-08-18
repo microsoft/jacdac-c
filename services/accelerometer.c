@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 #include "jd_services.h"
-#include "interfaces/jd_accel.h"
+#include "interfaces/jd_sensor_api.h"
 #include "jacdac/dist/c/accelerometer.h"
 
 #ifdef PIN_ACC_INT
@@ -56,7 +56,6 @@ struct ShakeHistory {
 struct srv_state {
     SENSOR_COMMON;
 
-    const accelerometer_api_t *hw;
     uint8_t sigma;
     uint8_t impulseSigma;
     uint16_t g_events;
@@ -167,7 +166,8 @@ static uint16_t instantaneousPosture(srv_t *state, uint32_t force) {
 #define G(g) ((g * 1024) * (g * 1024))
 static void process_events(srv_t *state) {
     // works up to 16g
-    uint32_t force = (sample.x >> 10) * (sample.x >> 10) + (sample.y >> 10) * (sample.y >> 10) + (sample.z >> 10) * (sample.z >> 10);
+    uint32_t force = (sample.x >> 10) * (sample.x >> 10) + (sample.y >> 10) * (sample.y >> 10) +
+                     (sample.z >> 10) * (sample.z >> 10);
 
     if (force > G(2)) {
         state->impulseSigma = 0;
@@ -220,9 +220,12 @@ void accelerometer_process(srv_t *state) {
     if (!jd_should_sample(&state->nextSample, SAMPLING_PERIOD))
         return;
 #endif
-
-    state->hw->get_sample(&sample.x);
-    accelerometer_data_transform(&sample.x);
+    sensor_process(state);
+    void *tmp = sensor_get_reading(state);
+    if (tmp) {
+        memcpy(&sample.x, tmp, 3 * 4);
+        accelerometer_data_transform(&sample.x);
+    }
 
     process_events(state);
 
@@ -234,10 +237,9 @@ void accelerometer_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(accelerometer, JD_SERVICE_CLASS_ACCELEROMETER);
-void accelerometer_init(const accelerometer_api_t *hw) {
+void accelerometer_init(const accelerometer_api_t *api) {
     SRV_ALLOC(accelerometer);
-    state->hw = hw;
-    hw->init();
+    state->api = api;
 #ifdef PIN_ACC_INT
     pin_setup_input(PIN_ACC_INT, PIN_PULL_DOWN);
     exti_set_callback(PIN_ACC_INT, accelerometer_int, EXTI_RISING);

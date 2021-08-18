@@ -60,7 +60,7 @@ typedef struct _srv_vt srv_vt_t;
 #define SRV_COMMON                                                                                 \
     const srv_vt_t *vt;                                                                            \
     uint8_t service_number;                                                                        \
-    uint8_t padding0;
+    uint8_t srv_flags;
 #define REG_SRV_COMMON REG_BYTES(JD_REG_PADDING, 6)
 
 struct srv_state_common {
@@ -89,9 +89,15 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
 void jd_services_init(void);
 
 /**
- * Should be called each time delta by the application
+ * Called by jd_process_everything()
  **/
 void jd_services_tick(void);
+
+/**
+ * Should be called in a loop from the main application.
+ * This may also be called recursively if sensor implementation decides to sleep.
+ */
+void jd_process_everything(void);
 
 /**
  * Can be implemented by the user to get a callback on each packet.
@@ -104,7 +110,7 @@ void jd_app_handle_packet(jd_packet_t *pkt);
 void jd_app_handle_command(jd_packet_t *pkt);
 
 /**
- * Should be called by the user, right before jd_services_tick()
+ * Called by jd_process_everything().
  *
  * Unpacks frames into packets, and passes them to
  * jd_services_handle_packet for delivery to services.
@@ -129,6 +135,15 @@ void jd_services_announce(void);
  * Called by TX queue implementation when a packet is queued for sending.
  */
 void jd_services_packet_queued(void);
+
+/**
+ * This can be only invoked from service process callback.
+ * It will continue calling jd_process_everything(), excluding any service
+ * process callbacks that are currently sleeping.
+ * This will also prevent the MCU from sleeping.
+ * Be mindful of stack usage.
+ */
+void jd_services_sleep_us(uint32_t delta);
 
 /**
  * TODO: work out if this is required, or if we can write it out...

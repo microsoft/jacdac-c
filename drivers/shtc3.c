@@ -40,7 +40,8 @@ static void wake(void) {
     target_wait_us(300); // 200us seems minimum; play it safe with 300us
 }
 
-static void init(ctx_t *ctx) {
+static void shtc3_init(void) {
+    ctx_t *ctx = &state;
     if (ctx->inited)
         return;
 
@@ -61,8 +62,8 @@ static void init(ctx_t *ctx) {
     send_cmd(SHTC3_SLEEP);
 }
 
-static int shtc3_process(ctx_t *ctx) {
-    init(ctx);
+static void shtc3_process(void) {
+    ctx_t *ctx = &state;
 
     // the 20ms here is just for readings, we actually sample at SAMPLING_MS
     // the datasheet says max reading time is 12.1ms; give a little more time
@@ -85,20 +86,30 @@ static int shtc3_process(ctx_t *ctx) {
             ctx->inited = 2;
         }
     }
-
-    return ctx->inited >= 2;
 }
 
-const env_reading_t *shtc3_temperature(void) {
+static void *shtc3_temperature(void) {
     ctx_t *ctx = &state;
-    if (shtc3_process(ctx))
+    if (ctx->inited >= 2)
         return &ctx->temperature;
     return NULL;
 }
 
-const env_reading_t *shtc3_humidity(void) {
+static void *shtc3_humidity(void) {
     ctx_t *ctx = &state;
-    if (shtc3_process(ctx))
+    if (ctx->inited >= 2)
         return &ctx->humidity;
     return NULL;
 }
+
+const env_sensor_api_t temperature_shtc3 = {
+    .init = shtc3_init,
+    .process = shtc3_process,
+    .get_reading = shtc3_temperature,
+};
+
+const env_sensor_api_t humidity_shtc3 = {
+    .init = shtc3_init,
+    .process = shtc3_process,
+    .get_reading = shtc3_humidity,
+};
