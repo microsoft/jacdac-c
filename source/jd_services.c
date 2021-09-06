@@ -123,9 +123,13 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
     return 0;
 }
 
+__attribute__((weak)) void jd_app_handle_frame(jd_frame_t *frame) {}
+
 void jd_services_process_frame(jd_frame_t *frame) {
     if (!frame)
         return;
+
+    jd_app_handle_frame(frame);
 
     if (frame->flags & JD_FRAME_FLAG_ACK_REQUESTED && frame->flags & JD_FRAME_FLAG_COMMAND &&
         frame->device_identifier == jd_device_id()) {
