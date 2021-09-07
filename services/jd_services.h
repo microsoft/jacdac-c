@@ -150,5 +150,6 @@ typedef struct {
     void (*cancel)(void);
 } speech_synth_api_t;
 void speech_synthesis_init(const speech_synth_api_t *api);
+extern const speech_synth_api_t tts_click;
 
 #endif

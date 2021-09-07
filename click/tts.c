@@ -332,6 +332,8 @@ uint16_t tts_image_exec()
     return ( tmp_resp == 1 ) ? 0x0000 : tmp_resp;
 }
 
+static uint8_t _test[ 8 ] = { 0x01, 0x00, 0x00, 0x00,
+                              0x00, 0x00, 0x00, 0x00 };
 uint16_t tts_interface_test()
 {
     uint16_t tmp_resp = 0;
