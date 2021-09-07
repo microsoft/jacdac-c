@@ -139,4 +139,16 @@ void led_service_init(const led_params_t *params);
 // Color sensor service.
 void color_init(const color_api_t *api);
 
+typedef struct {
+    void (*init)(void);
+    void (*speak)(char*);
+    void (*set_volume)(uint32_t);
+    void (*set_rate)(uint32_t);
+    bool (*set_language)(char *);
+    void (*pause)(void);
+    void (*resume)(void);
+    void (*cancel)(void);
+} speech_synth_api_t;
+void speech_synthesis_init(const speech_synth_api_t *api);
+
 #endif

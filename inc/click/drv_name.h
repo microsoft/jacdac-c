@@ -84,3 +84,6 @@ static inline void Delay_100ms(void) {
 static inline void Delay_1sec(void) {
     jd_services_sleep_us(1000000);
 }
+static inline void Delay_ms(int ms) {
+    jd_services_sleep_us(ms * 1000);
+}

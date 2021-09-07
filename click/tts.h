@@ -1,6 +1,6 @@
 /******************************************************************************
 * Title                 :   Text To Speech
-* Filename              :   text_to_speech.h
+* Filename              :   tts.h
 * Author                :   MSV
 * Origin Date           :   30/01/2016
 * Notes                 :
@@ -12,7 +12,7 @@
 *
 *******************************************************************************/
 /**
- * @file text_to_speech.h
+ * @file tts.h
  * @brief <h3> Text to Speech </h3>
  *
  * @par
@@ -56,7 +56,7 @@
  * initialisation data in boot mode before it is run in main mode.
  * This initialisation data is contained in the device binary file included
  * with this documentation.
- * @link text_to_speech_img.h @endlink
+ * @link tts_image.h @endlink
  * In order to enter the main work mode user should call execution of the loaded
  * image
  * @link tts_image_exec @endlink
@@ -92,7 +92,10 @@
 /******************************************************************************
 * Includes
 *******************************************************************************/
-#include "text_to_speech_hw.h"
+#include "tts_hw.h"
+#include "drv_digital_out.h"
+#include "drv_digital_in.h"
+#include "drv_i2c_master.h"
 /******************************************************************************
 * Preprocessor Constants
 *******************************************************************************/
@@ -149,8 +152,8 @@
 /******************************************************************************
 * Configuration Constants
 *******************************************************************************/
-static uint8_t _test[ 8 ] = { 0x01, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00 };
+// static uint8_t _test[ 8 ] = { 0x01, 0x00, 0x00, 0x00,
+//                               0x00, 0x00, 0x00, 0x00 };
 /******************************************************************************
 * Macros
 *******************************************************************************/

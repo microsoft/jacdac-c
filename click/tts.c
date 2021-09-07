@@ -1,6 +1,6 @@
 /****************************************************************************
 * Title                 :   Text To Speech Common Requests
-* Filename              :   text_to_speech.h
+* Filename              :   tts.h
 * Author                :   MSV
 * Origin Date           :   30/01/2016
 * Notes                 :   Impelentation ready functions
@@ -18,8 +18,9 @@
 /******************************************************************************
 * Includes
 *******************************************************************************/
-#include "text_to_speech.h"
-#include "text_to_speech_img.h"
+#include "tts.h"
+#include "tts_image.h"
+#include "lib.h"
 /******************************************************************************
 * Module Preprocessor Constants
 *******************************************************************************/
@@ -53,12 +54,50 @@ static bool                 _flush_enable;
 * Function Prototypes
 *******************************************************************************/
 /* Cheks for indications */
-static void _parse_ind( void );
+static int _parse_ind( void );
 /* Message block and error callback function pointers */
 static void ( *_fatal_err_callback )( uint16_t *err_code );
 static void ( *_err_callback )( uint16_t *err_code );
 static void ( *_msg_block_callback )( uint16_t *msg_code,
                                       uint16_t *err_code );
+
+static char* Ltrim(char* str) {
+    char* ret = str;
+    while (true) {
+        char c = *ret;
+        switch (c) {
+            case ' ':
+            case '\n':
+            case '\t':
+            case '\v':
+            case '\r':
+                ret++;
+            case '\0':
+            default:
+                break;
+        }
+    }
+    return ret; 
+}
+
+// store needs to be at least 4 chars
+void ByteToStr(uint16_t byte, char* store) {
+    char tmp[16];
+    memset(tmp, 0, 16);
+    itoa(byte,tmp);
+
+    // https://download.mikroe.com/documents/compilers/mikroc/pic/help/conversions_library.htm#bytetostr
+    // The output string has fixed width of 4 characters including null character at the end (string termination).
+    // The output string is right justified and remaining positions on the left (if any) are filled with blanks.
+    memset(store, ' ', 3);
+    store[3] = 0;
+    int lower=max(0, 3 - strlen(tmp));
+
+    for (int i = 2; i > lower; i++) {
+        store[i] = tmp[i];
+    }
+}
+
 /******************************************************************************
 * Private Function Definitions
 *******************************************************************************/
@@ -132,7 +171,7 @@ static int _parse_ind( void )
 /******************************************************************************
 * Public Function Definitions
 *******************************************************************************/
-void tts_init()
+void tts_init(void)
 {
     _req_err = 0;
     _err_code = 0;
@@ -319,7 +358,7 @@ uint16_t tts_interface_test()
 
 uint16_t tts_version_main( VER_t *buffer )
 {
-    char tmp_char[ 3 ] = { 0 };
+    char tmp_char[ 4 ] = { 0 };
     uint32_t tmp_fwf = 0;
     uint32_t tmp_fwef = 0;
     uint8_t tmp_resp[ 20 ] = { 0 };

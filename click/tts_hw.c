@@ -1,6 +1,6 @@
 /****************************************************************************
 * Title                 :   Text To Speech Click
-* Filename              :   text_to_speech_hw.h
+* Filename              :   tts_hw.h
 * Author                :   MSV
 * Origin Date           :   30/01/2016
 * Notes                 :   Hardware layer
@@ -19,8 +19,11 @@
 /******************************************************************************
 * Includes
 *******************************************************************************/
-#include "text_to_speech_hw.h"
-#include "text_to_speech_hal.h"
+#include "tts_hw.h"
+#include "tts_hal.h"
+#include "drv_digital_out.h"
+#include "drv_digital_in.h"
+#include "drv_i2c_master.h"
 /******************************************************************************
 * Module Preprocessor Constants
 *******************************************************************************/
@@ -40,12 +43,12 @@
 static volatile bool        _ticker_f;
 static volatile uint16_t    _ticker;
 /* Input and output buffers */
-static volatile ISC_REQ_t   _last_req;
-static volatile ISC_RESP_t  _last_rsp;
+static ISC_REQ_t   _last_req;
+static ISC_RESP_t  _last_rsp;
 /******************************************************************************
 * Private Function Definitions
 *******************************************************************************/
-void _read_rsp()
+void _read_rsp(void)
 {
     uint8_t tmp_byte = 0;
     uint16_t tmp_len = 0;
@@ -70,7 +73,7 @@ void _read_rsp()
     tts_hal_cs_high();
 }
 
-void _write_req()
+void _write_req(void)
 {
     uint16_t cnt = 0;
     uint8_t start = START_MESSAGE;
@@ -111,7 +114,7 @@ void tts_tick_isr()
     _ticker++;
 
     if( _ticker > 500 )
-        _ticker_f == true;
+        _ticker_f = true;
 }
 
 void tts_mute_cmd( bool cmd )
@@ -161,8 +164,10 @@ void tts_parse_boot_img( const uint8_t *payload,
 
     if ( payload != NULL )
     {
-        while ( pl_len-- )
-            _last_req.payload[ i++ ] = payload[ i ];
+        while ( pl_len-- ) {
+            _last_req.payload[ i ] = payload[ i ];
+            i++;
+        }
     }
 
     _write_req();

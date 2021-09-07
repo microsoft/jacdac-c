@@ -1,6 +1,6 @@
 /*******************************************************************************
 * Title                 :   Text to Speech HAL
-* Filename              :   text_to_speech_hal.c
+* Filename              :   tts_hal.c
 * Author                :   MSV
 * Origin Date           :   01/02/2016
 * Notes                 :   None
@@ -12,13 +12,16 @@
 *
 *******************************************************************************/
 /**
- * @file text_to_speech_hal.c
+ * @file tts_hal.c
  * @brief <h2> HAL layer </h2>
  */
 /******************************************************************************
 * Includes
 *******************************************************************************/
-#include "text_to_speech_hal.h"
+#include "tts_hal.h"
+#include "board.h"
+#include "drv_name.h"
+#include "tinyhw.h"
 
 /******************************************************************************
 * Module Preprocessor Constants
@@ -82,7 +85,7 @@ extern sfr sbit TTS_MUTE;
 void tts_hal_cs_high()
 {
 #if defined( __GNUC__ )
-
+    pin_set(PIN_RX_CS,1);
 #else
     TTS_CS = 1;
 #endif
@@ -91,7 +94,7 @@ void tts_hal_cs_high()
 void tts_hal_cs_low()
 {
 #if defined( __GNUC__ )
-
+    pin_set(PIN_RX_CS,0);
 #else
     TTS_CS = 0;
 #endif
@@ -100,7 +103,7 @@ void tts_hal_cs_low()
 void tts_hal_mut_high()
 {
 #if defined( __GNUC__ )
-
+    pin_set(PIN_AN,1);
 #else
     TTS_MUTE = 1;
 #endif
@@ -109,7 +112,7 @@ void tts_hal_mut_high()
 void tts_hal_mut_low()
 {
 #if defined( __GNUC__ )
-
+    pin_set(PIN_AN,0);
 #else
     TTS_MUTE = 0;
 #endif
@@ -118,7 +121,10 @@ void tts_hal_mut_low()
 void tts_hal_reset( void )
 {
 #if defined( __GNUC__ )
-
+    pin_set(PIN_RST,0);
+    Delay_10ms();
+    pin_set(PIN_RST,1);
+    Delay_ms( POR_TIME );
 #else
     TTS_RST = 0;
     Delay_10ms();
@@ -130,10 +136,15 @@ void tts_hal_reset( void )
 bool tts_hal_msg_rdy( void )
 {
 #if defined( __GNUC__ )
-
+    return pin_get(PIN_INT);
 #else
     return TTS_RDY;
 #endif
+}
+
+volatile int xfer_in_progress = 0;
+void xfer_handle(void) {
+    xfer_in_progress = 0;
 }
 
 void tts_hal_init()
@@ -156,6 +167,8 @@ void tts_hal_init()
     write_bytes_spi_p       = SPIM_WrBytes_Ptr;
     read_bytes_spi_p        = SPIM_RdBytes_Ptr;
 #endif
+    xfer_in_progress = 0;
+
     tts_hal_reset();
     tts_hal_cs_low();
     tts_hal_mut_low();
@@ -164,15 +177,17 @@ void tts_hal_init()
 void tts_hal_write( uint8_t *buffer,
                     uint16_t count )
 {
-    while( count-- )
-        write_spi_p( *( buffer++ ) );
+    xfer_in_progress = 1;
+    dspi_tx(buffer, count, xfer_handle);
+    while (xfer_in_progress == 1);
 }
 
 void tts_hal_read( uint8_t *buffer,
                    uint16_t count )
 {
-    while( count-- )
-        *( buffer++ ) = read_spi_p( DUMMY_BYTE );
+    xfer_in_progress = 1;
+    dspi_xfer(NULL, buffer, count, xfer_handle);
+    while (xfer_in_progress == 1);
 }
 
 /*************** END OF FUNCTIONS ***************************************************************************/
