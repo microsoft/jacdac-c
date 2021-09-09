@@ -60,17 +60,17 @@ static inline int scale_volume(uint8_t vol) {
 
 void text_to_speech_init(uint8_t volume, uint32_t rate, uint32_t pitch, char* language) {
     // chip select
-    pin_setup_output(PIN_RX_CS);
-    pin_set(PIN_RX_CS, 1);
+    pin_setup_output(MIKROBUS_CS);
+    pin_set(MIKROBUS_CS, 1);
     // mute
-    pin_setup_output(PIN_AN);
-    pin_set(PIN_AN, 0);
+    pin_setup_output(MIKROBUS_AN);
+    pin_set(MIKROBUS_AN, 0);
     // reset
-    pin_setup_output(PIN_RST);
-    pin_set(PIN_RST, 1);
+    pin_setup_output(MIKROBUS_RST);
+    pin_set(MIKROBUS_RST, 1);
 
     // data ready
-    pin_setup_input(PIN_INT, PIN_PULL_NONE);
+    pin_setup_input(MIKROBUS_INT, PIN_PULL_NONE);
 
     sspi_init();
 
