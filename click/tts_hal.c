@@ -22,6 +22,7 @@
 #include "board.h"
 #include "drv_name.h"
 #include "tinyhw.h"
+#include "lib.h"
 
 /******************************************************************************
 * Module Preprocessor Constants
@@ -38,42 +39,6 @@
 /******************************************************************************
 * Module Variable Definitions
 *******************************************************************************/
-#if defined( __MIKROC_PRO_FOR_ARM__ )   || \
-    defined( __MIKROC_PRO_FOR_DSPIC__ )
-static void         ( *write_spi_p )            ( unsigned int data_out );
-static unsigned int ( *read_spi_p )             ( unsigned int buffer );
-
-#elif defined( __MIKROC_PRO_FOR_AVR__ )     || \
-      defined( __MIKROC_PRO_FOR_PIC__ )     || \
-      defined( __MIKROC_PRO_FOR_8051__ )
-static void         ( *write_spi_p )            ( unsigned char data_out );
-static unsigned char( *read_spi_p )             ( unsigned char dummy );
-
-#elif defined( __MIKROC_PRO_FOR_PIC32__ )
-static void         ( *write_spi_p )            ( unsigned long data_out );
-static unsigned long( *read_spi_p )             ( unsigned long buffer );
-
-#elif defined( __MIKROC_PRO_FOR_FT90x__ )
-static void         ( *write_spi_p )            ( unsigned char data_out );
-static unsigned char( *read_spi_p )             ( unsigned char dummy );
-static void         ( *write_bytes_spi_p )      ( unsigned char *data_out,
-                                                  unsigned int count );
-static void         ( *read_bytes_spi_p )       ( unsigned char *buffer,
-                                                  unsigned int count );
-#endif
-
-#if defined( __MIKROC_PRO_FOR_ARM__ )     || \
-    defined( __MIKROC_PRO_FOR_AVR__ )     || \
-    defined( __MIKROC_PRO_FOR_PIC__ )     || \
-    defined( __MIKROC_PRO_FOR_PIC32__ )   || \
-    defined( __MIKROC_PRO_FOR_DSPIC__ )   || \
-    defined( __MIKROC_PRO_FOR_8051__ )    || \
-    defined( __MIKROC_PRO_FOR_FT90x__ )
-extern sfr sbit TTS_CS;
-extern sfr sbit TTS_RST;
-extern sfr sbit TTS_RDY;
-extern sfr sbit TTS_MUTE;
-#endif
 
 /******************************************************************************
 * Function Prototypes
@@ -84,91 +49,39 @@ extern sfr sbit TTS_MUTE;
 *******************************************************************************/
 void tts_hal_cs_high()
 {
-#if defined( __GNUC__ )
     pin_set(PIN_RX_CS,1);
-#else
-    TTS_CS = 1;
-#endif
 }
 
 void tts_hal_cs_low()
 {
-#if defined( __GNUC__ )
     pin_set(PIN_RX_CS,0);
-#else
-    TTS_CS = 0;
-#endif
 }
 
 void tts_hal_mut_high()
 {
-#if defined( __GNUC__ )
     pin_set(PIN_AN,1);
-#else
-    TTS_MUTE = 1;
-#endif
 }
 
 void tts_hal_mut_low()
 {
-#if defined( __GNUC__ )
     pin_set(PIN_AN,0);
-#else
-    TTS_MUTE = 0;
-#endif
 }
 
 void tts_hal_reset( void )
 {
-#if defined( __GNUC__ )
     pin_set(PIN_RST,0);
     Delay_10ms();
     pin_set(PIN_RST,1);
     Delay_ms( POR_TIME );
-#else
-    TTS_RST = 0;
-    Delay_10ms();
-    TTS_RST = 1;
-    Delay_ms( POR_TIME );
-#endif
 }
 
 bool tts_hal_msg_rdy( void )
 {
-#if defined( __GNUC__ )
     return pin_get(PIN_INT);
-#else
-    return TTS_RDY;
-#endif
-}
-
-volatile int xfer_in_progress = 0;
-void xfer_handle(void) {
-    xfer_in_progress = 0;
 }
 
 void tts_hal_init()
 {
-#if defined( __MIKROC_PRO_FOR_ARM__ )   || \
-    defined( __MIKROC_PRO_FOR_AVR__ )   || \
-    defined( __MIKROC_PRO_FOR_DSPIC__ ) || \
-    defined( __MIKROC_PRO_FOR_PIC32__ ) || \
-    defined( __MIKROC_PRO_FOR_8051__ )
-    write_spi_p             = SPI_Wr_Ptr;
-    read_spi_p              = SPI_Rd_Ptr;
-
-#elif defined( __MIKROC_PRO_FOR_PIC__ )
-    write_spi_p             = SPI1_Write;
-    read_spi_p              = SPI1_Read;
-
-#elif defined( __MIKROC_PRO_FOR_FT90x__ )
-    write_spi_p             = SPIM_Wr_Ptr;
-    read_spi_p              = SPIM_Rd_Ptr;
-    write_bytes_spi_p       = SPIM_WrBytes_Ptr;
-    read_bytes_spi_p        = SPIM_RdBytes_Ptr;
-#endif
-    xfer_in_progress = 0;
-
     tts_hal_reset();
     tts_hal_cs_low();
     tts_hal_mut_low();
@@ -177,17 +90,17 @@ void tts_hal_init()
 void tts_hal_write( uint8_t *buffer,
                     uint16_t count )
 {
-    xfer_in_progress = 1;
-    dspi_tx(buffer, count, xfer_handle);
-    while (xfer_in_progress == 1);
+    sspi_tx(buffer, count);
 }
 
 void tts_hal_read( uint8_t *buffer,
                    uint16_t count )
 {
-    xfer_in_progress = 1;
-    dspi_xfer(NULL, buffer, count, xfer_handle);
-    while (xfer_in_progress == 1);
+    uint8_t dummy = 0x0;
+    for (int i = 0; i < count; i++) {
+        sspi_tx(&dummy, 1);
+        sspi_rx(&buffer[i], 1);
+    }
 }
 
 /*************** END OF FUNCTIONS ***************************************************************************/

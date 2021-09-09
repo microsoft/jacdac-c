@@ -2,6 +2,7 @@
 #include "interfaces/jd_sensor_api.h"
 #include "tts.h"
 #include "jd_services.h"
+#include "tinyhw.h"
 
 #ifdef MIKROBUS_AVAILABLE
 
@@ -13,7 +14,7 @@ void msg_blocked( uint16_t *req, uint16_t *err ) {
     DMESG("MSG BLOCKED %d ERR %d", *req, *err);
 }
 
-void text_to_speech_volume(uint32_t volume) {
+void text_to_speech_volume(uint8_t volume) {
     // todo scale to decibels gain
 }
 
@@ -42,15 +43,36 @@ void text_to_speech_speak(char *phrase) {
     tts_speak(phrase);
 }
 
-void text_to_speech_init(void) {
+static inline int scale_rate(uint32_t rate) {
+    // 0x004A ~ 0x0259
+    return 0;
+}
+
+static inline int scale_volume(uint8_t vol) {
+    if (vol > 100)
+        vol = 100;
+
+    const float DB_MIN = -49;
+    const float DB_MAX = 19;
+    int retval = ((float)vol / 100) * (DB_MAX - DB_MIN) + DB_MIN;
+    return retval;     
+}
+
+void text_to_speech_init(uint8_t volume, uint32_t rate, uint32_t pitch, char* language) {
     // chip select
     pin_setup_output(PIN_RX_CS);
+    pin_set(PIN_RX_CS, 1);
     // mute
     pin_setup_output(PIN_AN);
+    pin_set(PIN_AN, 0);
     // reset
     pin_setup_output(PIN_RST);
+    pin_set(PIN_RST, 1);
+
     // data ready
-    pin_setup_input(PIN_INT, 0);
+    pin_setup_input(PIN_INT, PIN_PULL_NONE);
+
+    sspi_init();
 
     tts_init();
     tts_setup();
@@ -58,7 +80,7 @@ void text_to_speech_init(void) {
     tts_msg_block_callback(msg_blocked);
     tts_fatal_err_callback(fatal_error);
     
-    tts_config( 0x01, false, TTSV_US, 0x0100 );
+    tts_config( 0x03, false, TTSV_US, 0x0100 );
 }
 
 const speech_synth_api_t tts_click = {

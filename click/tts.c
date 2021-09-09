@@ -19,6 +19,7 @@
 * Includes
 *******************************************************************************/
 #include "tts.h"
+#include "tts_hal.h"
 #include "tts_image.h"
 #include "lib.h"
 /******************************************************************************
@@ -64,7 +65,7 @@ static void ( *_msg_block_callback )( uint16_t *msg_code,
 static char* Ltrim(char* str) {
     char* ret = str;
     while (true) {
-        char c = *ret;
+        char c = *(ret);
         switch (c) {
             case ' ':
             case '\n':
@@ -72,9 +73,10 @@ static char* Ltrim(char* str) {
             case '\v':
             case '\r':
                 ret++;
+                break;
             case '\0':
             default:
-                break;
+                return ret;
         }
     }
     return ret; 
@@ -91,11 +93,11 @@ void ByteToStr(uint16_t byte, char* store) {
     // The output string is right justified and remaining positions on the left (if any) are filled with blanks.
     memset(store, ' ', 3);
     store[3] = 0;
-    int lower=max(0, 3 - strlen(tmp));
-
-    for (int i = 2; i > lower; i++) {
-        store[i] = tmp[i];
-    }
+    int len = min(strlen(tmp), 3);
+    char* wptr = store + 3;
+    char* rptr = tmp;
+    while(len--)
+        *(wptr--) = *(rptr++);
 }
 
 /******************************************************************************
@@ -293,9 +295,14 @@ uint16_t tts_image_load( const uint8_t *image,
 
     tts_parse_boot_img( image + index, count - index );
 
+    uint8_t retries = 100;
     while( !tts_rsp_chk( ISC_BOOT_LOAD_RESP ) )
     {
         tts_get_resp();
+        retries--;
+
+        if (retries == 0)
+            target_reset();
 
         if( _parse_ind() )
             return _err_code;

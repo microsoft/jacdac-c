@@ -181,7 +181,7 @@
  * ( Inter-System-Communication ) messages. An ISC message consists of a
  * fixed length header part and a variable length payload.
  */
-typedef struct
+typedef struct __attribute__((packed))
 {
     /**
      * Header Part - Message length ( including header )
@@ -208,7 +208,7 @@ typedef struct
  * ( Inter-System-Communication ) messages. An ISC message consists of a
  * fixed length header part and a variable length payload.
  */
-typedef struct
+typedef struct __attribute__((packed))
 {
     /**
      * Header Part - Message length ( including header )
