@@ -32,9 +32,6 @@ REG_DEFINITION(                                   //
     REG_U8(JD_SPEECH_SYNTHESIS_REG_VOLUME),                //
 )
 
-void reflect_register_state(srv_t* state) {
-}
-
 void speech_synth_process(srv_t * state) {
     if (state->flags & SPEAK_CMD) {
         state->api->speak(phrase);

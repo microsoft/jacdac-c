@@ -18,7 +18,7 @@ REG_DEFINITION(                                   //
     REG_OPT32(JD_RELAY_REG_MAX_SWITCHING_CURRENT),            //
 )
 
-void reflect_register_state(srv_t* state) {
+static void reflect_register_state(srv_t* state) {
     // active
     if (state->intensity) {
         pin_set(state->params.pin_relay_drive, (state->params.drive_active_lo ? 0 : 1));
