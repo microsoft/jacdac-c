@@ -6,7 +6,7 @@ typedef int pin_name_t;
 typedef int err_t;
 
 #define HAL_PIN_NC (-1)
-
+#if MIKROBUS_AVAILABLE
 #define MIKROBUS_SCL PIN_SCL
 #define MIKROBUS_SDA PIN_SDA
 #define MIKROBUS_AN PIN_AN
@@ -48,6 +48,26 @@ typedef int err_t;
 
 #define MIKROBUS(mikrobus, pin) pin
 
+#else
+
+#define MIKROBUS_SCL NO_PIN
+#define MIKROBUS_SDA NO_PIN
+#define MIKROBUS_AN NO_PIN
+#define MIKROBUS_PWM NO_PIN
+#define MIKROBUS_INT NO_PIN
+#define MIKROBUS_SCK NO_PIN
+#define MIKROBUS_RST NO_PIN
+
+#define MIKROBUS_CS NO_PIN
+#define MIKROBUS_TX NO_PIN
+#define MIKROBUS_MISO NO_PIN
+#define MIKROBUS_RX NO_PIN
+#define MIKROBUS_MOSI NO_PIN
+
+#define MIKROBUS(mikrobus, pin) pin
+
+#endif
+
 static inline void Delay_1us(void) {
     jd_services_sleep_us(1);
 }
@@ -83,4 +103,7 @@ static inline void Delay_100ms(void) {
 }
 static inline void Delay_1sec(void) {
     jd_services_sleep_us(1000000);
+}
+static inline void Delay_ms(int ms) {
+    jd_services_sleep_us(ms * 1000);
 }

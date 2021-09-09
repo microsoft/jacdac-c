@@ -139,6 +139,20 @@ void led_service_init(const led_params_t *params);
 // Color sensor service.
 void color_init(const color_api_t *api);
 
+typedef struct {
+    void (*init)(uint8_t volume, uint32_t rate, uint32_t pitch, char* language);
+    void (*speak)(char*);
+    void (*set_volume)(uint8_t);
+    void (*set_rate)(uint32_t);
+    bool (*set_language)(char *);
+    bool (*set_pitch)(uint32_t);
+    void (*pause)(void);
+    void (*resume)(void);
+    void (*cancel)(void);
+} speech_synth_api_t;
+void speech_synthesis_init(const speech_synth_api_t *api);
+extern const speech_synth_api_t tts_click;
+
 // initialises a relay service.
 // relay state is the driver pin, some relays also have a feedback pin to show whether they are active or not (relay_feedback)
 // in some cases, hw mfrs may want to light an LED when relay is active (relay_status)
