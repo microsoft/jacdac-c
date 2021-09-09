@@ -89,6 +89,8 @@ bool tts_hal_msg_rdy( void )
 {
 #if MIKROBUS_AVAILABLE
     return pin_get(PIN_INT);
+#else
+    return 0;
 #endif
 }
 
