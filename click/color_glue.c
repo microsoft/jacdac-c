@@ -16,21 +16,29 @@ static void glue_color_init(void) {
     color_set_led(&ctx, 1, 1, 1);
 }
 
+static void glue_color_sleep(void) {
+    color_set_led(&ctx, 0, 0, 0);
+    color_write_byte(&ctx, COLOR_REG_ENABLE, 0x00);
+}
+
 // this is what we get on "white"
 #define SCALE_R 50
 #define SCALE_G 34
 #define SCALE_B 24
 
-static void glue_color_get_sample(uint32_t sample[4]) {
+static void *glue_color_get_sample(void) {
+    static uint32_t sample[4];
     sample[0] = (color_read_data(&ctx, COLOR_COLOR_DATA_RED) << 16) / SCALE_R;
     sample[1] = (color_read_data(&ctx, COLOR_COLOR_DATA_GREEN) << 16) / SCALE_G;
     sample[2] = (color_read_data(&ctx, COLOR_COLOR_DATA_BLUE) << 16) / SCALE_B;
     sample[3] = color_read_data(&ctx, COLOR_COLOR_DATA_CLEAR) << 16;
+    return sample;
 }
 
 const color_api_t color_click = {
     .init = glue_color_init,
-    .get_sample = (get_sample_t)glue_color_get_sample,
+    .get_reading = glue_color_get_sample,
+    .sleep = glue_color_sleep,
 };
 
 #endif

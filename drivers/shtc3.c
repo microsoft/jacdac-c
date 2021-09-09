@@ -88,20 +88,19 @@ static void shtc3_process(void) {
     }
 }
 
-static const env_reading_t *shtc3_temperature(void) {
+static void *shtc3_temperature(void) {
     ctx_t *ctx = &state;
     if (ctx->inited >= 2)
         return &ctx->temperature;
     return NULL;
 }
 
-static const env_reading_t *shtc3_humidity(void) {
+static void *shtc3_humidity(void) {
     ctx_t *ctx = &state;
     if (ctx->inited >= 2)
         return &ctx->humidity;
     return NULL;
 }
-
 
 const env_sensor_api_t temperature_shtc3 = {
     .init = shtc3_init,

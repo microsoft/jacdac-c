@@ -7,7 +7,7 @@
 
 struct srv_state {
     SENSOR_COMMON;
-    uint8_t state, inited;
+    uint8_t state;
     uint8_t pin0, pin1;
     uint16_t clicks_per_turn;
     int32_t sample, position;

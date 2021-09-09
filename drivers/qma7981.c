@@ -167,12 +167,14 @@ static void init_chip(void) {
     // 0xE2 260Hz
 }
 
-static void qma7981_get_sample(int32_t sample[3]) {
+static void *qma7981_get_sample(void) {
     int16_t data[3];
+    static int32_t sample[3];
     readData(REG_DX, (uint8_t *)data, 6);
     sample[0] = data[1] << ACC_SHIFT;
     sample[1] = -data[0] << ACC_SHIFT;
     sample[2] = -data[2] << ACC_SHIFT;
+    return sample;
 }
 
 static void qma7981_sleep(void) {
@@ -211,6 +213,6 @@ static void qma7981_init(void) {
 
 const accelerometer_api_t accelerometer_qma7981 = {
     .init = qma7981_init,
-    .get_sample = (get_sample_t)qma7981_get_sample,
+    .get_reading = qma7981_get_sample,
     .sleep = qma7981_sleep,
 };

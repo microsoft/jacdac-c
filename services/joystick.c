@@ -9,7 +9,6 @@
 struct srv_state {
     SENSOR_COMMON;
     joystick_params_t params;
-    uint8_t inited;
     jd_joystick_direction_t direction;
     uint32_t nextSample;
 };

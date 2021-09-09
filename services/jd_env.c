@@ -9,18 +9,16 @@ struct srv_state {
     SENSOR_COMMON;
 };
 
-void env_sensor_process(srv_t *state, const env_sensor_api_t *api) {
-    if (api->process)
-        api->process();
-
+void env_sensor_process(srv_t *state) {
+    sensor_process(state);
     if (sensor_should_stream(state)) {
-        const env_reading_t *env = api->get_reading();
+        const env_reading_t *env = sensor_get_reading(state);
         if (env)
             jd_send(state->service_number, JD_GET(JD_REG_READING), &env->value, sizeof(env->value));
     }
 }
 
-int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_api_t *api) {
+int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
     int off;
     int32_t tmp;
 
@@ -42,8 +40,8 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
         off = 3;
         break;
     case JD_GET(JD_E_CO2_REG_CONDITIONING_PERIOD):
-        if (api->conditioning_period) {
-            tmp = api->conditioning_period();
+        if (state->api->conditioning_period) {
+            tmp = state->api->conditioning_period();
             goto send_it;
         } else {
             return 0;
@@ -52,7 +50,9 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt, const env_sensor_ap
         return 0;
     }
 
-    const env_reading_t *env = api->get_reading();
+    state->got_query = 1;
+
+    const env_reading_t *env = sensor_get_reading(state);
     if (env == NULL)
         return 0;
     tmp = (&env->value)[off];

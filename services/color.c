@@ -7,37 +7,27 @@
 
 struct srv_state {
     SENSOR_COMMON;
-    const color_api_t *api;
-    uint32_t sample_raw[4];
     uint16_t sample[3];
     uint32_t nextSample;
-    uint8_t inited;
 };
 
 static void update(srv_t *state) {
-    state->api->get_sample(state->sample_raw);
-    uint32_t max = state->sample_raw[0];
+    uint32_t *sample_raw = sensor_get_reading(state);
+    if (!sample_raw)
+        return;
+    uint32_t max = sample_raw[0];
     for (int i = 1; i < 3; ++i)
-        if (state->sample_raw[i] > max)
-            max = state->sample_raw[i];
+        if (sample_raw[i] > max)
+            max = sample_raw[i];
     int d = (max >> 15);
     // int d = 1 << 16;
     // TODO update this when color service is updated to use 32 bits
-    state->sample[0] = state->sample_raw[0] / d;
-    state->sample[1] = state->sample_raw[1] / d;
-    state->sample[2] = state->sample_raw[2] / d;
-}
-
-static void maybe_init(srv_t *state) {
-    if (state->got_query && !state->inited) {
-        state->inited = true;
-        state->api->init();
-    }
+    state->sample[0] = sample_raw[0] / d;
+    state->sample[1] = sample_raw[1] / d;
+    state->sample[2] = sample_raw[2] / d;
 }
 
 void color_process(srv_t *state) {
-    maybe_init(state);
-
     if (jd_should_sample(&state->nextSample, 100000) && state->inited)
         update(state);
 

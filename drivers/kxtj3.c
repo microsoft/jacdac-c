@@ -60,12 +60,14 @@ static void init_chip(void) {
     writeReg(CTRL_REG1, 0b11100000 | RANGE); // write ctrl_reg1 last as it enables chip
 }
 
-static void kxtj3_get_sample(int32_t sample[3]) {
+static void *kxtj3_get_sample(void) {
     int16_t data[3];
+    static int32_t sample[3];
     readData(0x06, (uint8_t *)data, 6);
     sample[0] = data[1] << ACC_SHIFT;
     sample[1] = -data[0] << ACC_SHIFT;
     sample[2] = -data[2] << ACC_SHIFT;
+    return sample;
 }
 
 static void kxtj3_sleep(void) {
@@ -90,6 +92,6 @@ static void kxtj3_init(void) {
 
 const accelerometer_api_t accelerometer_kxtj3 = {
     .init = kxtj3_init,
-    .get_sample = (get_sample_t)kxtj3_get_sample,
+    .get_reading = kxtj3_get_sample,
     .sleep = kxtj3_sleep,
 };

@@ -105,6 +105,7 @@ void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t 
     ev->service_size = data_bytes;
     ev->service_command = cmd;
     ev->service_number = state->service_number;
+    memcpy(ev->data, data, data_bytes);
     // no randomization; it's somewhat often to generate multiple events in the same tick
     // they will this way get the same re-transmission time, and thus be packed in one frame
     // on both re-transmissions

@@ -75,11 +75,11 @@ static void aq4_sleep(void) {
     i2c_write_reg_buf(0x00, 0x06, NULL, 0);
 }
 
-static const env_reading_t *eco2_reading(void) {
+static void *eco2_reading(void) {
     return numsamples > 15 ? &eco2 : NULL;
 }
 
-static const env_reading_t *tvoc_reading(void) {
+static void *tvoc_reading(void) {
     return numsamples > 15 ? &tvoc : NULL;
 }
 
