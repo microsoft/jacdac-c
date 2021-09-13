@@ -80,7 +80,7 @@ void text_to_speech_init(uint8_t volume, uint32_t rate, uint32_t pitch, char* la
     tts_msg_block_callback(msg_blocked);
     tts_fatal_err_callback(fatal_error);
     
-    tts_config( 0x03, false, TTSV_US, 0x0100 );
+    tts_config( 0x01, false, TTSV_US, 0x0100 );
     tts_volume_set(19);
 }
 
