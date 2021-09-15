@@ -23,7 +23,9 @@
 
 // assume a non-RGB LED is connected like this: MCU -|>- GND
 #ifndef PIN_LED_R
+#ifndef PIN_LED_ACTIVE_LO
 #define LED_RGB_COMMON_CATHODE 1
+#endif
 #endif
 
 #ifdef LED_RGB_COMMON_CATHODE
