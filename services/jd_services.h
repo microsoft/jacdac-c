@@ -153,6 +153,16 @@ typedef struct {
 void speech_synthesis_init(const speech_synth_api_t *api);
 extern const speech_synth_api_t tts_click;
 
+typedef struct {
+    void (*init)(void);
+    void (*channel_clear)(uint8_t);
+    void (*channel_set)(uint8_t, int);
+    void (*clear_all)(void);
+    void (*write)(void);
+} hbridge_api_t;
+void braille_init(const hbridge_api_t *api);
+extern const hbridge_api_t ncv7726b;
+
 // initialises a relay service.
 // relay state is the driver pin, some relays also have a feedback pin to show whether they are active or not (relay_feedback)
 // in some cases, hw mfrs may want to light an LED when relay is active (relay_status)

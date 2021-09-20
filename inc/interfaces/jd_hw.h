@@ -81,4 +81,14 @@ void bspi_send(const void *src, uint32_t len);
 void bspi_recv(void *dst, uint32_t len);
 void bspi_init(void);
 
+//dspi.c
+void dspi_init(void);
+void dspi_tx(const void *data, uint32_t numbytes, cb_t doneHandler);
+void dspi_xfer(const void *txdata, void *rxdata, uint32_t numbytes, cb_t doneHandler);
+
+// sspic.c
+void sspi_init(void);
+void sspi_tx(uint8_t *data, uint32_t numbytes);
+void sspi_rx(uint8_t *buf, uint32_t numbytes);
+
 #endif
