@@ -47,7 +47,8 @@ void button_process(srv_t *state) {
     if (jd_should_sample(&state->nextSample, 9000)) {
         update(state);
     }
-    sensor_process_simple(state, &state->pressed, sizeof(state->pressed));
+    uint16_t pressed = (state->pressed ? 0xffff : 0); 
+    sensor_process_simple(state, &pressed, sizeof(pressed));
 }
 
 void button_handle_packet(srv_t *state, jd_packet_t *pkt) {
