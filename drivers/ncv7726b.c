@@ -23,7 +23,7 @@ static uint32_t driver_state_en = 0;
 static uint32_t driver_state_ls = 0;
 static uint32_t driver_state_hs = 0;
 
-static uint16_t ncv7726b_resp = 0;
+static uint32_t ncv7726b_resp = 0;
 static volatile uint8_t tx_complete = 0;
 
 static void ncv7726b_reset(void);
@@ -39,7 +39,7 @@ static void ncv7726b_xfer_done(void) {
 
     DMESG("R: %x", ncv7726b_resp);
     // thermal warning
-    if (ncv7726b & 0x0001)
+    if (ncv7726b_resp & 0x0001)
         jd_panic();
 }
 
@@ -48,6 +48,7 @@ static void ncv7726b_send(uint16_t* data) {
     *data = flip(*data); // ls bit first
     DBG("WRITE %x", *data); 
     pin_set(PIN_RX_CS, 0);
+    target_wait_us(10);
     dspi_xfer(data, &ncv7726b_resp, 2, ncv7726b_xfer_done);
     while(tx_complete == 0);
 }
@@ -107,21 +108,21 @@ static void ncv7726b_write_state(void) {
             }
         }
     }
-    
-    DMESG("OUT UP %x LOW %x", upper, lower);
 
-    if (driver_state_en == 0 && driver_state_ls == 0 && driver_state_hs == 0) {
-        uint16_t reset = SRR;
-        ncv7726b_send(&reset);
-        target_wait_us(3000);
-        reset =  SRR | HB_SEL;
-        ncv7726b_send(&reset);
-    } else {
+    // if (driver_state_en == 0 && driver_state_ls == 0 && driver_state_hs == 0) {
+    //     uint16_t reset = SRR;
+    //     ncv7726b_send(&reset);
+    //     target_wait_us(3000);
+    //     reset =  SRR | HB_SEL;
+    //     ncv7726b_send(&reset);
+    // } else {
+        DMESG("OUT UP %x", upper);
         ncv7726b_send(&upper);
         target_wait_us(3000);
+        DMESG("OUT LOW %x", lower);
         ncv7726b_send(&lower);
         target_wait_us(3000);
-    }
+    // }
 
     
 }
@@ -134,15 +135,12 @@ static void ncv7726b_channel_set(uint8_t channel, int state) {
 
     driver_state_en |= msk;
 
-    switch (state) {
-        case DRIVE_LS_ON:
-            driver_state_hs &= ~msk;
-            driver_state_ls |= msk;
-            break;
-        case DRIVE_HS_ON:
-            driver_state_ls &= ~msk;
-            driver_state_hs |= msk;
-            break;
+    if (state == 0) {
+        driver_state_hs &= ~msk;
+        driver_state_ls |= msk;
+    } else {
+        driver_state_ls &= ~msk;
+        driver_state_hs |= msk;
     }
 }
 
