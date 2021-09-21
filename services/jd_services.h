@@ -168,4 +168,11 @@ typedef struct {
 } relay_params_t;
 void relay_service_init(const relay_params_t *params);
 
+
+// Flex service.
+// pinM is sampled, while pinL is set low, and pinH is set high.
+// When not sampling, pinL and pinH are left as inputs, reducing power consumption.
+// pinL and/or pinH can be NO_PIN (it only really makes sense to use one of them).
+void flex_init(uint8_t pinL, uint8_t pinM, uint8_t pinH);
+
 #endif
