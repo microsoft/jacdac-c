@@ -124,8 +124,8 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
                 strlen(app_fw_version));
         break;
 
-    case JD_GET(JD_CONTROL_REG_FIRMWARE_IDENTIFIER):
-    case JD_GET(JD_CONTROL_REG_BOOTLOADER_FIRMWARE_IDENTIFIER):
+    case JD_GET(JD_CONTROL_REG_PRODUCT_IDENTIFIER):
+    case JD_GET(JD_CONTROL_REG_BOOTLOADER_PRODUCT_IDENTIFIER):
         send_value(pkt, app_get_device_class());
         break;
 
