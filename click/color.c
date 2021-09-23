@@ -136,7 +136,7 @@ uint16_t color_read_data ( color_t *ctx, uint8_t reg )
     uint8_t read_reg[ 2 ] = { 0 };
     uint16_t read_data = 0;
 
-    reg_addr = reg | COLOR_CMD_SELECT;
+    reg_addr = reg | COLOR_CMD_SELECT | COLOR_CMD_AUTO_INCREMENT_PROTOCOL;
 
     color_generic_read( ctx, reg_addr, read_reg, 2 );
 
