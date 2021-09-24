@@ -55,6 +55,12 @@ static void shtc3_init(void) {
     ctx->inited = 1;
     i2c_init();
     wake();
+
+
+
+    i2c_write_reg16(0, 0x0006, 0x6);
+    target_wait_us(400);
+
     int id = i2c_read_reg16(SHTC3_ADDR, SHTC3_ID);
     DMESG("SHTC3 id=%x", id);
     if (id <= 0)
