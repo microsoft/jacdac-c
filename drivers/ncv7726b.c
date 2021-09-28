@@ -138,10 +138,10 @@ static void ncv7726b_write_state(void) {
         target_wait_us(3000);
         
         ncv7726b_send(&upper);
-        target_wait_us(3000);
+        target_wait_us(8000);
         // DMESG("OUT LOW %x", lower);
         
-        ncv7726b_reset();
+        // ncv7726b_reset();
 }
 
 static void ncv7726b_channel_set(uint8_t channel, int state) {
