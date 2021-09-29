@@ -50,7 +50,7 @@ static inline uint16_t flip (uint16_t v) {
 static void ncv7726b_xfer_done(void) {
     ncv7726b_resp = flip(ncv7726b_resp);
 
-    // DBG("P: %x R: %x", previous_command, ncv7726b_resp);
+    DMESG("P: %x R: %x", previous_command, ncv7726b_resp);
     // thermal warning
     // if (ncv7726b_resp & 0x0001)
     //     jd_panic();
@@ -85,6 +85,9 @@ static void ncv7726b_write_state(void) {
             if (!(driver_state_ls & (1 << i)) && !(driver_state_hs & (1 << i)))
                 jd_panic();
 
+            if ((driver_state_ls & (1 << i)) && (driver_state_hs & (1 << i)))
+                jd_panic();
+
             if (driver_state_ls & (1 << i))
             {
                 DBG("LSL %x", CNF_START << (i - 1));
@@ -112,6 +115,9 @@ static void ncv7726b_write_state(void) {
             if (!(driver_state_ls & (1 << i)) && !(driver_state_hs & (1 << i)))
                 jd_panic();
 
+            if ((driver_state_ls & (1 << i)) && (driver_state_hs & (1 << i)))
+                jd_panic();
+
             if (driver_state_ls & (1 << i))
             {
                 DBG("LSH %x", CNF_START << (i - 7));
@@ -134,11 +140,20 @@ static void ncv7726b_write_state(void) {
     //     ncv7726b_send(&reset);
     // } else {
         // DMESG("OUT UP %x", upper);
-        ncv7726b_send(&lower);
-        target_wait_us(3000);
+
+    ncv7726b_send(&upper);
+    target_wait_us(8000);
+
+    ncv7726b_send(&lower);
+    target_wait_us(8000);
         
-        ncv7726b_send(&upper);
-        target_wait_us(8000);
+    uint16_t reset = SRR | HB_SEL;
+    ncv7726b_send(&reset);
+    target_wait_us(8000);
+    reset = SRR;
+    ncv7726b_send(&reset);
+    target_wait_us(8000);
+        
         // DMESG("OUT LOW %x", lower);
         
         // ncv7726b_reset();
