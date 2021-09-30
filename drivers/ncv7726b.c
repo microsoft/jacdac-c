@@ -142,14 +142,13 @@ static void ncv7726b_write_state(void) {
         // DMESG("OUT UP %x", upper);
 
     ncv7726b_send(&upper);
-    target_wait_us(8000);
-
+    target_wait_us(10);
     ncv7726b_send(&lower);
     target_wait_us(8000);
         
     uint16_t reset = SRR | HB_SEL;
     ncv7726b_send(&reset);
-    target_wait_us(8000);
+    target_wait_us(10);
     reset = SRR;
     ncv7726b_send(&reset);
     target_wait_us(8000);
