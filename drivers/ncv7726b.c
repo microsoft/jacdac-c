@@ -1,5 +1,6 @@
 #include "jd_drivers.h"
 #include "jd_services.h"
+#include "board.h"
 
 #define ASSERT(cond)                                                                               \
     if (!(cond))                                                                                   \
@@ -26,7 +27,6 @@ static uint32_t driver_state_hs = 0;
 static uint32_t ncv7726b_tx = 0;
 static uint32_t ncv7726b_resp = 0;
 static uint16_t command = 0;
-static uint16_t previous_command = 0;
 static volatile uint8_t tx_complete = 0;
 
 static void ncv7726b_reset(void);
@@ -49,13 +49,6 @@ static inline uint16_t flip (uint16_t v) {
 
 static void ncv7726b_xfer_done(void) {
     ncv7726b_resp = flip(ncv7726b_resp);
-
-    DMESG("P: %x R: %x", previous_command, ncv7726b_resp);
-    // thermal warning
-    // if (ncv7726b_resp & 0x0001)
-    //     jd_panic();
-
-    previous_command = command;
     pin_set(PIN_RX_CS,1);
     tx_complete = 1;
 }
@@ -68,6 +61,11 @@ static void ncv7726b_send(uint16_t* data) {
     target_wait_us(10);
     dspi_xfer(&ncv7726b_tx, &ncv7726b_resp, 2, ncv7726b_xfer_done);
     while(tx_complete == 0);
+}
+
+static uint16_t ncv7726b_write_raw(uint16_t d) {
+    ncv7726b_send(&d);
+    return ncv7726b_resp;
 }
 
 static void ncv7726b_write_state(void) {
@@ -139,8 +137,6 @@ static void ncv7726b_write_state(void) {
     //     reset =  SRR | HB_SEL;
     //     ncv7726b_send(&reset);
     // } else {
-        // DMESG("OUT UP %x", upper);
-
     ncv7726b_send(&upper);
     target_wait_us(10);
     ncv7726b_send(&lower);
@@ -148,12 +144,10 @@ static void ncv7726b_write_state(void) {
         
     uint16_t reset = SRR | HB_SEL;
     ncv7726b_send(&reset);
-    target_wait_us(10);
+    target_wait_us(200);
     reset = SRR;
     ncv7726b_send(&reset);
     target_wait_us(8000);
-        
-        // DMESG("OUT LOW %x", lower);
         
         // ncv7726b_reset();
 }
@@ -214,5 +208,6 @@ const hbridge_api_t ncv7726b = {
     .channel_clear = ncv7726b_channel_clear,
     .channel_set = ncv7726b_channel_set,
     .clear_all = ncv7726b_clear_all,
-    .write = ncv7726b_write_state
+    .write_channels = ncv7726b_write_state,
+    .write_raw = ncv7726b_write_raw
 };
