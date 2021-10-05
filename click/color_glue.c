@@ -18,7 +18,7 @@ static void glue_color_init(void) {
 
 static void glue_color_sleep(void) {
     color_set_led(&ctx, 0, 0, 0);
-    color_write_byte(&ctx, COLOR_REG_ENABLE, 0x00);
+    //    color_write_byte(&ctx, COLOR_REG_ENABLE, 0x00);
 }
 
 // this is what we get on "white"
@@ -28,10 +28,14 @@ static void glue_color_sleep(void) {
 
 static void *glue_color_get_sample(void) {
     static uint32_t sample[4];
-    sample[0] = (color_read_data(&ctx, COLOR_COLOR_DATA_RED) << 16) / SCALE_R;
-    sample[1] = (color_read_data(&ctx, COLOR_COLOR_DATA_GREEN) << 16) / SCALE_G;
-    sample[2] = (color_read_data(&ctx, COLOR_COLOR_DATA_BLUE) << 16) / SCALE_B;
-    sample[3] = color_read_data(&ctx, COLOR_COLOR_DATA_CLEAR) << 16;
+    uint32_t r = color_read_data(&ctx, COLOR_COLOR_DATA_RED);
+    uint32_t g = color_read_data(&ctx, COLOR_COLOR_DATA_GREEN);
+    uint32_t b = color_read_data(&ctx, COLOR_COLOR_DATA_BLUE);
+    uint32_t c = color_read_data(&ctx, COLOR_COLOR_DATA_CLEAR);
+    sample[0] = r * ((1 << 16) / SCALE_R);
+    sample[1] = g * ((1 << 16) / SCALE_G);
+    sample[2] = b * ((1 << 16) / SCALE_B);
+    sample[3] = c << 16;
     return sample;
 }
 
