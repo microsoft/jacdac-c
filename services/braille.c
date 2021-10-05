@@ -8,7 +8,7 @@
 #define MAXBRBANK 2  // HiBank, LoBank
 #define BRPHASEUP 0
 #define BRPHASEDN 1
-#define BRWAITSETU 5   // msec after set/reset each dot for UP
+#define BRWAITSETU 8   // msec after set/reset each dot for UP
 #define BRWAITSETD 12  // msec after set/reset each dot for DOWN
 #define BRWAITSETFU 10 // msec after set/reset each dot for forced UP
 #define BRWAITSETFD 10 // msec after set/reset each dot for forced DOWN
@@ -29,6 +29,8 @@ struct srv_state {
     uint16_t cols;
     uint8_t variant;
     uint8_t flags;
+    uint16_t padding;
+    uint32_t now;
     uint8_t dots[DOTS_MAX];
 };
 
@@ -39,6 +41,9 @@ REG_DEFINITION(                                   //
     REG_U16(JD_DOT_MATRIX_REG_ROWS),                         //
     REG_U16(JD_DOT_MATRIX_REG_COLUMNS),                         //
     REG_U8(JD_DOT_MATRIX_REG_VARIANT),                //
+    REG_U8(JD_REG_PADDING),                // flags
+    REG_U16(JD_REG_PADDING),                         //
+    REG_U32(JD_REG_PADDING),                         //
     REG_BYTES(JD_DOT_MATRIX_REG_DOTS, DOTS_MAX),                         //
 )
 
@@ -82,7 +87,7 @@ const uint16_t BrDotTbl_forced[ MAXBRPHASE ][ MAXBRROW ][ MAXBRCOL ][ MAXBRBANK 
 
 
 void delay(uint32_t t) {
-    target_wait_us(t * 1000);
+    jd_services_sleep_us(t * 1000);
 }
 
 uint16_t tx = 0;
@@ -116,6 +121,9 @@ void BrClrPtn(void) {
 
 // BrSetPtn: SetBraille Pattern
 void BrSetPtn(uint16_t row, uint16_t col, bool state) {
+    if (row >= MAXBRROW || col >= MAXBRCOL)
+        hw_panic();
+
     BrDotPtn[row][col] = state;
 }
 
@@ -250,32 +258,40 @@ void braille_process(srv_t * state) {
     }
 }
 
+bool get_bit(srv_t * state, uint8_t* data, uint16_t row, uint16_t col) {
+    uint16_t cols_padded = state->cols + (8 - (state->cols % 8));
+    uint32_t bitindex = row * cols_padded + col;
+    uint8_t byte = data[bitindex >> 3];
+    uint8_t bit = bitindex % 8;
+    return (1 == ((byte >> bit) & 1));
+}
+
+// translates from sim to real life accurately.
+const uint8_t cell_map[] = {2,0,1,3};
+
 void handle_disp_write(srv_t * state, jd_packet_t* pkt) {
-    if (pkt->service_size > 8 * state->cols)
-    {
-        DMESG("GREATER %d %d", pkt->service_size, 8 * state->cols);
-        while(1);
-    }
-        // hw_panic();
 
-    int col = 0;
-    // for each byte, we get values for n rows
-    while(col < pkt->service_size) {
-        int row = 0;
-        while (row < state->rows) {
-            // handle the case where number of rows is > 8 for a given column
-            if (row != 0 && row % 8 == 0)
-                col++;
+    // update in progress
+    if (state->flags & STATE_DIRTY)
+        return;
 
-            if (pkt->data[col] & (1 << row))
-                BrSetPtn(row, col, true);
-            else
-                BrSetPtn(row, col, false);
+    // too big for our buffer
+    if (pkt->service_size > DOTS_MAX)
+        hw_panic();
 
-            row++;
+    BrClrPtn();
+    
+    for (int row = 0; row < state->rows; row++) 
+        for (int col = 0; col < state->cols; col++) {
+            uint8_t cell = cell_map[col / 2];
+            bool upper = (col%2);
+            if (get_bit(state, pkt->data, row, col)) {
+                BrSetPtn(cell, (upper) ? 4 + row : row, true);
+                DMESG("SET Cell %d DOT %d", cell, (upper) ? 4 + row : row);
+            }
         }
-        col++;
-    }
+
+    // memcpy(state->dots, pkt->data, pkt->service_size);
 
     state->flags |= STATE_DIRTY;
 }
@@ -286,7 +302,8 @@ void braille_handle_packet(srv_t *state, jd_packet_t *pkt) {
         default:
             switch (service_handle_register(state, pkt, braille_regs)) {
                 case JD_DOT_MATRIX_REG_DOTS:
-                    handle_disp_write(state, pkt);
+                    if (JD_SET(JD_DOT_MATRIX_REG_DOTS) == pkt->service_command)
+                        handle_disp_write(state, pkt);
                     break;
             }
     }
@@ -295,11 +312,13 @@ void braille_handle_packet(srv_t *state, jd_packet_t *pkt) {
 SRV_DEF(braille, JD_SERVICE_CLASS_DOT_MATRIX);
 void braille_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols, uint8_t variant) {
     SRV_ALLOC(braille);
+
     state->api = params;
     state->rows = rows;
     state->cols = cols;
     state->variant = variant;
     state->flags = 0;
+    state->now = 0;
 
     state->api->init();
 
@@ -310,8 +329,8 @@ void braille_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols, uin
 
     memset(state->dots, 0, DOTS_MAX);
 
+    BrClrPtn();
 
-    // clear (for video shooting)
     BrClrAllDots(state);
     delay(3000);
 }
