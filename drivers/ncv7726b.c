@@ -49,7 +49,7 @@ static inline uint16_t flip (uint16_t v) {
 
 static void ncv7726b_xfer_done(void) {
     ncv7726b_resp = flip(ncv7726b_resp);
-    pin_set(PIN_RX_CS,1);
+    pin_set(MIKROBUS_CS,1);
     tx_complete = 1;
 }
 
@@ -57,7 +57,7 @@ static void ncv7726b_send(uint16_t* data) {
     tx_complete = 0;
     command = *data;
     ncv7726b_tx = flip(*data); // ls bit first
-    pin_set(PIN_RX_CS, 0);
+    pin_set(MIKROBUS_CS, 0);
     target_wait_us(10);
     dspi_xfer(&ncv7726b_tx, &ncv7726b_resp, 2, ncv7726b_xfer_done);
     while(tx_complete == 0);
@@ -196,7 +196,7 @@ static void ncv7726b_reset(void) {
 
 static void ncv7726b_init(void) {
     dspi_init();
-    pin_setup_output(PIN_RX_CS);
+    pin_setup_output(MIKROBUS_CS);
     target_wait_us(50000);
     ncv7726b_reset();
     // clean slate
