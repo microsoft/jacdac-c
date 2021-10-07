@@ -86,7 +86,7 @@ const uint16_t BrDotTbl_forced[ MAXBRPHASE ][ MAXBRROW ][ MAXBRCOL ][ MAXBRBANK 
 };
 
 
-void delay(uint32_t t) {
+static void delay(uint32_t t) {
     jd_services_sleep_us(t * 1000);
 }
 
