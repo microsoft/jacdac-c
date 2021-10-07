@@ -8,7 +8,7 @@
 #define MAXBRBANK 2  // HiBank, LoBank
 #define BRPHASEUP 0
 #define BRPHASEDN 1
-#define BRWAITSETU 8   // msec after set/reset each dot for UP
+#define BRWAITSETU 3   // msec after set/reset each dot for UP
 #define BRWAITSETD 12  // msec after set/reset each dot for DOWN
 #define BRWAITSETFU 10 // msec after set/reset each dot for forced UP
 #define BRWAITSETFD 10 // msec after set/reset each dot for forced DOWN
