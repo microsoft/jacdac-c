@@ -195,7 +195,7 @@ static void ncv7726b_reset(void) {
 }
 
 static void ncv7726b_init(void) {
-    dspi_init();
+    dspi_init(false, 0, 1);
     pin_setup_output(MIKROBUS_CS);
     target_wait_us(50000);
     ncv7726b_reset();

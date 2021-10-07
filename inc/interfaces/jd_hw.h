@@ -82,7 +82,7 @@ void bspi_recv(void *dst, uint32_t len);
 void bspi_init(void);
 
 //dspi.c
-void dspi_init(void);
+void dspi_init(bool slow, int cpol, int cpha);
 void dspi_tx(const void *data, uint32_t numbytes, cb_t doneHandler);
 void dspi_xfer(const void *txdata, void *rxdata, uint32_t numbytes, cb_t doneHandler);
 
