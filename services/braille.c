@@ -285,13 +285,9 @@ void handle_disp_write(srv_t * state, jd_packet_t* pkt) {
         for (int col = 0; col < state->cols; col++) {
             uint8_t cell = cell_map[col / 2];
             bool upper = (col%2);
-            if (get_bit(state, pkt->data, row, col)) {
+            if (get_bit(state, pkt->data, row, col))
                 BrSetPtn(cell, (upper) ? 4 + row : row, true);
-                DMESG("SET Cell %d DOT %d", cell, (upper) ? 4 + row : row);
-            }
         }
-
-    // memcpy(state->dots, pkt->data, pkt->service_size);
 
     state->flags |= STATE_DIRTY;
 }

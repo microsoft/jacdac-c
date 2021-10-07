@@ -33,18 +33,6 @@ static volatile uint8_t tx_complete = 0;
 
 static void ncv7726b_reset(void);
 
-// static inline uint8_t flip_word(uint8_t v) {
-//     return ((v & 0xf0) >> 4) | ((v & 0xf) << 4);
-// }
-
-// static inline uint16_t flip (uint16_t v) {
-
-//     uint8_t upper =((v & 0xff00) >> 8);
-//     uint8_t lower = v & 0xff; 
-
-//     return flip_word(upper) | (flip_word(lower) << 8);
-// }
-
 static inline uint16_t flip (uint16_t v) {
     return ((v & 0xff00) >> 8) | ((v & 0x00ff) << 8);
 }
@@ -150,8 +138,6 @@ static void ncv7726b_write_state(void) {
     reset = SRR;
     ncv7726b_send(&reset);
     target_wait_us(8000);
-        
-        // ncv7726b_reset();
 }
 
 static void ncv7726b_channel_set(uint8_t channel, int state) {
@@ -188,10 +174,10 @@ static void ncv7726b_clear_all(void) {
 }
 
 static void ncv7726b_reset(void) {
-    // uint16_t reset = SRR | OVLO;
-    // ncv7726b_send(&reset);
-    // target_wait_us(3000);
-    uint16_t reset = SRR | HB_SEL | OVLO;
+    uint16_t reset = SRR;
+    ncv7726b_send(&reset);
+    target_wait_us(3000);
+    reset = SRR | HB_SEL;
     ncv7726b_send(&reset);
     target_wait_us(3000);
 }
@@ -199,9 +185,7 @@ static void ncv7726b_reset(void) {
 static void ncv7726b_init(void) {
     dspi_init(false, 0, 1);
     pin_setup_output(PIN_CS);
-    target_wait_us(50000);
     ncv7726b_reset();
-    // clean slate
     ncv7726b_clear_all();
 }
 
