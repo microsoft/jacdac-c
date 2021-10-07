@@ -2,6 +2,8 @@
 #include "jd_services.h"
 #include "board.h"
 
+#ifdef SPI_RX
+
 #define ASSERT(cond)                                                                               \
     if (!(cond))                                                                                   \
     jd_panic()
@@ -211,3 +213,5 @@ const hbridge_api_t ncv7726b = {
     .write_channels = ncv7726b_write_state,
     .write_raw = ncv7726b_write_raw
 };
+
+#endif
