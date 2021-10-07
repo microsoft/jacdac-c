@@ -267,8 +267,11 @@ bool get_bit(srv_t * state, uint8_t* data, uint16_t row, uint16_t col) {
 }
 
 // translates from sim to real life accurately.
+#ifdef BRAILLE_V1
 const uint8_t cell_map[] = {2,0,1,3};
-
+#else
+const uint8_t cell_map[] = {0,1,2,3};
+#endif
 void handle_disp_write(srv_t * state, jd_packet_t* pkt) {
 
     // update in progress
