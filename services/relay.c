@@ -30,7 +30,7 @@ static void reflect_register_state(srv_t* state) {
         pin_set(state->params.pin_relay_led, (state->params.led_active_lo ? 1 : 0));
     }
 
-    jd_send_event_ext(state, (state->intensity > 0) ? JD_RELAY_EV_ON : JD_RELAY_EV_OFF, 0, 0);
+    jd_send_event_ext(state, (state->intensity > 0) ? JD_RELAY_EV_ACTIVE : JD_RELAY_EV_INACTIVE, 0, 0);
 }
 
 void relay_process(srv_t * state) {

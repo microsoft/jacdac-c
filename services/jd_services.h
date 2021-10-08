@@ -161,7 +161,10 @@ typedef struct {
     void (*write_channels)(void);
     uint16_t (*write_raw)(uint16_t);
 } hbridge_api_t;
-void braille_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols, uint8_t variant);
+// dot matrix (pixel set/clear)
+void braille_dm_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols, const uint8_t* cell_map);
+// character interface (character level set/clear)
+void braille_char_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols, const uint8_t* cell_map);
 extern const hbridge_api_t ncv7726b;
 
 // initialises a relay service.
