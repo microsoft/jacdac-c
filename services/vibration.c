@@ -3,6 +3,8 @@
 #include "jacdac/dist/c/vibration.h"
 #include "lib.h"
 
+#define MAX_SEQUENCE        118
+
 struct srv_state {
     SRV_COMMON;
     uint8_t enabled;
@@ -26,7 +28,7 @@ void vibration_process(srv_t * state) {
     jd_vibration_motor_vibrate_t* curr = &state->sequence[state->idx];
 
     if (curr->duration == 0) {
-        state->idx++;
+        state->idx = (state->idx + 1) % MAX_SEQUENCE;
         return;
     }
     
