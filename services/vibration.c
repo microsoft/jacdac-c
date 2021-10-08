@@ -23,18 +23,16 @@ void vibration_process(srv_t * state) {
     if (!jd_should_sample(&state->now, 1000))
         return;
 
-    jd_vibration_motor_vibrate_t curr = state->sequence[state->idx];
+    jd_vibration_motor_vibrate_t* curr = &state->sequence[state->idx];
 
-    if (curr.duration == 0) {
+    if (curr->duration == 0) {
         state->idx++;
-        curr = state->sequence[state->idx];
+        return;
     }
-
-    // each command is 83.3 us of vibration
-    // 12 writes == 1 ms; add some buffer incase process is delayed.
-    for (int i = 0; i < (12 * 8 + 10); i++) {
-        state->api->write_amplitude(curr.speed);
-    }
+    
+    // each speed tick is 8 ms in duration 
+    state->api->write_amplitude(curr->speed, 8);
+    curr->duration--;
 }
 
 

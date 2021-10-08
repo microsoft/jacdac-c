@@ -25,8 +25,11 @@
 #define AW86224_FCR_SYSCTRL2_REG            0x44
 #define AW86224_FCR_SYSCTRL2_VAL_12KHz      0x03
 
-static void aw86224fcr_write_amplitude(uint8_t amplitude) {
-    i2c_write_reg(AW86224_FCR_ADDR, AW86224_FCR_RTPDATA_REG, amplitude);
+static void aw86224fcr_write_amplitude(uint8_t amplitude, uint8_t duration_ms) {
+    // each command is 83.3 us of vibration
+    // 12 writes == 1 ms; add some buffer incase process is delayed.
+    for (int i = 0; i < (12 * duration_ms + 10); i++)
+        i2c_write_reg(AW86224_FCR_ADDR, AW86224_FCR_RTPDATA_REG, amplitude);
 }
 
 static void aw86224fcr_reset(void) {
