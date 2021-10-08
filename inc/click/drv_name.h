@@ -42,8 +42,13 @@ typedef int err_t;
 #endif
 
 #ifdef PIN_RX_CS
-#define MIKROBUS_RX PIN_RX_CS
+#ifndef MIKROBUS_CS
 #define MIKROBUS_CS PIN_RX_CS
+#endif
+
+#ifndef MIKROBUS_RX
+#define MIKROBUS_RX PIN_RX_CS
+#endif
 #endif
 
 #define MIKROBUS(mikrobus, pin) pin
