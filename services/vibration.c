@@ -62,4 +62,6 @@ void vibration_service_init(const vibration_motor_api_t *api) {
     SRV_ALLOC(vibration);
     state->api = api;
     state->enabled = 1;
+
+    state->api->init();
 }
