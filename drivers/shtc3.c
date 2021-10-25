@@ -67,7 +67,7 @@ static void shtc3_process(void) {
 
     // the 20ms here is just for readings, we actually sample at SAMPLING_MS
     // the datasheet says max reading time is 12.1ms; give a little more time
-    if (jd_should_sample(&ctx->nextsample, 20000)) {
+    if (jd_should_sample_delay(&ctx->nextsample, 20000)) {
         if (!ctx->read_issued) {
             ctx->read_issued = 1;
             wake();

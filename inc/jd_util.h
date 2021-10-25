@@ -17,7 +17,10 @@ int jd_shift_frame(jd_frame_t *frame);
 void jd_reset_frame(jd_frame_t *frame);
 void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service_cmd,
                        unsigned service_size);
+// jd_should_sample() will try to keep the period sampling rate, when delayed
 bool jd_should_sample(uint32_t *sample, uint32_t period);
+// jd_should_sample_delay() will wait at least `period` until next sampling
+bool jd_should_sample_delay(uint32_t *sample, uint32_t period);
 
 // check if given timestamp is already in the past, regardless of overflows on 'now'
 // the moment has to be no more than ~500 seconds in the past

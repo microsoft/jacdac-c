@@ -141,3 +141,12 @@ bool jd_should_sample(uint32_t *sample, uint32_t period) {
 
     return true;
 }
+
+bool jd_should_sample_delay(uint32_t *sample, uint32_t period) {
+    if (in_future(*sample))
+        return false;
+
+    *sample = now + period;
+
+    return true;
+}

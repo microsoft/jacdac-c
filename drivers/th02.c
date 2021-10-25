@@ -64,7 +64,7 @@ static void th02_process(void) {
     ctx_t *ctx = &state;
 
     // the 50ms here is just for readings, we actually sample at SAMPLING_MS
-    if (jd_should_sample(&ctx->nextsample, 50000)) {
+    if (jd_should_sample_delay(&ctx->nextsample, 50000)) {
         if (ctx->in_temp) {
             int v = read_data();
             if (v >= 0) {
