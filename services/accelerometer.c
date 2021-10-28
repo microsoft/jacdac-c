@@ -21,8 +21,8 @@ Standing on bottom edge: 0,1000,0
 
 // values for QMA7981
 #define SAMPLING_PERIOD (7695 * 2) // 64.98Hz
-#define MAX_RANGE 32
-#define DEFAULT_RANGE 8
+
+uint8_t gyroscope_pending;
 
 #ifdef PIN_ACC_INT
 static uint8_t got_accelerometer_int;
@@ -213,9 +213,10 @@ static void process_events(srv_t *state) {
 
 void accelerometer_process(srv_t *state) {
 #ifdef PIN_ACC_INT
-    if (!got_accelerometer_int)
+    if (!got_accelerometer_int && state->inited)
         return;
     got_accelerometer_int = 0;
+    gyroscope_pending = 1;
 #else
     if (!jd_should_sample(&state->nextSample, SAMPLING_PERIOD))
         return;
