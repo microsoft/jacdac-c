@@ -11,24 +11,17 @@
 #define INT_CTRL_REG2 0x1F
 #define DATA_CTRL_REG 0x21
 
-#ifndef ACC_RANGE
-#define ACC_RANGE 8
-#endif
+#define ACCEL_RANGE(dps, cfg, scale)                                                               \
+    { dps * 1024 * 1024, cfg, scale }
 
-#define RANGE_2G (0b000 << 2)
-#define RANGE_4G (0b010 << 2)
-#define RANGE_8G (0b100 << 2)
-#define RANGE_16G (0b001 << 2)
+static const sensor_range_t accel_ranges[] = { //
+    ACCEL_RANGE(2, (0b000 << 2), 6),
+    ACCEL_RANGE(4, (0b010 << 2), 7),
+    ACCEL_RANGE(8, (0b100 << 2), 8),
+    ACCEL_RANGE(16, (0b001 << 2), 9),
+    {0, 0, 0}};
 
-#if ACC_RANGE == 8
-#define RANGE RANGE_8G
-#define ACC_SHIFT 8
-#elif ACC_RANGE == 16
-#define RANGE RANGE_16G
-#define ACC_SHIFT 9
-#else
-#error "untested range"
-#endif
+static const sensor_range_t *r_accel;
 
 static void writeReg(uint8_t reg, uint8_t val) {
     i2c_write_reg(ACC_I2C_ADDR, reg, val);
@@ -57,16 +50,27 @@ static void init_chip(void) {
     writeReg(INT_CTRL_REG1, 0b00111000);
 #endif
 
-    writeReg(CTRL_REG1, 0b11100000 | RANGE); // write ctrl_reg1 last as it enables chip
+    writeReg(CTRL_REG1, 0b11100000 | r_accel->config); // write ctrl_reg1 last as it enables chip
+}
+
+static int32_t kxtj3_accel_get_range(void) {
+    return r_accel->range;
+}
+
+static int32_t kxtj3_accel_set_range(int32_t range) {
+    r_accel = sensor_lookup_range(accel_ranges, range);
+    init_chip();
+    return r_accel->range;
 }
 
 static void *kxtj3_get_sample(void) {
     int16_t data[3];
     static int32_t sample[3];
     readData(0x06, (uint8_t *)data, 6);
-    sample[0] = data[1] << ACC_SHIFT;
-    sample[1] = -data[0] << ACC_SHIFT;
-    sample[2] = -data[2] << ACC_SHIFT;
+    int shift = r_accel->scale;
+    sample[0] = data[1] << shift;
+    sample[1] = -data[0] << shift;
+    sample[2] = -data[2] << shift;
     return sample;
 }
 
@@ -87,11 +91,14 @@ static void kxtj3_init(void) {
         hw_panic();
     }
 
-    init_chip();
+    kxtj3_accel_set_range(8 << 20);
 }
 
 const accelerometer_api_t accelerometer_kxtj3 = {
     .init = kxtj3_init,
     .get_reading = kxtj3_get_sample,
     .sleep = kxtj3_sleep,
+    .get_range = kxtj3_accel_get_range,
+    .set_range = kxtj3_accel_set_range,
+    .ranges = accel_ranges,
 };

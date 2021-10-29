@@ -18,39 +18,34 @@
 #define LSM6DS_TAP_CFG 0x58
 #define LSM6DS_INT1_CTRL 0x0D
 
-#ifndef ACC_RANGE
-#define ACC_RANGE 8
-#endif
+#define GYRO_RANGE(dps, cfg, scale)                                                                \
+    { dps * 1024 * 1024, cfg, ((int)(1024 * 1024 * scale) / 1000) }
 
-#define RANGE_2G (0b00 << 2)
-#define RANGE_4G (0b10 << 2)
-#define RANGE_8G (0b11 << 2)
-#define RANGE_16G (0b01 << 2)
+static const sensor_range_t gyro_ranges[] = { //
+    GYRO_RANGE(250, (0b00 << 2), 8.75),
+    GYRO_RANGE(500, (0b01 << 2), 17.5),
+    GYRO_RANGE(1000, (0b10 << 2), 35),
+    GYRO_RANGE(2000, (0b11 << 2), 70),
+    {0, 0, 0}};
 
-#if ACC_RANGE == 8
-#define RANGE RANGE_8G
-#define ACC_SHIFT 8
-#elif ACC_RANGE == 16
-#define RANGE RANGE_16G
-#define ACC_SHIFT 9
-#else
-#error "untested range"
-#endif
+#define ACCEL_RANGE(dps, cfg, scale)                                                               \
+    { dps * 1024 * 1024, cfg, scale }
 
-#define RANGE_GYRO_250 (0b00 << 2)
-#define RANGE_GYRO_500 (0b01 << 2)
-#define RANGE_GYRO_1000 (0b10 << 2)
-#define RANGE_GYRO_2000 (0b11 << 2)
-
-// 35.0 at 1000dps (from data sheet)
-#define G_MULT ((int)(1024*1024*35.0)/1000)
-#define RANGE_GYRO RANGE_GYRO_1000
+static const sensor_range_t accel_ranges[] = { //
+    ACCEL_RANGE(2, (0b00 << 2), 6),
+    ACCEL_RANGE(4, (0b10 << 2), 7),
+    ACCEL_RANGE(8, (0b11 << 2), 8),
+    ACCEL_RANGE(16, (0b01 << 2), 9),
+    {0, 0, 0}};
 
 #ifdef ACC_100HZ
 #define ODR (0b0100 << 4) // 104Hz
 #else
 #define ODR (0b0011 << 4) // 52Hz
 #endif
+
+static uint8_t inited;
+static const sensor_range_t *r_accel, *r_gyro;
 
 static void writeReg(uint8_t reg, uint8_t val) {
     i2c_write_reg(ACC_I2C_ADDR, reg, val);
@@ -73,17 +68,18 @@ static void init_chip(void) {
 #else
     writeReg(LSM6DS_INT1_CTRL, 0b00);
 #endif
-    writeReg(LSM6DS_CTRL1_XL, RANGE | ODR);
-    writeReg(LSM6DS_CTRL2_G, RANGE_GYRO | ODR);
+    writeReg(LSM6DS_CTRL1_XL, r_accel->config | ODR);
+    writeReg(LSM6DS_CTRL2_G, r_gyro->config | ODR);
 }
 
 static void *lsm6ds_get_sample(void) {
     int16_t data[3];
     static int32_t sample[3];
     readData(LSM6DS_OUTX_L_A, (uint8_t *)data, 6);
-    sample[0] = data[0] << ACC_SHIFT;
-    sample[1] = data[1] << ACC_SHIFT;
-    sample[2] = data[2] << ACC_SHIFT;
+    int shift = r_accel->scale;
+    sample[0] = data[0] << shift;
+    sample[1] = data[1] << shift;
+    sample[2] = data[2] << shift;
     return sample;
 }
 
@@ -91,13 +87,12 @@ static void *lsm6ds_get_sample_gyro(void) {
     int16_t data[3];
     static int32_t sample[3];
     readData(LSM6DS_OUTX_L_G, (uint8_t *)data, 6);
-    sample[0] = data[0] * G_MULT;
-    sample[1] = data[1] * G_MULT;
-    sample[2] = data[2] * G_MULT;
+    int32_t mul = r_gyro->scale;
+    sample[0] = data[0] * mul;
+    sample[1] = data[1] * mul;
+    sample[2] = data[2] * mul;
     return sample;
 }
-
-static uint8_t inited;
 
 static void lsm6ds_sleep(void) {
     writeReg(LSM6DS_CTRL1_XL, 0);
@@ -105,11 +100,34 @@ static void lsm6ds_sleep(void) {
     inited = 0;
 }
 
+static int32_t lsm6ds_accel_get_range(void) {
+    return r_accel->range;
+}
+
+static int32_t lsm6ds_accel_set_range(int32_t range) {
+    r_accel = sensor_lookup_range(accel_ranges, range);
+    init_chip();
+    return r_accel->range;
+}
+
+static int32_t lsm6ds_gyro_get_range(void) {
+    return r_gyro->range;
+}
+
+static int32_t lsm6ds_gyro_set_range(int32_t range) {
+    r_gyro = sensor_lookup_range(gyro_ranges, range);
+    init_chip();
+    return r_gyro->range;
+}
+
 static void lsm6ds_init(void) {
     if (inited)
         return;
     inited = 1;
     i2c_init();
+
+    r_accel = sensor_lookup_range(accel_ranges, 8 << 20);
+    r_gyro = sensor_lookup_range(gyro_ranges, 1000 << 20);
 
     int v = readReg(LSM6DS_WHOAMI);
     DMESG("LSM acc id: %x", v);
@@ -128,10 +146,16 @@ const accelerometer_api_t accelerometer_lsm6ds = {
     .init = lsm6ds_init,
     .get_reading = lsm6ds_get_sample,
     .sleep = lsm6ds_sleep,
+    .get_range = lsm6ds_accel_get_range,
+    .set_range = lsm6ds_accel_set_range,
+    .ranges = accel_ranges,
 };
 
 const gyroscope_api_t gyroscope_lsm6ds = {
     .init = lsm6ds_init,
     .get_reading = lsm6ds_get_sample_gyro,
     .sleep = lsm6ds_sleep,
+    .get_range = lsm6ds_gyro_get_range,
+    .set_range = lsm6ds_gyro_set_range,
+    .ranges = gyro_ranges,
 };
