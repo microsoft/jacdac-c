@@ -31,6 +31,21 @@ void sensor_send_status(srv_t *state) {
     jd_send_event_ext(state, JD_EV_STATUS_CODE_CHANGED, &payload, sizeof(payload));
 }
 
+static int respond_ranges(srv_t *state) {
+    const sensor_range_t *r = state->api->ranges;
+    if (!r)
+        return 0;
+    while (r->range)
+        r++;
+    int len = r - state->api->ranges;
+    uint32_t buf[len];
+    r = state->api->ranges;
+    for (int i = 0; i < len; ++i)
+        buf[i] = r[i].range;
+    jd_send(state->service_number, JD_GET(JD_REG_SUPPORTED_RANGES), buf, len * sizeof(uint32_t));
+    return -JD_REG_SUPPORTED_RANGES;
+}
+
 int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_GET(JD_REG_INTENSITY):
@@ -39,6 +54,18 @@ int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
     case JD_GET(JD_REG_STATUS_CODE):
         jd_respond_u32(pkt, get_status_code(state));
         return -JD_REG_STATUS_CODE;
+    case JD_GET(JD_REG_READING_RANGE):
+        if (!state->api->get_range)
+            return 0;
+        jd_respond_u32(pkt, state->api->get_range());
+        return -JD_REG_READING_RANGE;
+    case JD_SET(JD_REG_READING_RANGE):
+        if (!state->api->set_range)
+            return 0;
+        state->api->set_range(*(uint32_t *)pkt->data);
+        return JD_REG_READING_RANGE;
+    case JD_GET(JD_REG_SUPPORTED_RANGES):
+        return respond_ranges(state);
     case JD_SET(JD_REG_INTENSITY):
         if (pkt->data[0]) {
             // this will make it initialize soon
@@ -88,6 +115,15 @@ void *sensor_get_reading(srv_t *state) {
         sensor_send_status(state);
     }
     return r;
+}
+
+const sensor_range_t *sensor_lookup_range(const sensor_range_t *ranges, int32_t requested) {
+    while (ranges->range) {
+        if (ranges->range >= requested)
+            return ranges;
+        ranges++;
+    }
+    return ranges - 1; // return maximum possible one
 }
 
 static void maybe_init(srv_t *state) {
