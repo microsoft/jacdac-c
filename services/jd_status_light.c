@@ -17,8 +17,6 @@
 #error "RGB_LED_PERIOD must be at least 512"
 #endif
 
-#define RGB_IN_TIM 0x01
-
 #define FRAME_US 65536
 
 // assume a non-RGB LED is connected like this: MCU -|>- GND
@@ -47,10 +45,10 @@ static const struct status_anim jd_status_animations[] = {
     {.color = {0, 255, 0, 150}, .time = 200 * 1000}, // STARTUP
     // the time on CONNECTED is used in only used with a non-RGB LED; note that there's already a
     // ~30us overhead
-    {.color = {0, 255, 0, 0}, .time = 100},          // CONNECTED
-    {.color = {255, 0, 0, 100}, .time = 500 * 1000}, // DISCONNECTED
-    {.color = {0, 0, 255, 0}, .time = 50 * 1000},    // IDENTIFY
-    {.color = {255, 255, 0, 100}, .time = 500 * 1000},    // UNKNOWN STATE
+    {.color = {0, 255, 0, 0}, .time = 100},            // CONNECTED
+    {.color = {255, 0, 0, 100}, .time = 500 * 1000},   // DISCONNECTED
+    {.color = {0, 0, 255, 0}, .time = 50 * 1000},      // IDENTIFY
+    {.color = {255, 255, 0, 100}, .time = 500 * 1000}, // UNKNOWN STATE
 };
 
 typedef struct {
@@ -64,7 +62,7 @@ typedef struct {
 
 typedef struct {
     uint8_t numleds;
-    uint8_t flags;
+    uint8_t in_tim;
     uint8_t jd_status; // JD_STATUS_*
     uint32_t step_sample;
     uint32_t jd_status_stop;
@@ -97,12 +95,12 @@ static void rgbled_show(status_ctx_t *state) {
         }
     }
 
-    if (sum == 0 && (state->flags & RGB_IN_TIM)) {
+    if (sum == 0 && state->in_tim) {
         pwr_leave_tim();
-        state->flags &= ~RGB_IN_TIM;
-    } else if (sum != 0 && !(state->flags & RGB_IN_TIM)) {
+        state->in_tim = 0;
+    } else if (sum != 0 && !state->in_tim) {
         pwr_enter_tim();
-        state->flags |= RGB_IN_TIM;
+        state->in_tim = 1;
     }
 #else
     int fl = 0;
@@ -112,10 +110,10 @@ static void rgbled_show(status_ctx_t *state) {
             fl = 1;
     }
     if (fl) {
-        state->flags |= RGB_IN_TIM;
+        state->in_tim = 1;
         pin_set(PIN_LED, LED_ON_STATE);
     } else {
-        state->flags &= ~RGB_IN_TIM;
+        state->in_tim = 0;
         pin_set(PIN_LED, LED_OFF_STATE);
     }
 #endif
@@ -187,19 +185,19 @@ void jd_status_handle_packet(jd_packet_t *pkt) {
     }
 }
 
+#ifdef PIN_LED_R
+const uint8_t mults[] = {LED_R_MULT, LED_G_MULT, LED_B_MULT};
+const uint8_t pins[] = {PIN_LED_R, PIN_LED_G, PIN_LED_B};
+#endif
+
 void jd_status_init() {
     status_ctx_t *state = &status_ctx;
 
 #ifdef PIN_LED_R
-    state->channels[0].pin = PIN_LED_R;
-    state->channels[0].mult = LED_R_MULT;
-    state->channels[1].pin = PIN_LED_G;
-    state->channels[1].mult = LED_G_MULT;
-    state->channels[2].pin = PIN_LED_B;
-    state->channels[2].mult = LED_B_MULT;
-
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
+        ch->pin = pins[i];
+        ch->mult = mults[i];
         ch->pwm = pwm_init(ch->pin, RGB_LED_PERIOD, 0, 1);
     }
 #else
@@ -219,7 +217,7 @@ void jd_status(int status) {
 
     if (status == JD_STATUS_CONNECTED) {
         // if the PWM is on, we ignore this one
-        if (state->flags & RGB_IN_TIM)
+        if (state->in_tim)
             return;
         channel_t *ch = &state->channels[1]; // green
         pin_set(ch->pin, LED_ON_STATE);
