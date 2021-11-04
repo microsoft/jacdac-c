@@ -79,3 +79,26 @@ typedef struct sensor_range {
 
 // returns range closest to requested one; `ranges` is {0,0,0}-terminated and sorted ascending
 const sensor_range_t *sensor_lookup_range(const sensor_range_t *ranges, int32_t requested);
+
+// generic 16 bit analog sensor
+typedef struct analog_config {
+    uint8_t pinH, pinL, pinM;
+    uint8_t variant;
+    int32_t offset;
+    int32_t scale;
+} analog_config_t;
+
+#define ANALOG_SENSOR_STATE                                                                        \
+    SENSOR_COMMON;                                                                                 \
+    const analog_config_t *config;                                                                 \
+    uint16_t sample;                                                                               \
+    uint32_t nextSample
+
+void analog_process(srv_t *state);
+void analog_handle_packet(srv_t *state, jd_packet_t *pkt);
+void analog_init(const srv_vt_t *vt, const analog_config_t *cfg);
+
+#define ANALOG_SRV_DEF(service_cls, ...)                                                           \
+    static const analog_config_t analog_cfg = {__VA_ARGS__};                                       \
+    SRV_DEF_SZ(analog, service_cls, sizeof(struct { ANALOG_SENSOR_STATE; }));                      \
+    analog_init(&analog_vt, &analog_cfg)

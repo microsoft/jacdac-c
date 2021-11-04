@@ -6,6 +6,7 @@
 
 #include "jd_sensor.h"
 #include "interfaces/jd_sensor_api.h"
+#include "jacdac/dist/c/potentiometer.h"
 
 // For pins where PWM or ADC is used, only certain pins are possible.
 // Best search for an existing call of the *_init() function and use the same pins.
@@ -63,7 +64,8 @@ void tvoc_init(const env_sensor_api_t *api);
 // pinM is sampled, while pinL is set low, and pinH is set high.
 // When not sampling, pinL and pinH are left as inputs, reducing power consumption.
 // pinL and/or pinH can be NO_PIN (it only really makes sense to use one of them).
-void potentiometer_init(uint8_t pinL, uint8_t pinM, uint8_t pinH);
+#define potentiometer_init(pin_L, pin_M, pin_H)                                                    \
+    ANALOG_SRV_DEF(JD_SERVICE_CLASS_POTENTIOMETER, .pinL = pin_L, .pinM = pin_M, .pinH = pin_H)
 
 // Motor (H-Bridge) control.
 // pin1/pin2 are active-high PWM-based input pins.
@@ -143,8 +145,8 @@ void led_service_init(const led_params_t *params);
 void color_init(const color_api_t *api);
 
 typedef struct {
-    void (*init)(uint8_t volume, uint32_t rate, uint32_t pitch, char* language);
-    void (*speak)(char*);
+    void (*init)(uint8_t volume, uint32_t rate, uint32_t pitch, char *language);
+    void (*speak)(char *);
     void (*set_volume)(uint8_t);
     void (*set_rate)(uint32_t);
     bool (*set_language)(char *);
@@ -165,15 +167,17 @@ typedef struct {
     uint16_t (*write_raw)(uint16_t);
 } hbridge_api_t;
 // dot matrix (pixel set/clear)
-void braille_dm_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols, const uint8_t* cell_map);
+void braille_dm_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols,
+                     const uint8_t *cell_map);
 // character interface (character level set/clear)
-void braille_char_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols, const uint8_t* cell_map);
+void braille_char_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols,
+                       const uint8_t *cell_map);
 extern const hbridge_api_t ncv7726b;
 
 // initialises a relay service.
-// relay state is the driver pin, some relays also have a feedback pin to show whether they are active or not (relay_feedback)
-// in some cases, hw mfrs may want to light an LED when relay is active (relay_status)
-// For variant values, please see relay.h
+// relay state is the driver pin, some relays also have a feedback pin to show whether they are
+// active or not (relay_feedback) in some cases, hw mfrs may want to light an LED when relay is
+// active (relay_status) For variant values, please see relay.h
 typedef struct {
     uint8_t relay_variant;
     uint32_t max_switching_current;
@@ -185,7 +189,6 @@ typedef struct {
 } relay_params_t;
 void relay_service_init(const relay_params_t *params);
 
-
 // Flex service.
 // pinM is sampled, while pinL is set low, and pinH is set high.
 // When not sampling, pinL and pinH are left as inputs, reducing power consumption.
@@ -196,7 +199,7 @@ typedef struct {
     void (*init)(void);
     void (*write_amplitude)(uint8_t amplitude, uint32_t duration_ms);
 } vibration_motor_api_t;
-void vibration_service_init(const vibration_motor_api_t* api);
+void vibration_service_init(const vibration_motor_api_t *api);
 extern const vibration_motor_api_t aw86224fcr;
 
 #endif

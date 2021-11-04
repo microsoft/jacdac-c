@@ -150,6 +150,14 @@ void jd_services_sleep_us(uint32_t delta);
  **/
 uint32_t app_get_device_class(void);
 
+#define SRV_DEF_SZ(id, service_cls, sz)                                                            \
+    static const srv_vt_t id##_vt = {                                                              \
+        .service_class = service_cls,                                                              \
+        .state_size = sz,                                                                          \
+        .process = id##_process,                                                                   \
+        .handle_pkt = id##_handle_packet,                                                          \
+    }
+
 #define SRV_DEF(id, service_cls)                                                                   \
     static const srv_vt_t id##_vt = {                                                              \
         .service_class = service_cls,                                                              \
