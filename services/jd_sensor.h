@@ -99,6 +99,8 @@ void analog_handle_packet(srv_t *state, jd_packet_t *pkt);
 void analog_init(const srv_vt_t *vt, const analog_config_t *cfg);
 
 #define ANALOG_SRV_DEF(service_cls, ...)                                                           \
-    static const analog_config_t analog_cfg = {__VA_ARGS__};                                       \
-    SRV_DEF_SZ(analog, service_cls, sizeof(struct { ANALOG_SENSOR_STATE; }));                      \
-    analog_init(&analog_vt, &analog_cfg)
+    do {                                                                                           \
+        static const analog_config_t analog_cfg = {__VA_ARGS__};                                   \
+        SRV_DEF_SZ(analog, service_cls, sizeof(struct { ANALOG_SENSOR_STATE; }));                  \
+        analog_init(&analog_vt, &analog_cfg);                                                      \
+    } while (0)

@@ -10,15 +10,16 @@ struct srv_state {
 };
 
 static void analog_update(srv_t *state) {
-    pin_setup_output(state->config->pinH);
-    pin_set(state->config->pinH, 1);
-    pin_setup_output(state->config->pinL);
-    pin_set(state->config->pinL, 0);
+    const analog_config_t *cfg = state->config;
+    pin_setup_output(cfg->pinH);
+    pin_set(cfg->pinH, 1);
+    pin_setup_output(cfg->pinL);
+    pin_set(cfg->pinL, 0);
 
-    int scale = state->config->scale;
+    int scale = cfg->scale;
     if (!scale)
         scale = 1024;
-    int v = state->config->offset + (((int)adc_read_pin(state->config->pinM) * scale) >> 10);
+    int v = cfg->offset + (((int)adc_read_pin(cfg->pinM) * scale) >> 10);
     if (v < 0)
         v = 0;
     else if (v > 0xffff)
@@ -26,19 +27,15 @@ static void analog_update(srv_t *state) {
     state->sample = v;
 
     // save power
-    pin_setup_analog_input(state->config->pinH);
-    pin_setup_analog_input(state->config->pinL);
+    pin_setup_analog_input(cfg->pinH);
+    pin_setup_analog_input(cfg->pinL);
 }
 
-static void analog_maybe_init(srv_t *state) {
+void analog_process(srv_t *state) {
     if (state->got_query && !state->inited) {
         state->inited = true;
         analog_update(state);
     }
-}
-
-void analog_process(srv_t *state) {
-    analog_maybe_init(state);
 
     if (jd_should_sample(&state->nextSample, 9000) && state->inited)
         analog_update(state);
