@@ -91,4 +91,10 @@ void sspi_init(void);
 void sspi_tx(uint8_t *data, uint32_t numbytes);
 void sspi_rx(uint8_t *buf, uint32_t numbytes);
 
+// onewire.c
+void one_init(void);
+int one_reset(void);
+void one_write(uint8_t b);
+uint8_t one_read(void);
+
 #endif
