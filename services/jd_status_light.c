@@ -164,7 +164,7 @@ void jd_status_process() {
         rgbled_show(state);
 }
 
-void jd_status_handle_packet(jd_packet_t *pkt) {
+int jd_status_handle_packet(jd_packet_t *pkt) {
     status_ctx_t *state = &status_ctx;
 
     switch (pkt->service_command) {
@@ -174,15 +174,17 @@ void jd_status_handle_packet(jd_packet_t *pkt) {
         for (int i = 0; i < 3; ++i)
             color[i] = state->channels[i].value >> 8;
         jd_send(0, pkt->service_command, color, sizeof(color));
-        break;
+        return 1;
     }
 #endif
 
     case JD_CONTROL_CMD_SET_STATUS_LIGHT:
         if (pkt->service_size >= sizeof(jd_control_set_status_light_t))
             rgbled_animate(state, (jd_control_set_status_light_t *)pkt->data);
-        break;
+        return 1;
     }
+
+    return 0;
 }
 
 #ifdef PIN_LED_R

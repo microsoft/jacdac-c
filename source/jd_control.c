@@ -77,13 +77,10 @@ void jd_ctrl_process(srv_t *state) {
 #endif
 }
 
-static void send_value(jd_packet_t *pkt, uint32_t v) {
-    jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, &v, sizeof(v));
-}
-
 void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 #if JD_CONFIG_STATUS == 1
-    jd_status_handle_packet(pkt);
+    if (jd_status_handle_packet(pkt))
+        return;
 #endif
 
     switch (pkt->service_command) {
@@ -126,7 +123,7 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_GET(JD_CONTROL_REG_PRODUCT_IDENTIFIER):
     case JD_GET(JD_CONTROL_REG_BOOTLOADER_PRODUCT_IDENTIFIER):
-        send_value(pkt, app_get_device_class());
+        jd_respond_u32(pkt, app_get_device_class());
         break;
 
     case JD_GET(JD_CONTROL_REG_UPTIME): {
@@ -147,7 +144,7 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
         uint32_t d = state->watchdog;
         if (d)
             d -= now;
-        jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, &d, sizeof(d));
+        jd_respond_u32(pkt, d);
         break;
     }
     case JD_SET(JD_CONTROL_REG_RESET_IN):
@@ -160,9 +157,13 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 #if JD_CONFIG_TEMPERATURE == 1
     case JD_GET(JD_CONTROL_REG_MCU_TEMPERATURE):
-        send_value(pkt, adc_read_temp());
+        jd_respond_u32(pkt, adc_read_temp());
         break;
 #endif
+
+    default:
+        jd_nack(pkt);
+        break;
     }
 }
 

@@ -12,7 +12,7 @@ void jd_power_enable(int en);
 #if JD_CONFIG_STATUS == 1
 void jd_status_init(void);
 void jd_status_process(void);
-void jd_status_handle_packet(jd_packet_t *pkt);
+int jd_status_handle_packet(jd_packet_t *pkt);
 #endif
 
 // sync with jd_status_animations[]
