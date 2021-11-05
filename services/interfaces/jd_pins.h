@@ -21,6 +21,7 @@ int pin_get(int pin);
 #define PIN_PULL_UP 1
 
 void pin_setup_input(int pin, int pull);
+void pin_set_pull(int pin, int pull); // doesn't change pin to input
 
 void pin_setup_output_af(int pin, int af);
 
