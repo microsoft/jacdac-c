@@ -27,7 +27,8 @@ static const int32_t temperature_error[] = {
 static void ds18b20_cmd(uint8_t cmd) {
     if (one_reset() != 0)
         hw_panic();
-    one_write(DS18B20_SKIP_ROM);
+    if (cmd != DS18B20_READ_ROM)
+        one_write(DS18B20_SKIP_ROM);
     one_write(cmd);
 }
 
@@ -71,6 +72,7 @@ static void ds18b20_process(void) {
         } else {
             ctx->in_temp = 1;
             ds18b20_cmd(DS18B20_CONVERT_T);
+            // DMESG("conv");
         }
     }
 }
