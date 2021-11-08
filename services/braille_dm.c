@@ -117,7 +117,7 @@ void braille_dm_handle_packet(srv_t *state, jd_packet_t *pkt) {
             break;
         default:
             handle_disp_read(state);
-            switch (service_handle_register(state, pkt, braille_dm_regs)) {
+            switch (service_handle_register_final(state, pkt, braille_dm_regs)) {
                 default:
                     break;
             }

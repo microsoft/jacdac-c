@@ -181,7 +181,7 @@ void braille_char_handle_packet(srv_t *state, jd_packet_t *pkt) {
             break;
 
         default:
-            switch (service_handle_register(state, pkt, braille_char_regs)) {
+            switch (service_handle_register_final(state, pkt, braille_char_regs)) {
                 case JD_CHARACTER_SCREEN_REG_MESSAGE:
                     if (JD_SET(JD_CHARACTER_SCREEN_REG_MESSAGE) == pkt->service_command)
                         handle_disp_write(state, pkt);

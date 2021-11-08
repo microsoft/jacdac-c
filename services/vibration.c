@@ -75,7 +75,7 @@ void vibration_handle_packet(srv_t *state, jd_packet_t *pkt) {
             break;
 
         default:
-            service_handle_register(state, pkt, vibration_regs);
+            service_handle_register_final(state, pkt, vibration_regs);
             break;
     }
 }

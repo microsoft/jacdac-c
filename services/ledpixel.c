@@ -626,7 +626,7 @@ void ledpixel_handle_packet(srv_t *state, jd_packet_t *pkt) {
         if (pkt->service_command == JD_SET(JD_LED_PIXEL_REG_NUM_PIXELS))
             break;
 #endif
-        switch (service_handle_register(state, pkt, ledpixel_regs)) {
+        switch (service_handle_register_final(state, pkt, ledpixel_regs)) {
         case JD_LED_PIXEL_REG_BRIGHTNESS:
             state->intensity = state->requested_intensity;
             break;

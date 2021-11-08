@@ -23,7 +23,7 @@ struct srv_state {
 
 REG_DEFINITION(               //
     buzzer_regs,              //
-    REG_SRV_COMMON,             //
+    REG_SRV_COMMON,           //
     REG_U8(JD_REG_INTENSITY), //
 )
 
@@ -60,10 +60,6 @@ void buzzer_process(srv_t *state) {
 }
 
 void buzzer_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    // if the packet was handled as a register read or write, no reason to continue
-    if (service_handle_register(state, pkt, buzzer_regs))
-        return;
-
     switch (pkt->service_command) {
     case JD_BUZZER_CMD_PLAY_TONE:
         // ensure input is big enough
@@ -74,6 +70,9 @@ void buzzer_handle_packet(srv_t *state, jd_packet_t *pkt) {
             play_tone(state, state->period, d->duty);
         }
         buzzer_process(state);
+        break;
+    default:
+        service_handle_register_final(state, pkt, buzzer_regs);
         break;
     }
 }

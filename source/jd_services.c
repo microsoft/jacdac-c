@@ -31,6 +31,13 @@ static int is_zero(const uint8_t *p, uint32_t sz) {
     return 1;
 }
 
+int service_handle_register_final(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]) {
+    int r = service_handle_register(state, pkt, sdesc);
+    if (r == 0)
+        jd_send_not_implemented(pkt);
+    return r;
+}
+
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]) {
     bool is_get = (pkt->service_command >> 12) == (JD_CMD_GET_REGISTER >> 12);
     bool is_set = (pkt->service_command >> 12) == (JD_CMD_SET_REGISTER >> 12);

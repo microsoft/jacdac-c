@@ -77,7 +77,7 @@ void servo_handle_packet(srv_t *state, jd_packet_t *pkt) {
     // it will either send a response with the current state, or update state.
     // It returns the code of the written (or read) register.
     // Here, we just assume if anything was updated, we sync our state to hardware
-    if (service_handle_register(state, pkt, servo_regs) > 0) {
+    if (service_handle_register_final(state, pkt, servo_regs) > 0) {
         set_pwr(state, !!state->intensity);
 
         servo_params_t *p = &state->params;

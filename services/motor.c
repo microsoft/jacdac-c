@@ -108,7 +108,7 @@ static int pwm_value(int v) {
 }
 
 void motor_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (service_handle_register(state, pkt, motor_regs)) {
+    if (service_handle_register_final(state, pkt, motor_regs)) {
         set_pwr(state, !!state->intensity);
         if (state->is_on) {
             LOG("PWM set %d", state->value);

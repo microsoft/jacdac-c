@@ -164,6 +164,9 @@ int sensor_handle_packet_simple(srv_t *state, jd_packet_t *pkt, const void *samp
         r = -JD_REG_READING;
     }
 
+    if (r == 0)
+        jd_send_not_implemented(pkt);
+
     return r;
 }
 

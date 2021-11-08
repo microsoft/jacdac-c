@@ -43,7 +43,7 @@ void relay_process(srv_t * state) {
 
 
 void relay_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    switch (service_handle_register(state, pkt, relay_regs)) {
+    switch (service_handle_register_final(state, pkt, relay_regs)) {
         case JD_RELAY_REG_CLOSED:
             reflect_register_state(state);
             break;

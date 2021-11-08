@@ -44,9 +44,11 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
             tmp = state->api->conditioning_period();
             goto send_it;
         } else {
+            jd_send_not_implemented(pkt);
             return 0;
         }
     default:
+        jd_send_not_implemented(pkt);
         return 0;
     }
 

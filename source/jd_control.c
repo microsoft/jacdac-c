@@ -162,7 +162,7 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 #endif
 
     default:
-        jd_nack(pkt);
+        jd_send_not_implemented(pkt);
         break;
     }
 }

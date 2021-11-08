@@ -109,12 +109,9 @@ void joystick_process(srv_t *state) {
 }
 
 void joystick_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    int r = sensor_handle_packet_simple(state, pkt, &state->direction, sizeof(state->direction));
-
-    if (r)
+    if (service_handle_register(state, pkt, joystick_regs))
         return;
-
-    service_handle_register(state, pkt, joystick_regs);
+    sensor_handle_packet_simple(state, pkt, &state->direction, sizeof(state->direction));
 }
 
 SRV_DEF(joystick, JD_SERVICE_CLASS_JOYSTICK);

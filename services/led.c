@@ -49,7 +49,8 @@ static void led_show(srv_t *state) {
 
     if (state->numch == 1) {
         // take double green to avoid division when computing mean
-        int tmp = state->channels[0].value + 2 * state->channels[1].value + state->channels[2].value;
+        int tmp =
+            state->channels[0].value + 2 * state->channels[1].value + state->channels[2].value;
         state->channels[0].value = tmp >> 2;
     }
 
@@ -123,9 +124,6 @@ void led_process(srv_t *state) {
 }
 
 void led_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (service_handle_register(state, pkt, led_regs))
-        return;
-
     switch (pkt->service_command) {
     case JD_GET(JD_LED_REG_COLOR): {
         uint8_t color[3];
@@ -138,6 +136,10 @@ void led_handle_packet(srv_t *state, jd_packet_t *pkt) {
     case JD_LED_CMD_ANIMATE:
         if (pkt->service_size >= sizeof(jd_control_set_status_light_t))
             led_animate(state, (jd_control_set_status_light_t *)pkt->data);
+        break;
+
+    default:
+        service_handle_register_final(state, pkt, led_regs);
         break;
     }
 }

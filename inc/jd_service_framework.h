@@ -84,6 +84,11 @@ srv_t *jd_allocate_service(const srv_vt_t *vt);
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
 
 /**
+ * Like `service_handle_register()` but calls `jd_send_not_implemented()` for unknown packets.
+ */
+int service_handle_register_final(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
+
+/**
  * called by jd_init();
  **/
 void jd_services_init(void);

@@ -167,9 +167,6 @@ void power_process(srv_t *state) {
 }
 
 void power_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (sensor_handle_packet_simple(state, pkt, &state->curr_power, sizeof(state->curr_power)))
-        return;
-
     switch (service_handle_register(state, pkt, power_regs)) {
     case JD_POWER_REG_KEEP_ON_PULSE_PERIOD:
     case JD_POWER_REG_KEEP_ON_PULSE_DURATION:
@@ -182,6 +179,9 @@ void power_handle_packet(srv_t *state, jd_packet_t *pkt) {
             if (state->pulse_period < state->pulse_duration * 10)
                 state->pulse_period = state->pulse_duration * 10;
         }
+        break;
+    case 0:
+        sensor_handle_packet_simple(state, pkt, &state->curr_power, sizeof(state->curr_power));
         break;
     }
 }

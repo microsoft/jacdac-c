@@ -12,7 +12,7 @@ struct srv_state {
 
 REG_DEFINITION(                         //
     jdcon_regs,                         //
-    REG_SRV_COMMON,                       //
+    REG_SRV_COMMON,                     //
     REG_U8(JD_LOGGER_REG_MIN_PRIORITY), //
 )
 
@@ -46,7 +46,7 @@ void jdcon_warn(const char *format, ...) {
 void jdcon_process(srv_t *state) {}
 
 void jdcon_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    service_handle_register(state, pkt, jdcon_regs);
+    service_handle_register_final(state, pkt, jdcon_regs);
 }
 
 SRV_DEF(jdcon, JD_SERVICE_CLASS_LOGGER);

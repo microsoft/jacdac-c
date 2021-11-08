@@ -79,7 +79,6 @@ void handle_cancel_cmd(srv_t * state, jd_packet_t* pkt) {
 }
 
 void speech_synth_handle_packet(srv_t *state, jd_packet_t *pkt) {
-
     switch (pkt->service_command) {
         case JD_SPEECH_SYNTHESIS_CMD_SPEAK:
             handle_speak_cmd(state, pkt);
@@ -88,7 +87,7 @@ void speech_synth_handle_packet(srv_t *state, jd_packet_t *pkt) {
             handle_cancel_cmd(state, pkt);
             break;
         default:
-            switch (service_handle_register(state, pkt, speech_synth_regs)) {
+            switch (service_handle_register_final(state, pkt, speech_synth_regs)) {
                 case JD_SPEECH_SYNTHESIS_REG_LANG:
                     state->flags |= SET_LANG;
                     break;
