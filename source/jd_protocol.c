@@ -32,6 +32,7 @@ int jd_respond_u32(jd_packet_t *pkt, uint32_t v) {
 }
 
 int jd_send_not_implemented(jd_packet_t *pkt) {
-    uint16_t payload[2] = {pkt->service_command, pkt->crc};
-    return jd_send(pkt->service_number, 0x03, payload, 4);
+    jd_system_command_not_implemented_report_t payload = {.service_command = pkt->service_command,
+                                                          .packet_crc = pkt->crc};
+    return jd_send(pkt->service_number, JD_CMD_COMMAND_NOT_IMPLEMENTED, &payload, sizeof(payload));
 }
