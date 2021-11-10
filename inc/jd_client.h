@@ -20,6 +20,23 @@ typedef struct jd_device_service {
     void *userdata;
 } jd_device_service_t;
 
+typedef struct jd_register_query {
+    struct jd_register_query *next;
+    uint16_t reg_code;
+    uint8_t service_index;
+    uint8_t resp_size;
+    union {
+        uint32_t u32;
+        uint16_t u16;
+        uint8_t u8;
+        int32_t i32;
+        int16_t i16;
+        int8_t i8;
+        uint8_t data[4];
+        uint8_t *buffer;
+    }
+} jd_register_query_t;
+
 typedef struct jd_device {
     struct jd_device *next;
     uint64_t device_identifier;
