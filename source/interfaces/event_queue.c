@@ -6,7 +6,7 @@
 typedef struct {
     uint32_t timestamp;
     uint8_t service_size;
-    uint8_t service_number;
+    uint8_t service_index;
     uint16_t service_command;
     uint8_t data[0];
 } ev_t;
@@ -48,25 +48,25 @@ static void do_process_event_queue(void) {
     // if info.process != NULL, then info.buffer has been initialized already
     ev_t *ev = info.buffer;
     while ((uint8_t *)ev - (uint8_t *)info.buffer < info.qptr) {
-        if (ev->service_number == 0xff) {
+        if (ev->service_index == 0xff) {
             if (ev == info.buffer) {
                 ev_shift();
                 continue;
             }
         } else if (in_past(ev->timestamp)) {
-            if (jd_send(ev->service_number & 0x7f, ev->service_command, ev->data,
+            if (jd_send(ev->service_index & 0x7f, ev->service_command, ev->data,
                         ev->service_size) != 0)
                 break;
-            if (ev->service_number & 0x80) {
+            if (ev->service_index & 0x80) {
                 if (ev == info.buffer) {
                     ev_shift();
                     continue;
                 } else {
-                    ev->service_number = 0xff; // not sure this can happen
+                    ev->service_index = 0xff; // not sure this can happen
                 }
             } else {
                 ev->timestamp += 50 * 1000;
-                ev->service_number |= 0x80;
+                ev->service_index |= 0x80;
             }
         }
 
@@ -91,7 +91,7 @@ void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t 
     srv_common_t *state = (srv_common_t *)srv;
 
     uint16_t cmd = next_event_cmd(eventid);
-    jd_send(state->service_number, cmd, data, data_bytes);
+    jd_send(state->service_index, cmd, data, data_bytes);
 
     ev_init();
 
@@ -104,7 +104,7 @@ void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t 
     ev_t *ev = (ev_t *)((uint8_t *)info.buffer + info.qptr);
     ev->service_size = data_bytes;
     ev->service_command = cmd;
-    ev->service_number = state->service_number;
+    ev->service_index = state->service_index;
     memcpy(ev->data, data, data_bytes);
     // no randomization; it's somewhat often to generate multiple events in the same tick
     // they will this way get the same re-transmission time, and thus be packed in one frame

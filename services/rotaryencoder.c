@@ -51,7 +51,7 @@ void rotaryencoder_process(srv_t *state) {
 
 void rotaryencoder_handle_packet(srv_t *state, jd_packet_t *pkt) {
     if (pkt->service_command == JD_GET(JD_ROTARY_ENCODER_REG_CLICKS_PER_TURN))
-        jd_send(state->service_number, JD_GET(JD_ROTARY_ENCODER_REG_CLICKS_PER_TURN), &(state->clicks_per_turn), sizeof(uint16_t));
+        jd_send(state->service_index, JD_GET(JD_ROTARY_ENCODER_REG_CLICKS_PER_TURN), &(state->clicks_per_turn), sizeof(uint16_t));
     else
         sensor_handle_packet_simple(state, pkt, &state->sample, sizeof(state->sample));
 }

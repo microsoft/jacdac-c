@@ -87,11 +87,11 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
             if (is_get) {
                 if (tp == _REG_BIT) {
                     uint8_t v = *sptr & (1 << bitoffset) ? 1 : 0;
-                    jd_send(pkt->service_number, pkt->service_command, &v, 1);
+                    jd_send(pkt->service_index, pkt->service_command, &v, 1);
                 } else {
                     if (REG_IS_OPT(tp) && is_zero(sptr, regsz))
                         return 0;
-                    jd_send(pkt->service_number, pkt->service_command, sptr, regsz);
+                    jd_send(pkt->service_index, pkt->service_command, sptr, regsz);
                 }
                 return -reg;
             } else {
@@ -153,7 +153,7 @@ srv_t *jd_allocate_service(const srv_vt_t *vt) {
         jd_panic();
     srv_t *r = jd_alloc(vt->state_size);
     r->vt = vt;
-    r->service_number = num_services;
+    r->service_index = num_services;
     // sleeping is allowed in service init
     curr_service_process = IN_SERV_INIT;
     services[num_services++] = r;
@@ -229,22 +229,22 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
     jd_app_handle_packet(pkt);
 
     if (!(pkt->flags & JD_FRAME_FLAG_COMMAND)) {
-        if (pkt->service_number == 0)
+        if (pkt->service_index == 0)
             handle_ctrl_tick(pkt);
         return;
     }
 
     if (pkt->device_identifier == jd_device_id()) {
         jd_app_handle_command(pkt);
-        if (pkt->service_number < num_services) {
-            srv_t *s = services[pkt->service_number];
+        if (pkt->service_index < num_services) {
+            srv_t *s = services[pkt->service_index];
             s->vt->handle_pkt(s, pkt);
         }
     } else if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) {
         for (int i = 0; i < num_services; ++i) {
             srv_t *s = services[i];
             if (pkt->device_identifier == s->vt->service_class) {
-                pkt->service_number = i;
+                pkt->service_index = i;
                 s->vt->handle_pkt(s, pkt);
             }
         }
@@ -329,7 +329,7 @@ void jd_services_sleep_us(uint32_t delta) {
 }
 
 void dump_pkt(jd_packet_t *pkt, const char *msg) {
-    LOG("pkt[%s]; s#=%d sz=%d %x", msg, pkt->service_number, pkt->service_size,
+    LOG("pkt[%s]; s#=%d sz=%d %x", msg, pkt->service_index, pkt->service_size,
         pkt->service_command);
 }
 

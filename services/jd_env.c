@@ -14,7 +14,7 @@ void env_sensor_process(srv_t *state) {
     if (sensor_should_stream(state)) {
         const env_reading_t *env = sensor_get_reading(state);
         if (env)
-            jd_send(state->service_number, JD_GET(JD_REG_READING), &env->value, sizeof(env->value));
+            jd_send(state->service_index, JD_GET(JD_REG_READING), &env->value, sizeof(env->value));
     }
 }
 
@@ -60,7 +60,7 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
     tmp = (&env->value)[off];
 
 send_it:
-    jd_send(pkt->service_number, pkt->service_command, &tmp, 4);
+    jd_send(pkt->service_index, pkt->service_command, &tmp, 4);
     return -(pkt->service_command & 0xfff);
 }
 
