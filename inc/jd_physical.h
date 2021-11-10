@@ -59,7 +59,7 @@ struct _jd_packet_t {
     uint64_t device_identifier;
 
     uint8_t service_size;
-    uint8_t service_number;
+    uint8_t service_index;
     uint16_t service_command;
 
     uint8_t data[0];

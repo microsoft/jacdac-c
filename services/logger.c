@@ -26,7 +26,7 @@ void jdcon_logv(int level, const char *format, va_list ap) {
         return;
     char buf[100];
     codal_vsprintf(buf, sizeof(buf), format, ap);
-    jd_send(ctx->service_number, JD_LOGGER_CMD_DEBUG + level, buf, strlen(buf));
+    jd_send(ctx->service_index, JD_LOGGER_CMD_DEBUG + level, buf, strlen(buf));
 }
 
 void jdcon_log(const char *format, ...) {

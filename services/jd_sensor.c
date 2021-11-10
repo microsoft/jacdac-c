@@ -27,7 +27,7 @@ static uint32_t get_status_code(srv_t *state) {
 
 void sensor_send_status(srv_t *state) {
     uint32_t payload = get_status_code(state);
-    // DMESG("status: s=%d st=%d", state->service_number, payload);
+    // DMESG("status: s=%d st=%d", state->service_index, payload);
     jd_send_event_ext(state, JD_EV_STATUS_CODE_CHANGED, &payload, sizeof(payload));
 }
 
@@ -42,7 +42,7 @@ static int respond_ranges(srv_t *state) {
     r = state->api->ranges;
     for (int i = 0; i < len; ++i)
         buf[i] = r[i].range;
-    jd_send(state->service_number, JD_GET(JD_REG_SUPPORTED_RANGES), buf, len * sizeof(uint32_t));
+    jd_send(state->service_index, JD_GET(JD_REG_SUPPORTED_RANGES), buf, len * sizeof(uint32_t));
     return -JD_REG_SUPPORTED_RANGES;
 }
 
@@ -151,7 +151,7 @@ void sensor_process(srv_t *state) {
 void sensor_process_simple(srv_t *state, const void *sample, uint32_t sample_size) {
     sensor_process(state);
     if (sensor_should_stream(state))
-        jd_send(state->service_number, JD_GET(JD_REG_READING), sample, sample_size);
+        jd_send(state->service_index, JD_GET(JD_REG_READING), sample, sample_size);
 }
 
 int sensor_handle_packet_simple(srv_t *state, jd_packet_t *pkt, const void *sample,
@@ -160,7 +160,7 @@ int sensor_handle_packet_simple(srv_t *state, jd_packet_t *pkt, const void *samp
 
     if (pkt->service_command == JD_GET(JD_REG_READING)) {
         state->got_query = 1;
-        jd_send(pkt->service_number, pkt->service_command, sample, sample_size);
+        jd_send(pkt->service_index, pkt->service_command, sample, sample_size);
         r = -JD_REG_READING;
     }
 

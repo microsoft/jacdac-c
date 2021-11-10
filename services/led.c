@@ -129,7 +129,7 @@ void led_handle_packet(srv_t *state, jd_packet_t *pkt) {
         uint8_t color[3];
         for (int i = 0; i < 3; ++i)
             color[i] = state->channels[i].value >> 8;
-        jd_send(state->service_number, pkt->service_command, color, sizeof(color));
+        jd_send(state->service_index, pkt->service_command, color, sizeof(color));
         break;
     }
 

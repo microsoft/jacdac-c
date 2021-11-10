@@ -59,7 +59,7 @@ typedef struct _srv_vt srv_vt_t;
 
 #define SRV_COMMON                                                                                 \
     const srv_vt_t *vt;                                                                            \
-    uint8_t service_number;                                                                        \
+    uint8_t service_index;                                                                        \
     uint8_t srv_flags;
 #define REG_SRV_COMMON REG_BYTES(JD_REG_PADDING, 6)
 
