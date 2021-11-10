@@ -17,6 +17,10 @@
 #define JD_GET(reg) (JD_CMD_GET_REGISTER | (reg))
 #define JD_SET(reg) (JD_CMD_SET_REGISTER | (reg))
 
+#define JD_IS_GET(cmd) (((cmd) >> 12) == (JD_CMD_GET_REGISTER >> 12))
+#define JD_IS_SET(cmd) (((cmd) >> 12) == (JD_CMD_SET_REGISTER >> 12))
+#define JD_REG_CODE(cmd) ((cmd)&0xfff)
+
 void jd_ctrl_init(void);
 void jd_ctrl_process(srv_t *_state);
 void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt);

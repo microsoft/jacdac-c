@@ -40,15 +40,16 @@ int service_handle_register_final(srv_t *state, jd_packet_t *pkt, const uint16_t
 }
 
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]) {
-    bool is_get = (pkt->service_command >> 12) == (JD_CMD_GET_REGISTER >> 12);
-    bool is_set = (pkt->service_command >> 12) == (JD_CMD_SET_REGISTER >> 12);
+    uint16_t cmd = pkt->service_command;
+    bool is_get = JD_IS_GET(cmd);
+    bool is_set = JD_IS_SET(cmd);
     if (!is_get && !is_set)
         return 0;
 
     if (is_set && pkt->service_size == 0)
         return 0;
 
-    int reg = pkt->service_command & 0xfff;
+    int reg = JD_REG_CODE(cmd);
 
     if (reg >= 0xf00) // these are reserved
         return 0;
