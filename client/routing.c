@@ -49,6 +49,7 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     jd_device_t *d = arg0;
     jd_device_service_t *serv = arg0;
     jd_packet_t *pkt = arg1;
+    jd_register_query_t *reg = arg1;
 
     switch (event_id) {
     case JD_CLIENT_EV_DEVICE_CREATED:
@@ -62,7 +63,7 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
         break;
     case JD_CLIENT_EV_SERVICE_PACKET:
         if (verbose_log) {
-            DMESG("device %s/%d[0x%x] - pkt cmd=%x", jd_service_parent(serv)->short_id,
+            DMESG("serv %s/%d[0x%x] - pkt cmd=%x", jd_service_parent(serv)->short_id,
                   serv->service_index, serv->service_class, pkt->service_command);
         }
         break;
@@ -73,6 +74,10 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
         // arg0 == NULL here
         if (verbose_log)
             DMESG("brd cmd=%x", pkt->service_command);
+        break;
+    case JD_CLIENT_EV_SERVICE_REGISTER_CHANGED:
+        DMESG("serv %s/%d reg chg %x [sz=%d]", jd_service_parent(serv)->short_id,
+              serv->service_index, reg->reg_code, reg->resp_size);
         break;
     }
 }
@@ -107,6 +112,14 @@ static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
 
 static void jd_device_free(jd_device_t *d) {
     jd_client_emit_event(JD_CLIENT_EV_DEVICE_DESTROYED, d, NULL);
+    jd_register_query_t *tmp, *q = d->_queries;
+    while (q) {
+        tmp = q;
+        q = q->next;
+        if (tmp->resp_size > JD_REGISTER_QUERY_MAX_INLINE)
+            jd_free(tmp->value.buffer);
+        jd_free(tmp);
+    }
     jd_free(d);
 }
 
@@ -163,6 +176,36 @@ int jd_service_send_cmd(jd_device_service_t *serv, uint16_t service_command, con
     return r;
 }
 
+jd_register_query_t *jd_service_query_lookup(jd_device_service_t *serv, int reg_code) {
+    jd_register_query_t *q = jd_service_parent(serv)->_queries;
+    int idx = serv->service_index;
+    while (q) {
+        if (q->reg_code == reg_code && (q->service_index & JD_SERVICE_INDEX_MASK) == idx)
+            return q;
+    }
+    return NULL;
+}
+
+const jd_register_query_t *jd_service_query(jd_device_service_t *serv, int reg_code,
+                                            int refresh_ms) {
+    jd_register_query_t *q = jd_service_query_lookup(serv, reg_code);
+    if (!q) {
+        q = jd_alloc(sizeof(jd_register_query_t));
+        memset(q, 0, sizeof(*q));
+        jd_device_t *dev = jd_service_parent(serv);
+        q->reg_code = reg_code;
+        q->service_index = serv->service_index;
+        q->next = dev->_queries;
+        dev->_queries = q;
+    }
+    if (!jd_register_not_implemented(q) &&
+        (!q->last_query || (refresh_ms && in_past(q->last_query + refresh_ms * 1000)))) {
+        jd_service_send_cmd(serv, JD_GET(reg_code), NULL, 0);
+        q->last_query = now;
+    }
+    return q;
+}
+
 void jd_client_process(void) {
     if (jd_should_sample(&next_gc, 300 * 1000)) {
         jd_device_gc();
@@ -177,6 +220,13 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
 
     jd_device_t *dev = jd_device_lookup(pkt->device_identifier);
     jd_device_service_t *serv = NULL;
+
+    if (dev) {
+        int idx = pkt->service_index & JD_SERVICE_INDEX_MASK;
+        if (idx < dev->num_services) {
+            serv = &dev->services[idx];
+        }
+    }
 
     if (pkt->flags & JD_FRAME_FLAG_COMMAND) {
 
@@ -197,14 +247,43 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
                     dev->announce_flags = new_flags;
                 }
             }
+            serv = &dev->services[0]; // re-assign in case we (re)allocated dev
             dev->_expires = now + EXPIRES_USEC;
         }
-    }
 
-    if (dev) {
-        int idx = pkt->service_index & JD_SERVICE_NUMBER_MASK;
-        if (idx < dev->num_services) {
-            serv = &dev->services[idx];
+        if (serv && pkt->service_size >= 4 &&
+            pkt->service_command == JD_CMD_COMMAND_NOT_IMPLEMENTED) {
+            uint16_t cmd = *(uint16_t *)pkt->data;
+            if (JD_IS_GET(cmd)) {
+                jd_register_query_t *q = jd_service_query_lookup(serv, JD_REG_CODE(cmd));
+                if (q && !jd_register_not_implemented(q)) {
+                    q->service_index |= 0x80;
+                    jd_client_emit_event(JD_CLIENT_EV_SERVICE_REGISTER_NOT_IMPLEMENTED, serv, q);
+                }
+            }
+        }
+
+        if (serv && JD_IS_GET(pkt->service_command)) {
+            jd_register_query_t *q =
+                jd_service_query_lookup(serv, JD_REG_CODE(pkt->service_command));
+            if (q) {
+                int chg = 0;
+                if (q->resp_size != pkt->service_size ||
+                    memcmp(pkt->data, jd_register_data(q), q->resp_size))
+                    chg = 1;
+
+                if (pkt->service_size > JD_REGISTER_QUERY_MAX_INLINE) {
+                    if (q->resp_size != pkt->service_size) {
+                        if (q->resp_size > JD_REGISTER_QUERY_MAX_INLINE)
+                            jd_free(q->value.buffer);
+                        q->value.buffer = jd_alloc(pkt->service_size);
+                    }
+                }
+                q->resp_size = pkt->service_size;
+                memcpy((void *)jd_register_data(q), pkt->data, q->resp_size);
+                if (chg)
+                    jd_client_emit_event(JD_CLIENT_EV_SERVICE_REGISTER_CHANGED, serv, q);
+            }
         }
     }
 
