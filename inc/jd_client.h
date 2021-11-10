@@ -87,3 +87,5 @@ static inline jd_device_t *jd_service_parent(jd_device_service_t *serv) {
 }
 int jd_service_send_cmd(jd_device_service_t *serv, uint16_t service_command, const void *data,
                         size_t datasize);
+const jd_register_query_t *jd_service_query(jd_device_service_t *serv, int reg_code,
+                                            int refresh_ms);

@@ -68,7 +68,8 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
         }
         break;
     case JD_CLIENT_EV_NON_SERVICE_PACKET:
-        DMESG("unbound pkt d=%s cmd=%x", d ? d->short_id : "n/a", pkt->service_command);
+        if (verbose_log)
+            DMESG("unbound pkt d=%s cmd=%x", d ? d->short_id : "n/a", pkt->service_command);
         break;
     case JD_CLIENT_EV_BROADCAST_PACKET:
         // arg0 == NULL here
@@ -82,9 +83,11 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     }
 }
 
+__attribute__((weak)) void app_client_event_handler(int event_id, void *arg0, void *arg1) {}
+
 void jd_client_emit_event(int event_id, void *arg0, void *arg1) {
     jd_client_log_event(event_id, arg0, arg1);
-    // TODO
+    app_client_event_handler(event_id, arg0, arg1);
 }
 
 static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
@@ -176,12 +179,13 @@ int jd_service_send_cmd(jd_device_service_t *serv, uint16_t service_command, con
     return r;
 }
 
-jd_register_query_t *jd_service_query_lookup(jd_device_service_t *serv, int reg_code) {
+static jd_register_query_t *jd_service_query_lookup(jd_device_service_t *serv, int reg_code) {
     jd_register_query_t *q = jd_service_parent(serv)->_queries;
     int idx = serv->service_index;
     while (q) {
         if (q->reg_code == reg_code && (q->service_index & JD_SERVICE_INDEX_MASK) == idx)
             return q;
+        q = q->next;
     }
     return NULL;
 }
