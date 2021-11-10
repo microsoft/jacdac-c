@@ -128,7 +128,6 @@ void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service
     return dst;
 }
 
-
 bool jd_should_sample(uint32_t *sample, uint32_t period) {
     if (in_future(*sample))
         return false;
@@ -149,4 +148,14 @@ bool jd_should_sample_delay(uint32_t *sample, uint32_t period) {
     *sample = now + period;
 
     return true;
+}
+
+void jd_to_hex(char *dst, const void *src, size_t len) {
+    const char *hex = "0123456789abcdef";
+    const uint8_t *p = src;
+    for (size_t i = 0; i < len; ++i) {
+        dst[i * 2] = hex[p[i] >> 4];
+        dst[i * 2 + 1] = hex[p[i] & 0xf];
+    }
+    dst[len * 2 + 1] = 0;
 }

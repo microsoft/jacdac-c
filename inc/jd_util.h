@@ -32,3 +32,5 @@ static inline bool in_future(uint32_t moment) {
     extern uint32_t now;
     return ((moment - now) >> 29) == 0;
 }
+// sizeof(dst) == len*2 + 1
+void jd_to_hex(char *dst, const void *src, size_t len);

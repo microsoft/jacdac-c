@@ -78,4 +78,8 @@
 #define JD_WR_OVERHEAD 8
 #endif
 
+#ifndef JD_CLIENT
+#define JD_CLIENT 0
+#endif
+
 #endif

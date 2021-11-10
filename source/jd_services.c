@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 #include "jd_protocol.h"
+#include "jd_client.h"
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
@@ -228,6 +229,10 @@ __attribute__((weak)) void jd_app_handle_command(jd_packet_t *pkt) {}
 void jd_services_handle_packet(jd_packet_t *pkt) {
     jd_app_handle_packet(pkt);
 
+#if JD_CLIENT
+    jd_client_handle_packet(pkt);
+#endif
+
     if (!(pkt->flags & JD_FRAME_FLAG_COMMAND)) {
         if (pkt->service_number == 0)
             handle_ctrl_tick(pkt);
@@ -278,6 +283,10 @@ void jd_services_tick() {
 
 #if JD_CONFIG_STATUS == 1
     jd_status_process();
+#endif
+
+#if JD_CLIENT
+    jd_client_process();
 #endif
 
     jd_tx_flush();
