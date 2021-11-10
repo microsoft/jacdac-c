@@ -34,7 +34,7 @@ typedef struct jd_register_query {
         int8_t i8;
         uint8_t data[4];
         uint8_t *buffer;
-    }
+    } value;
 } jd_register_query_t;
 
 typedef struct jd_device {

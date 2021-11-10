@@ -154,7 +154,7 @@ int jd_service_send_cmd(jd_device_service_t *serv, uint16_t service_command, con
     jd_packet_t *pkt = jd_alloc(JD_SERIAL_FULL_HEADER_SIZE + datasize);
     pkt->flags = JD_FRAME_FLAG_COMMAND;
     pkt->device_identifier = jd_service_parent(serv)->device_identifier;
-    pkt->service_number = serv->service_index;
+    pkt->service_index = serv->service_index;
     pkt->service_command = service_command;
     pkt->service_size = datasize;
     memcpy(pkt->data, data, datasize);
@@ -182,7 +182,7 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
 
     } else {
         // report
-        if (pkt->service_number == 0 && pkt->service_command == 0) {
+        if (pkt->service_index == 0 && pkt->service_command == 0) {
             if (!dev)
                 dev = jd_device_alloc(pkt);
             uint16_t new_flags = *(uint16_t *)pkt->data;
@@ -202,7 +202,7 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
     }
 
     if (dev) {
-        int idx = pkt->service_number & JD_SERVICE_NUMBER_MASK;
+        int idx = pkt->service_index & JD_SERVICE_NUMBER_MASK;
         if (idx < dev->num_services) {
             serv = &dev->services[idx];
         }
