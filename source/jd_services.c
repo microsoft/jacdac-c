@@ -137,7 +137,7 @@ void jd_services_process_frame(jd_frame_t *frame) {
 
     if (frame->flags & JD_FRAME_FLAG_ACK_REQUESTED && frame->flags & JD_FRAME_FLAG_COMMAND &&
         frame->device_identifier == jd_device_id()) {
-        jd_send(JD_SERVICE_NUMBER_CRC_ACK, frame->crc, NULL, 0);
+        jd_send(JD_SERVICE_INDEX_CRC_ACK, frame->crc, NULL, 0);
         jd_tx_flush(); // the app handling below can take time
     }
 
@@ -208,7 +208,7 @@ void jd_services_announce() {
 
     dst[0] = adflags | ((packets_sent + 1) << 16);
 
-    if (jd_send(JD_SERVICE_NUMBER_CONTROL, JD_CONTROL_CMD_SERVICES, dst, num_services * 4) == 0) {
+    if (jd_send(JD_SERVICE_INDEX_CONTROL, JD_CONTROL_CMD_SERVICES, dst, num_services * 4) == 0) {
         packets_sent = 0;
     }
 }
