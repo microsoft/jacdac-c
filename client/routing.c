@@ -1,5 +1,10 @@
 #include "jd_client.h"
 
+/*
+- sending packet to device
+- query register on device
+*/
+
 static uint32_t next_gc;
 static uint8_t verbose_log;
 
@@ -42,6 +47,7 @@ void jd_device_short_id(char short_id[5], uint64_t long_id) {
 
 void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     jd_device_t *d = arg0;
+    jd_device_service_t *serv = arg0;
     jd_packet_t *pkt = arg1;
 
     switch (event_id) {
@@ -54,13 +60,14 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     case JD_CLIENT_EV_DEVICE_RESET:
         DMESG("device reset: %s", d->short_id);
         break;
-    case JD_CLIENT_EV_DEVICE_PACKET:
-        if (verbose_log)
-            DMESG("device %s - pkt cmd=%x", d->short_id, pkt->service_command);
+    case JD_CLIENT_EV_SERVICE_PACKET:
+        if (verbose_log) {
+            DMESG("device %s/%d[0x%x] - pkt cmd=%x", jd_service_parent(serv)->short_id,
+                  serv->service_index, serv->service_class, pkt->service_command);
+        }
         break;
-    case JD_CLIENT_EV_NON_DEVICE_PACKET:
-        // arg0 == NULL here
-        DMESG("unbound pkt cmd=%x", pkt->service_command);
+    case JD_CLIENT_EV_NON_SERVICE_PACKET:
+        DMESG("unbound pkt d=%s cmd=%x", d ? d->short_id : "n/a", pkt->service_command);
         break;
     case JD_CLIENT_EV_BROADCAST_PACKET:
         // arg0 == NULL here
@@ -77,13 +84,21 @@ void jd_client_emit_event(int event_id, void *arg0, void *arg1) {
 
 static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
     int num_services = announce->service_size >> 2;
-    jd_device_t *d = jd_alloc(sizeof(jd_device_t) + (num_services * 4));
-    memset(d, 0, sizeof(jd_device_t));
-    memcpy(d->services, announce->data, num_services * 4);
+    int sz = sizeof(jd_device_t) + (num_services * sizeof(jd_device_service_t));
+    jd_device_t *d = jd_alloc(sz);
+    memset(d, 0, sz);
     d->num_services = num_services;
     d->device_identifier = announce->device_identifier;
     d->_expires = now + EXPIRES_USEC;
     jd_device_short_id(d->short_id, d->device_identifier);
+
+    uint32_t *services = (uint32_t *)announce->data;
+    d->announce_flags = services[0] & 0xffff;
+    for (int i = 0; i < num_services; ++i) {
+        d->services[i].service_class = i == 0 ? 0 : services[i];
+        d->services[i].service_index = i;
+    }
+
     d->next = jd_devices;
     jd_devices = d;
     jd_client_emit_event(JD_CLIENT_EV_DEVICE_CREATED, d, announce);
@@ -134,6 +149,20 @@ jd_device_t *jd_device_lookup(uint64_t device_identifier) {
     return NULL;
 }
 
+int jd_service_send_cmd(jd_device_service_t *serv, uint16_t service_command, const void *data,
+                        size_t datasize) {
+    jd_packet_t *pkt = jd_alloc(JD_SERIAL_FULL_HEADER_SIZE + datasize);
+    pkt->flags = JD_FRAME_FLAG_COMMAND;
+    pkt->device_identifier = jd_service_parent(serv)->device_identifier;
+    pkt->service_number = serv->service_index;
+    pkt->service_command = service_command;
+    pkt->service_size = datasize;
+    memcpy(pkt->data, data, datasize);
+    int r = jd_send_pkt(pkt);
+    jd_free(pkt);
+    return r;
+}
+
 void jd_client_process(void) {
     if (jd_should_sample(&next_gc, 300 * 1000)) {
         jd_device_gc();
@@ -146,32 +175,41 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
         return;
     }
 
-    jd_device_t *d = jd_device_lookup(pkt->device_identifier);
+    jd_device_t *dev = jd_device_lookup(pkt->device_identifier);
+    jd_device_service_t *serv = NULL;
+
     if (pkt->flags & JD_FRAME_FLAG_COMMAND) {
 
     } else {
         // report
         if (pkt->service_number == 0 && pkt->service_command == 0) {
-            if (!d)
-                d = jd_device_alloc(pkt);
-            uint32_t new_serv0 = *(uint32_t *)pkt->data;
-            if (d->services[0] != new_serv0) {
-                if ((d->services[0] & JD_CONTROL_ANNOUNCE_FLAGS_RESTART_COUNTER_STEADY) >
-                    (new_serv0 & JD_CONTROL_ANNOUNCE_FLAGS_RESTART_COUNTER_STEADY)) {
-                    jd_client_emit_event(JD_CLIENT_EV_DEVICE_RESET, d, pkt);
-                    jd_device_unlink(d);
-                    jd_device_free(d);
-                    d = jd_device_alloc(pkt);
+            if (!dev)
+                dev = jd_device_alloc(pkt);
+            uint16_t new_flags = *(uint16_t *)pkt->data;
+            if (dev->announce_flags != new_flags) {
+                if ((dev->announce_flags & JD_CONTROL_ANNOUNCE_FLAGS_RESTART_COUNTER_STEADY) >
+                    (new_flags & JD_CONTROL_ANNOUNCE_FLAGS_RESTART_COUNTER_STEADY)) {
+                    jd_client_emit_event(JD_CLIENT_EV_DEVICE_RESET, dev, pkt);
+                    jd_device_unlink(dev);
+                    jd_device_free(dev);
+                    dev = jd_device_alloc(pkt);
                 } else {
-                    d->services[0] = new_serv0;
+                    dev->announce_flags = new_flags;
                 }
             }
-            d->_expires = now + EXPIRES_USEC;
+            dev->_expires = now + EXPIRES_USEC;
         }
     }
 
-    if (d)
-        jd_client_emit_event(JD_CLIENT_EV_DEVICE_PACKET, d, pkt);
+    if (dev) {
+        int idx = pkt->service_number & JD_SERVICE_NUMBER_MASK;
+        if (idx < dev->num_services) {
+            serv = &dev->services[idx];
+        }
+    }
+
+    if (serv)
+        jd_client_emit_event(JD_CLIENT_EV_SERVICE_PACKET, serv, pkt);
     else
-        jd_client_emit_event(JD_CLIENT_EV_NON_DEVICE_PACKET, d, pkt);
+        jd_client_emit_event(JD_CLIENT_EV_NON_SERVICE_PACKET, dev, pkt);
 }
