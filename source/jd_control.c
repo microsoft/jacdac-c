@@ -55,7 +55,7 @@ static void process_flood(srv_t *state) {
             tmp[i] = i - 4;
         state->flood_counter++;
         set_flood(state, state->flood_remaining - 1);
-        jd_send(JD_SERVICE_NUMBER_CONTROL, JD_CONTROL_CMD_FLOOD_PING, tmp, len);
+        jd_send(JD_SERVICE_INDEX_CONTROL, JD_CONTROL_CMD_FLOOD_PING, tmp, len);
     }
 }
 #else
@@ -112,12 +112,12 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 #endif
 
     case JD_GET(JD_CONTROL_REG_DEVICE_DESCRIPTION):
-        jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, app_dev_class_name,
+        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_dev_class_name,
                 strlen(app_dev_class_name));
         break;
 
     case JD_GET(JD_CONTROL_REG_FIRMWARE_VERSION):
-        jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, app_fw_version,
+        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_fw_version,
                 strlen(app_fw_version));
         break;
 
@@ -128,13 +128,13 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_GET(JD_CONTROL_REG_UPTIME): {
         uint64_t t = tim_get_micros();
-        jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, &t, sizeof(t));
+        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, &t, sizeof(t));
         break;
     }
 
 #if JD_CONFIG_DEV_SPEC_URL == 1
     case JD_GET(JD_CONTROL_REG_DEVICE_SPECIFICATION_URL):
-        jd_send(JD_SERVICE_NUMBER_CONTROL, pkt->service_command, app_spec_url,
+        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_spec_url,
                 strlen(app_spec_url));
         break;
 #endif
