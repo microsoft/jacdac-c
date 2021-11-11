@@ -1,15 +1,32 @@
 #include "jd_client.h"
 
-/*
-- sending packet to device
-- query register on device
-*/
+#define EVENT_CHECKING 1
 
 static uint32_t next_gc;
 static uint8_t verbose_log;
 
 #define EXPIRES_USEC (2000 * 1000)
 jd_device_t *jd_devices;
+
+#if EVENT_CHECKING
+#include <assert.h>
+static uint8_t event_scope;
+#define EVENT_ENTER()                                                                              \
+    do {                                                                                           \
+        assert(event_scope == 0);                                                                  \
+        event_scope = 1;                                                                           \
+    } while (0)
+#define EVENT_LEAVE()                                                                              \
+    do {                                                                                           \
+        assert(event_scope == 1);                                                                  \
+        event_scope = 0;                                                                           \
+    } while (0)
+#define EVENT_CHECK() assert(event_scope == 1)
+#else
+#define EVENT_ENTER() ((void)0)
+#define EVENT_LEAVE() ((void)0)
+#define EVENT_CHECK() ((void)0)
+#endif
 
 // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 // this is not jd_hash_fnv1a()!
@@ -86,8 +103,11 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
 __attribute__((weak)) void app_client_event_handler(int event_id, void *arg0, void *arg1) {}
 
 void jd_client_emit_event(int event_id, void *arg0, void *arg1) {
+    EVENT_CHECK();
+    EVENT_LEAVE();
     jd_client_log_event(event_id, arg0, arg1);
     app_client_event_handler(event_id, arg0, arg1);
+    EVENT_ENTER();
 }
 
 static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
@@ -211,9 +231,11 @@ const jd_register_query_t *jd_service_query(jd_device_service_t *serv, int reg_c
 }
 
 void jd_client_process(void) {
+    EVENT_ENTER();
     if (jd_should_sample(&next_gc, 300 * 1000)) {
         jd_device_gc();
     }
+    EVENT_LEAVE();
 }
 
 static void handle_register(jd_device_service_t *serv, jd_packet_t *pkt) {
@@ -250,8 +272,11 @@ static void handle_register(jd_device_service_t *serv, jd_packet_t *pkt) {
 }
 
 void jd_client_handle_packet(jd_packet_t *pkt) {
+    EVENT_ENTER();
+
     if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) {
         jd_client_emit_event(JD_CLIENT_EV_BROADCAST_PACKET, NULL, pkt);
+        EVENT_LEAVE();
         return;
     }
 
@@ -296,4 +321,5 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
         jd_client_emit_event(JD_CLIENT_EV_SERVICE_PACKET, serv, pkt);
     else
         jd_client_emit_event(JD_CLIENT_EV_NON_SERVICE_PACKET, dev, pkt);
+    EVENT_LEAVE();
 }
