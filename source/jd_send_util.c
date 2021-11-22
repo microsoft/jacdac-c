@@ -23,3 +23,11 @@ int jd_send_not_implemented(jd_packet_t *pkt) {
                                                           .packet_crc = pkt->crc};
     return jd_send(pkt->service_index, JD_CMD_COMMAND_NOT_IMPLEMENTED, &payload, sizeof(payload));
 }
+
+int jd_block_register(jd_packet_t *pkt, uint16_t reg_code) {
+    if (pkt->service_command == JD_GET(reg_code) || pkt->service_command == JD_SET(reg_code)) {
+        jd_send_not_implemented(pkt);
+        return 1;
+    }
+    return 0;
+}
