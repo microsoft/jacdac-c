@@ -34,3 +34,8 @@ static inline void jd_send_event(srv_t *srv, uint32_t eventid) {
     jd_send_event_ext(srv, eventid, 0, 0);
 }
 void jd_process_event_queue(void);
+
+#if JD_RAW_FRAME
+extern uint8_t rawFrameSending;
+extern jd_frame_t *rawFrame;
+#endif

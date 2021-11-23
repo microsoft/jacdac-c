@@ -58,6 +58,10 @@
 #define JD_CONFIG_DEV_SPEC_URL 0
 #endif
 
+#ifndef JD_RAW_FRAME
+#define JD_RAW_FRAME 0
+#endif
+
 #define CONCAT_1(a, b) a##b
 #define CONCAT_0(a, b) CONCAT_1(a, b)
 #ifndef STATIC_ASSERT

@@ -86,8 +86,13 @@ void multitouch_init(const uint8_t *pins);
 // Also preliminary.
 void touch_init(uint8_t pin);
 
-// Power-delivery service. Needs work.
-void power_init(uint8_t pre_sense, uint8_t gnd_sense, uint8_t overload, uint8_t pulse);
+// Power-delivery service.
+typedef struct {
+    uint8_t pin_fault;
+    uint8_t pin_en;
+    uint8_t pin_pulse;
+} power_config_t;
+void power_init(const power_config_t *cfg);
 
 // This is automatically called if you enable JD_CONSOLE in board.h.
 void jdcon_init(void);
