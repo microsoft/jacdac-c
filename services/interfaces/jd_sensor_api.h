@@ -27,8 +27,14 @@ extern const env_sensor_api_t humidity_th02;
 extern const env_sensor_api_t temperature_shtc3;
 extern const env_sensor_api_t humidity_shtc3;
 
+extern const env_sensor_api_t temperature_sht30;
+extern const env_sensor_api_t humidity_sht30;
+
 extern const env_sensor_api_t temperature_ds18b20;
 
 // SG30 sensor on airquality4 click
 extern const env_sensor_api_t eco2_airquality4;
 extern const env_sensor_api_t tvoc_airquality4;
+
+extern const env_sensor_api_t illuminance_ltr390uv;
+extern const env_sensor_api_t uvindex_ltr390uv;
