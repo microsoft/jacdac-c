@@ -207,4 +207,7 @@ typedef struct {
 void vibration_service_init(const vibration_motor_api_t *api);
 extern const vibration_motor_api_t aw86224fcr;
 
+void uvindex_init(const env_sensor_api_t *api);
+void illuminance_init(const env_sensor_api_t *api);
+
 #endif
