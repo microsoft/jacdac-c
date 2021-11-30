@@ -133,16 +133,29 @@ static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
     return d;
 }
 
+void jd_device_clear_queries(jd_device_t *d, uint8_t service_idx) {
+    jd_register_query_t *tmp, *q = d->_queries, *prev = NULL;
+    while (q) {
+        if (service_idx == 0xff || q->service_index == service_idx) {
+            if (q == d->_queries)
+                d->_queries = q->next;
+            else
+                prev->next = q->next;
+            tmp = q;
+            q = q->next;
+            if (tmp->resp_size > JD_REGISTER_QUERY_MAX_INLINE)
+                jd_free(tmp->value.buffer);
+            jd_free(tmp);
+        } else {
+            prev = q;
+            q = q->next;
+        }
+    }
+}
+
 static void jd_device_free(jd_device_t *d) {
     jd_client_emit_event(JD_CLIENT_EV_DEVICE_DESTROYED, d, NULL);
-    jd_register_query_t *tmp, *q = d->_queries;
-    while (q) {
-        tmp = q;
-        q = q->next;
-        if (tmp->resp_size > JD_REGISTER_QUERY_MAX_INLINE)
-            jd_free(tmp->value.buffer);
-        jd_free(tmp);
-    }
+    jd_device_clear_queries(d, 0xff);
     jd_free(d);
 }
 
