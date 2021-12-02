@@ -55,6 +55,7 @@ void button_init(uint8_t pin, bool active, uint8_t backlight_pin);
 // Temperature and humidity services; often from a single I2C sensor (defined in board.h)
 void thermometer_init(const env_sensor_api_t *api);
 void humidity_init(const env_sensor_api_t *api);
+void barometer_init(const env_sensor_api_t *api);
 
 // Air quality sensors
 void eco2_init(const env_sensor_api_t *api);

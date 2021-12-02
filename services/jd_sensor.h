@@ -55,12 +55,14 @@ void env_sensor_process(srv_t *state);
 
 #define SCALE_TEMP(x) (int)((x)*1024.0 + 0.5)
 #define SCALE_HUM(x) (int)((x)*1024.0 + 0.5)
+#define SCALE_PRESSURE(x) (int)((x)*1024.0 + 0.5)
 
 #define SCALE_LUX(x) (int)((x)*1024.0 + 0.5)
 #define SCALE_UVI(x) (int)((x)*16*1024.0 + 0.5)
 
 #define ERR_HUM(a, b) SCALE_HUM(a), SCALE_HUM(b)
 #define ERR_TEMP(a, b) SCALE_TEMP(a), SCALE_TEMP(b)
+#define ERR_PRESSURE(a, b) SCALE_PRESSURE(a), SCALE_PRESSURE(b)
 #define ERR_END -1, -1
 
 int32_t env_extrapolate_error(int32_t value, const int32_t *error_table);
