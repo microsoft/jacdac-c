@@ -26,6 +26,7 @@ typedef struct {
     uint8_t got_query : 1;                                                                         \
     uint8_t inited : 1;                                                                            \
     uint8_t got_reading : 1;                                                                       \
+    uint8_t reading_pending : 1;                                                                   \
     uint32_t streaming_interval;                                                                   \
     uint32_t next_streaming;                                                                       \
     const sensor_api_t *api
@@ -58,7 +59,7 @@ void env_sensor_process(srv_t *state);
 #define SCALE_PRESSURE(x) (int)((x)*1024.0 + 0.5)
 
 #define SCALE_LUX(x) (int)((x)*1024.0 + 0.5)
-#define SCALE_UVI(x) (int)((x)*16*1024.0 + 0.5)
+#define SCALE_UVI(x) (int)((x)*16 * 1024.0 + 0.5)
 
 #define ERR_HUM(a, b) SCALE_HUM(a), SCALE_HUM(b)
 #define ERR_TEMP(a, b) SCALE_TEMP(a), SCALE_TEMP(b)
@@ -91,6 +92,10 @@ typedef struct analog_config {
     uint8_t variant;
     int32_t offset;
     int32_t scale;
+    // all values in ms
+    uint32_t sampling_ms;        // how often to probe the sensor (default 9ms)
+    uint32_t sampling_delay;     // after enabling pinH/pinL how long to wait (default 0)
+    uint32_t streaming_interval; // defaults to 100ms
 } analog_config_t;
 
 #define ANALOG_SENSOR_STATE                                                                        \

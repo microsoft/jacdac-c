@@ -11,10 +11,21 @@ struct srv_state {
 
 static void analog_update(srv_t *state) {
     const analog_config_t *cfg = state->config;
-    pin_setup_output(cfg->pinH);
-    pin_set(cfg->pinH, 1);
-    pin_setup_output(cfg->pinL);
-    pin_set(cfg->pinL, 0);
+
+    if (!state->reading_pending) {
+        pin_setup_output(cfg->pinH);
+        pin_set(cfg->pinH, 1);
+        pin_setup_output(cfg->pinL);
+        pin_set(cfg->pinL, 0);
+
+        if (cfg->sampling_delay) {
+            state->nextSample = now + 1000 * cfg->sampling_delay;
+            state->reading_pending = 1;
+            return;
+        }
+    }
+
+    state->reading_pending = 0;
 
     int scale = cfg->scale;
     if (!scale)
@@ -37,7 +48,11 @@ void analog_process(srv_t *state) {
         analog_update(state);
     }
 
-    if (jd_should_sample(&state->nextSample, 9000) && state->inited)
+    int sampling_ms = state->config->sampling_ms * 1000;
+    if (!sampling_ms)
+        sampling_ms = 9000;
+
+    if (jd_should_sample(&state->nextSample, sampling_ms) && state->inited)
         analog_update(state);
 
     sensor_process_simple(state, &state->sample, sizeof(state->sample));
@@ -53,5 +68,7 @@ void analog_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 void analog_init(const srv_vt_t *vt, const analog_config_t *cfg) {
     srv_t *state = jd_allocate_service(vt);
+    if (cfg->streaming_interval)
+        state->streaming_interval = cfg->streaming_interval;
     state->config = cfg;
 }
