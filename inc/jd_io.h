@@ -13,6 +13,7 @@ void jd_power_enable(int en);
 void jd_status_init(void);
 void jd_status_process(void);
 int jd_status_handle_packet(jd_packet_t *pkt);
+void jd_status_set_ch(int ch, uint8_t v);
 #endif
 
 // sync with jd_status_animations[]
