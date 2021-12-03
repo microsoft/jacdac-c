@@ -89,9 +89,10 @@ void touch_init(uint8_t pin);
 
 // Power-delivery service.
 typedef struct {
-    uint8_t pin_fault;
+    uint8_t pin_fault; // active low
     uint8_t pin_en;
     uint8_t pin_pulse;
+    uint8_t en_active_high;
 } power_config_t;
 void power_init(const power_config_t *cfg);
 

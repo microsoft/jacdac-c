@@ -9,8 +9,7 @@
 #define LOG JD_LOG
 // #define LOG JD_NOLOG
 
-#define CHECK_PERIOD 1000 // how often to check the pins, in us
-#define OVERLOAD_MS 2000  // how long to shut down the power for after overload, in ms
+#define OVERLOAD_MS 2000 // how long to shut down the power for after overload, in ms
 
 #define MS(v) ((v) << 10)
 
@@ -33,7 +32,7 @@ struct srv_state {
     // timers
     uint32_t next_shutdown;
     uint32_t last_pulse;
-    uint32_t next_sample;
+    uint32_t next_leds;
     uint32_t power_switch_time;
     uint32_t power_on_complete;
     uint32_t re_enable;
@@ -51,7 +50,31 @@ REG_DEFINITION(                                   //
 
 static void set_limiter(srv_t *state, int onoff) {
     DMESG("lim: %d", onoff);
+
+    if (!state->cfg->en_active_high)
+        onoff = !onoff;
+
     pin_set(state->cfg->pin_en, onoff);
+}
+
+static void set_leds(srv_t *state) {
+    uint8_t r = 0, g = 0;
+    switch (state->power_status) {
+    case JD_POWER_POWER_STATUS_OVERLOAD:
+        r = 50;
+        break;
+    case JD_POWER_POWER_STATUS_OVERPROVISION:
+        g = 20;
+        r = 20;
+        break;
+    case JD_POWER_POWER_STATUS_DISALLOWED:
+        break;
+    case JD_POWER_POWER_STATUS_POWERING:
+        g = 20;
+        break;
+    }
+    jd_status_set_ch(0, r);
+    jd_status_set_ch(1, g);
 }
 
 static bool shutdown_pending(void) {
@@ -64,9 +87,9 @@ static void send_shutdown(srv_t *state) {
 }
 
 void power_process(srv_t *state) {
-    // not sure we need this
-    if (!jd_should_sample(&state->next_sample, CHECK_PERIOD * 9 / 10))
-        return;
+    if (jd_should_sample(&state->next_leds, 256 * 1024)) {
+        set_leds(state);
+    }
 
     if (state->pulse_period && state->pulse_duration) {
         uint32_t pulse_delta = now - state->last_pulse;
@@ -99,7 +122,8 @@ void power_process(srv_t *state) {
                 return; // still waiting for it to ramp up
         }
     } else {
-        set_limiter(state, 0);
+        if (state->prev_power_status != state->power_status)
+            set_limiter(state, 0);
     }
 
     state->power_on_complete = 0;
@@ -154,6 +178,10 @@ void power_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 
     switch (service_handle_register_final(state, pkt, power_regs)) {
+    case JD_POWER_REG_ALLOWED:
+        state->power_status =
+            state->allowed ? JD_POWER_POWER_STATUS_POWERING : JD_POWER_POWER_STATUS_DISALLOWED;
+        break;
     case JD_POWER_REG_KEEP_ON_PULSE_PERIOD:
     case JD_POWER_REG_KEEP_ON_PULSE_DURATION:
         if (state->pulse_period && state->pulse_duration) {
@@ -197,7 +225,7 @@ void power_init(const power_config_t *cfg) {
         state->last_pulse = now - state->pulse_duration * 1000;
     }
 
-    tim_max_sleep = CHECK_PERIOD;
+    tim_max_sleep = 1000; // wakeup at 1ms not usual 10ms to get faster over-current reaction
 }
 
 #endif
