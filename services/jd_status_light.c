@@ -122,6 +122,7 @@ static void rgbled_show(status_ctx_t *state) {
 void jd_status_set_ch(int ch, uint8_t v) {
     status_ctx_t *state = &status_ctx;
     state->channels[ch].target = v;
+    state->channels[ch].value = v << 8;
     state->channels[ch].speed = 0;
     rgbled_show(state);
 }
@@ -240,9 +241,11 @@ void jd_status(int status) {
         return;
     }
 
+#if !JD_CONFIG_IGNORE_STATUS
     jd_status_set(state, &jd_status_animations[status].color);
     state->jd_status = status;
     state->jd_status_stop = now + jd_status_animations[status].time;
+#endif
 }
 
 #endif
