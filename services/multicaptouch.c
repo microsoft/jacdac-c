@@ -58,7 +58,7 @@ static void detect_swipe(srv_t *state) {
         } else {
             delta++;
         }
-        
+
         if (!(SWIPE_DELTA_MIN <= d0 && d0 <= SWIPE_DELTA_MAX))
             return;
     }
