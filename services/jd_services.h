@@ -87,6 +87,8 @@ void multitouch_init(const uint8_t *pins);
 // Also preliminary.
 void touch_init(uint8_t pin);
 
+void multicaptouch_init(const captouch_api_t *cfg, uint32_t channels);
+
 // Power-delivery service.
 typedef struct {
     uint8_t pin_fault; // active low

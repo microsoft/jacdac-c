@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 #include "jd_protocol.h"
+#include "jd_services.h"
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
