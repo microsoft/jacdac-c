@@ -1,7 +1,8 @@
 #include "jd_drivers.h"
 
+#ifdef PIN_SCS
+
 #define SAMPLING_MS 500
-#define PRECISION 10
 
 typedef struct state {
     uint8_t inited;
@@ -67,3 +68,5 @@ const env_sensor_api_t temperature_max6675 = {
     .process = max6675_process,
     .get_reading = max6675_temperature,
 };
+
+#endif
