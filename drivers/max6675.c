@@ -1,0 +1,69 @@
+#include "jd_drivers.h"
+
+#define SAMPLING_MS 500
+#define PRECISION 10
+
+typedef struct state {
+    uint8_t inited;
+    env_reading_t temperature;
+    uint32_t nextsample;
+} ctx_t;
+static ctx_t state;
+
+static const int32_t temperature_error[] = {ERR_TEMP(0, 2), ERR_TEMP(700, 2), ERR_TEMP(701, 4.25),
+                                            ERR_TEMP(1024, 4.25), ERR_END};
+
+static void max6675_init(void) {
+    ctx_t *ctx = &state;
+    if (ctx->inited)
+        return;
+
+    ctx->temperature.min_value = SCALE_TEMP(0);
+    ctx->temperature.max_value = SCALE_TEMP(1024);
+
+    ctx->nextsample = now;
+
+    pin_set(PIN_SCS, 1);
+    pin_setup_output(PIN_SCS);
+
+    sspi_init();
+
+    ctx->inited = 1;
+}
+
+static void max6675_process(void) {
+    ctx_t *ctx = &state;
+
+    if (jd_should_sample(&ctx->nextsample, SAMPLING_MS * 1000)) {
+        uint8_t data[2];
+
+        pin_set(PIN_SCS, 0);
+        sspi_rx(data, sizeof(data));
+        pin_set(PIN_SCS, 1);
+
+        uint16_t rtemp = (data[0] << 8) | data[1];
+        if (rtemp & 4) {
+            DMESG("fault! 0x%x", rtemp);
+            hw_panic();
+        }
+
+        rtemp &= ~7;
+        int32_t temp = rtemp << 5;
+
+        env_set_value(&ctx->temperature, temp, temperature_error);
+        ctx->inited = 2;
+    }
+}
+
+static void *max6675_temperature(void) {
+    ctx_t *ctx = &state;
+    if (ctx->inited >= 2)
+        return &ctx->temperature;
+    return NULL;
+}
+
+const env_sensor_api_t temperature_max6675 = {
+    .init = max6675_init,
+    .process = max6675_process,
+    .get_reading = max6675_temperature,
+};
