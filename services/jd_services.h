@@ -212,4 +212,14 @@ extern const vibration_motor_api_t aw86224fcr;
 void uvindex_init(const env_sensor_api_t *api);
 void illuminance_init(const env_sensor_api_t *api);
 
+typedef struct motion_cfg {
+    uint8_t pin;
+    uint8_t variant; // PIR==1
+    bool inactive;
+    uint16_t angle;
+    uint32_t max_distance;
+} motion_cfg_t;
+void motion_init(const motion_cfg_t *cfg);
+
+
 #endif
