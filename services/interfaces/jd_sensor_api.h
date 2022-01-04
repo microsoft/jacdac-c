@@ -44,3 +44,6 @@ extern const env_sensor_api_t uvindex_ltr390uv;
 
 extern const env_sensor_api_t pressure_cps122;
 extern const env_sensor_api_t temperature_cps122;
+
+extern const env_sensor_api_t temperature_mpl3115a2;
+extern const env_sensor_api_t pressure_mpl3115a2;
