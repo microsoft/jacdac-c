@@ -326,6 +326,8 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
             dev->_expires = now + EXPIRES_USEC;
         }
 
+        // TODO maintain counter per device and emit SDK events for Jacdac events
+
         if (serv)
             handle_register(serv, pkt);
     }
