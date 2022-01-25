@@ -159,3 +159,10 @@ void jd_to_hex(char *dst, const void *src, size_t len) {
     }
     dst[len * 2 + 1] = 0;
 }
+
+void *jd_alloc0(uint32_t size) {
+    void *r = jd_alloc(size);
+    if (r)
+        memset(r, 0, size);
+    return r;
+}

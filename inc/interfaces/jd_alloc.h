@@ -22,6 +22,11 @@ void jd_alloc_init(void);
 void* jd_alloc(uint32_t size);
 
 /**
+ * Allocate and zero-out the memory.
+ **/
+void* jd_alloc0(uint32_t size);
+
+/**
  * Return the amount of memory left to allocated.
  */
 uint32_t jd_available_memory(void);
