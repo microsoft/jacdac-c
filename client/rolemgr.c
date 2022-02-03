@@ -57,7 +57,7 @@ static void rolemgr_set(srv_t *state, jd_role_t *role, jd_device_service_t *serv
 }
 
 static void rolemgr_autobind(srv_t *state) {
-    LOG("autobind");
+    // LOG("autobind");
     state->locked = 1;
     for (jd_role_t *r = state->roles; r; r = r->_next) {
         if (r->service)
