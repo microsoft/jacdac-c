@@ -22,13 +22,17 @@
 // A broadcast (JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) packet was received (NULL, jd_packet_t)
 #define JD_CLIENT_EV_BROADCAST_PACKET 0x0012
 // Additional copy of an event was received (jd_device_service_t, jd_packet_t)
-// This should most likely be ignored; the first copy is sent as regular JD_CLIENT_EV_SERVICE_PACKET.
+// This should most likely be ignored; the first copy is sent as regular
+// JD_CLIENT_EV_SERVICE_PACKET.
 #define JD_CLIENT_EV_REPEATED_EVENT_PACKET 0x0013
 
 // A value of register was first received, or has changed (jd_device_service_t, jd_register_query_t)
 #define JD_CLIENT_EV_SERVICE_REGISTER_CHANGED 0x0020
 // Register was marked as not implemented (jd_device_service_t, jd_register_query_t)
 #define JD_CLIENT_EV_SERVICE_REGISTER_NOT_IMPLEMENTED 0x0021
+
+// Emitted on every jd_client_process() (roughly every 10ms), no arguments
+#define JD_CLIENT_EV_PROCESS 0x0030
 
 typedef struct jd_device_service {
     uint32_t service_class;
@@ -87,6 +91,10 @@ int jd_send_pkt(jd_packet_t *pkt);
 jd_device_t *jd_device_lookup(uint64_t device_identifier);
 void jd_device_short_id(char short_id[5], uint64_t long_id);
 
+static inline jd_device_service_t *jd_device_get_service(jd_device_t *dev, unsigned serv_idx) {
+    return dev && serv_idx < dev->num_services ? dev->services + serv_idx : NULL;
+}
+
 // jd_device_service_t  methods
 static inline jd_device_t *jd_service_parent(jd_device_service_t *serv) {
     return (jd_device_t *)((uint8_t *)(serv - serv->service_index) - sizeof(jd_device_t));
@@ -97,3 +105,8 @@ int jd_service_send_cmd(jd_device_service_t *serv, uint16_t service_command, con
 const jd_register_query_t *jd_service_query(jd_device_service_t *serv, int reg_code,
                                             int refresh_ms);
 void jd_device_clear_queries(jd_device_t *d, uint8_t service_idx);
+
+// role manager
+void rolemgr_init(void);
+void rolemgr_add_role(const char *name, uint32_t service_class);
+jd_device_service_t *rolemgr_get_binding(const char *name);

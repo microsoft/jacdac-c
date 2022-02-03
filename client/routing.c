@@ -69,6 +69,9 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     jd_register_query_t *reg = arg1;
 
     switch (event_id) {
+    case JD_CLIENT_EV_PROCESS:
+        // this is called very often, so don't print anything
+        break;
     case JD_CLIENT_EV_DEVICE_CREATED:
         DMESG("device created: %s", d->short_id);
         break;
@@ -107,11 +110,13 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
 }
 
 __attribute__((weak)) void app_client_event_handler(int event_id, void *arg0, void *arg1) {}
+void rolemgr_client_event(int event_id, void *arg0, void *arg1);
 
 void jd_client_emit_event(int event_id, void *arg0, void *arg1) {
     EVENT_CHECK();
     EVENT_LEAVE();
     jd_client_log_event(event_id, arg0, arg1);
+    rolemgr_client_event(event_id, arg0, arg1);
     app_client_event_handler(event_id, arg0, arg1);
     EVENT_ENTER();
 }
@@ -255,6 +260,7 @@ void jd_client_process(void) {
     if (jd_should_sample(&next_gc, 300 * 1000)) {
         jd_device_gc();
     }
+    jd_client_emit_event(JD_CLIENT_EV_PROCESS, NULL, NULL);
     EVENT_LEAVE();
 }
 
