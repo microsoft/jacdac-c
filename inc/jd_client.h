@@ -34,6 +34,9 @@
 // Emitted on every jd_client_process() (roughly every 10ms), no arguments
 #define JD_CLIENT_EV_PROCESS 0x0030
 
+// A role assignment has changed (jd_device_service_t?, jd_role_t)
+#define JD_CLIENT_EV_ROLE_CHANGED 0x0040
+
 typedef struct jd_device_service {
     uint32_t service_class;
     uint8_t service_index;
@@ -41,6 +44,8 @@ typedef struct jd_device_service {
     uint16_t userflags;
     void *userdata;
 } jd_device_service_t;
+
+#define JD_DEVICE_SERVICE_FLAG_ROLE_ASSIGNED 0x01
 
 #define JD_REGISTER_QUERY_MAX_INLINE 4
 typedef struct jd_register_query {
@@ -107,6 +112,18 @@ const jd_register_query_t *jd_service_query(jd_device_service_t *serv, int reg_c
 void jd_device_clear_queries(jd_device_t *d, uint8_t service_idx);
 
 // role manager
-void rolemgr_init(void);
-void rolemgr_add_role(const char *name, uint32_t service_class);
-jd_device_service_t *rolemgr_get_binding(const char *name);
+typedef struct jd_role {
+    struct jd_role *_next;
+    const char *name;
+    uint32_t service_class;
+    jd_device_service_t *service;
+} jd_role_t;
+
+// name must be alive until jd_role_free()
+jd_role_t *jd_role_alloc(const char *name, uint32_t service_class);
+void jd_role_free(jd_role_t *role);
+// neither jd_role_alloc() nor jd_role_free() generate JD_CLIENT_EV_ROLE_CHANGED
+// a freshly created role will typically be bound on next auto-bind
+
+// call from app_init_services()
+void jd_role_manager_init(void);

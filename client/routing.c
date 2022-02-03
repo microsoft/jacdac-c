@@ -1,4 +1,4 @@
-#include "jd_client.h"
+#include "client_internal.h"
 
 #define EVENT_CHECKING 1
 
@@ -62,6 +62,12 @@ void jd_device_short_id(char short_id[5], uint64_t long_id) {
     short_id[4] = 0;
 }
 
+void rolemgr_role_changed(jd_role_t *role) {
+    EVENT_ENTER();
+    jd_client_emit_event(JD_CLIENT_EV_ROLE_CHANGED, role->service, role);
+    EVENT_LEAVE();
+}
+
 void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     jd_device_t *d = arg0;
     jd_device_service_t *serv = arg0;
@@ -110,15 +116,18 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
 }
 
 __attribute__((weak)) void app_client_event_handler(int event_id, void *arg0, void *arg1) {}
-void rolemgr_client_event(int event_id, void *arg0, void *arg1);
 
 void jd_client_emit_event(int event_id, void *arg0, void *arg1) {
     EVENT_CHECK();
     EVENT_LEAVE();
     jd_client_log_event(event_id, arg0, arg1);
-    rolemgr_client_event(event_id, arg0, arg1);
     app_client_event_handler(event_id, arg0, arg1);
     EVENT_ENTER();
+}
+
+static bool fits_at(jd_device_t *existing, jd_device_t *fresh) {
+    return !existing || memcmp(&fresh->device_identifier, &existing->device_identifier,
+                               sizeof(existing->device_identifier)) < 0;
 }
 
 static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
@@ -139,8 +148,19 @@ static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
         d->services[i].service_index = i;
     }
 
-    d->next = jd_devices;
-    jd_devices = d;
+    if (fits_at(jd_devices, d)) {
+        d->next = jd_devices;
+        jd_devices = d;
+    } else {
+        for (jd_device_t *q = jd_devices; q; q = q->next) {
+            if (fits_at(q->next, d)) {
+                d->next = q->next;
+                q->next = d;
+                break;
+            }
+        }
+    }
+
     jd_client_emit_event(JD_CLIENT_EV_DEVICE_CREATED, d, announce);
     return d;
 }
@@ -166,6 +186,7 @@ void jd_device_clear_queries(jd_device_t *d, uint8_t service_idx) {
 }
 
 static void jd_device_free(jd_device_t *d) {
+    rolemgr_device_destroyed(d);
     jd_client_emit_event(JD_CLIENT_EV_DEVICE_DESTROYED, d, NULL);
     jd_device_clear_queries(d, 0xff);
     jd_free(d);

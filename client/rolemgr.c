@@ -2,24 +2,19 @@
 // Licensed under the MIT license.
 
 #include "services/jd_services.h"
-#include "jd_client.h"
+#include "client_internal.h"
 #include "jacdac/dist/c/rolemanager.h"
 
+#define LOG JD_LOG
 #define AUTOBIND_MS 980
-
-typedef struct role {
-    struct role *next;
-    uint32_t service_class;
-    const char *name;
-    jd_device_service_t *serv;
-} role_t;
 
 struct srv_state {
     SRV_COMMON;
     uint8_t auto_bind_enabled;
     uint8_t all_roles_allocated;
     uint8_t changed;
-    role_t *roles;
+    uint8_t locked;
+    jd_role_t *roles;
     uint32_t next_autobind;
     uint32_t changed_timeout;
 };
@@ -33,30 +28,60 @@ REG_DEFINITION(                                      //
 
 static srv_t *_state;
 
-static void rolemgr_changed(srv_t *state) {
-    state->changed = 1;
+static void rolemgr_update_allocated(srv_t *state) {
     state->all_roles_allocated = 1;
-    for (role_t *r = state->roles; r; r = r->next) {
-        if (!r->serv) {
+    for (jd_role_t *r = state->roles; r; r = r->_next) {
+        if (!r->service) {
             state->all_roles_allocated = 0;
             break;
         }
     }
 }
 
-static void rolemgr_autobind(srv_t *state) {
-    // TODO
+static void rolemgr_set(srv_t *state, jd_role_t *role, jd_device_service_t *serv) {
+    if (role->service != serv) {
+        if (role->service)
+            role->service->flags &= ~JD_DEVICE_SERVICE_FLAG_ROLE_ASSIGNED;
+        if (serv) {
+            serv->flags |= JD_DEVICE_SERVICE_FLAG_ROLE_ASSIGNED;
+            char shortId[5];
+            jd_device_short_id(shortId, jd_service_parent(serv)->device_identifier);
+            LOG("set role %s -> %s:%d", role->name, shortId, serv->service_index);
+        } else {
+            LOG("clear role %s", role->name);
+        }
+        role->service = serv;
+        state->changed = 1;
+        rolemgr_role_changed(role);
+    }
 }
 
-static role_t *rolemgr_lookup(srv_t *state, const char *name) {
-    // first a quick pass
-    for (role_t *r = state->roles; r; r = r->next) {
-        if (r->name == name)
-            return r;
+static void rolemgr_autobind(srv_t *state) {
+    LOG("autobind");
+    state->locked = 1;
+    for (jd_role_t *r = state->roles; r; r = r->_next) {
+        if (r->service)
+            continue;
+
+        for (jd_device_t *d = jd_devices; d; d = d->next) {
+            for (int i = 1; i < d->num_services; i++) {
+                jd_device_service_t *serv = &d->services[i];
+                if (serv->service_class == r->service_class &&
+                    !(serv->flags & JD_DEVICE_SERVICE_FLAG_ROLE_ASSIGNED)) {
+                    rolemgr_set(state, r, serv);
+                    goto next_role;
+                }
+            }
+        }
+
+    next_role:;
     }
-    // next check by name
-    for (role_t *r = state->roles; r; r = r->next) {
-        if (strcmp(r->name, name) == 0)
+    state->locked = 0;
+}
+
+static jd_role_t *rolemgr_lookup(srv_t *state, const char *name, int name_len) {
+    for (jd_role_t *r = state->roles; r; r = r->_next) {
+        if (memcmp(r->name, name, name_len) == 0)
             return r;
     }
     return NULL;
@@ -77,28 +102,26 @@ void rolemgr_process(srv_t *state) {
 static void rolemgr_set_role(srv_t *state, jd_packet_t *pkt) {
     jd_role_manager_set_role_t *cmd = (jd_role_manager_set_role_t *)pkt->data;
     int name_len = pkt->service_size - sizeof(*cmd);
-    for (role_t *r = state->roles; r; r = r->next) {
-        if (memcmp(r->name, cmd->role, name_len) == 0) {
-            if (cmd->device_id == 0) {
-                r->serv = NULL;
-            } else {
-                jd_device_service_t *serv =
-                    jd_device_get_service(jd_device_lookup(cmd->device_id), cmd->service_idx);
-                if (serv)
-                    r->serv = serv;
-            }
-            rolemgr_changed(state);
-            break;
-        }
+    jd_role_t *r = rolemgr_lookup(state, cmd->role, name_len);
+    if (!r)
+        return;
+    if (cmd->device_id == 0) {
+        rolemgr_set(state, r, NULL);
+    } else {
+        jd_device_service_t *serv =
+            jd_device_get_service(jd_device_lookup(cmd->device_id), cmd->service_idx);
+        if (serv)
+            rolemgr_set(state, r, serv);
     }
 }
 
 void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
+    if (state->locked)
+        jd_panic();
     switch (pkt->service_command) {
     case JD_ROLE_MANAGER_CMD_CLEAR_ALL_ROLES:
-        for (role_t *r = state->roles; r; r = r->next)
-            r->serv = NULL;
-        rolemgr_changed(state);
+        for (jd_role_t *r = state->roles; r; r = r->_next)
+            rolemgr_set(state, r, NULL);
         break;
 
     case JD_ROLE_MANAGER_CMD_SET_ROLE:
@@ -108,6 +131,7 @@ void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
     case JD_ROLE_MANAGER_CMD_LIST_ROLES: // TODO
 
     default:
+        rolemgr_update_allocated(state);
         service_handle_register_final(state, pkt, rolemgr_regs);
         break;
     }
@@ -115,59 +139,72 @@ void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 SRV_DEF(rolemgr, JD_SERVICE_CLASS_ROLE_MANAGER);
 
-void rolemgr_init(void) {
+void jd_role_manager_init(void) {
     SRV_ALLOC(rolemgr);
     _state = state;
     // wait with first autobind
     state->next_autobind = now + AUTOBIND_MS * 1000;
-    rolemgr_changed(state);
 }
 
-void rolemgr_client_event(int event_id, void *arg0, void *arg1) {
-    jd_device_t *dev = arg0;
-    // jd_device_service_t *serv = arg0;
-    // jd_packet_t *pkt = arg1;
-    // jd_register_query_t *reg = arg1;
+void rolemgr_device_destroyed(jd_device_t *dev) {
+    srv_t *state = _state;
 
+    for (jd_role_t *r = state->roles; r; r = r->_next) {
+        if (r->service && jd_service_parent(r->service) == dev) {
+            rolemgr_set(state, r, NULL);
+        }
+    }
+}
+
+jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
     srv_t *state = _state;
     if (!state)
-        return;
+        jd_panic();
+    if (state->locked)
+        jd_panic();
+    if (rolemgr_lookup(state, name, strlen(name)))
+        jd_panic();
 
-    switch (event_id) {
-    case JD_CLIENT_EV_DEVICE_DESTROYED: {
-        int numdel = 0;
-        for (role_t *r = state->roles; r; r = r->next) {
-            if (r->serv && jd_service_parent(r->serv) == dev) {
-                r->serv = NULL;
-                numdel++;
+    jd_role_t *r = jd_alloc(sizeof(jd_role_t));
+
+    r->name = name;
+    r->service_class = service_class;
+
+    if (!state->roles || strcmp(name, state->roles->name) < 0) {
+        r->_next = state->roles;
+        state->roles = r;
+    } else {
+        for (jd_role_t *q = state->roles; q; q = q->_next) {
+            if (!q->_next || strcmp(name, q->_next->name) < 0) {
+                r->_next = q->_next;
+                q->_next = r;
+                break;
             }
         }
-        if (numdel)
-            rolemgr_changed(state);
-    } break;
     }
+
+    return r;
 }
 
-jd_device_service_t *rolemgr_get_binding(const char *name) {
+void jd_role_free(jd_role_t *role) {
+    if (!role)
+        return;
     srv_t *state = _state;
-    role_t *r = rolemgr_lookup(state, name);
-    if (r)
-        return r->serv;
-    return NULL;
-}
-
-void rolemgr_add_role(const char *name, uint32_t service_class) {
-    srv_t *state = _state;
-    role_t *r = rolemgr_lookup(state, name);
-    if (!r) {
-        r = jd_alloc0(sizeof(struct role));
-        r->next = state->roles;
-        state->roles = r;
+    if (state->locked)
+        jd_panic();
+    if (state->roles == role) {
+        state->roles = NULL;
+    } else {
+        jd_role_t *q;
+        for (q = state->roles; q; q = q->_next) {
+            if (q->_next == role) {
+                q->_next = role->_next;
+                break;
+            }
+        }
+        if (!q)
+            jd_panic();
     }
-    r->name = name;
-    if (r->service_class != service_class) {
-        r->service_class = service_class;
-        r->serv = NULL;
-    }
-    rolemgr_changed(state);
+    role->name = NULL;
+    jd_free(role);
 }
