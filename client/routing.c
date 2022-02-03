@@ -186,7 +186,10 @@ void jd_device_clear_queries(jd_device_t *d, uint8_t service_idx) {
 }
 
 static void jd_device_free(jd_device_t *d) {
+    EVENT_LEAVE();
     rolemgr_device_destroyed(d);
+    EVENT_ENTER();
+
     jd_client_emit_event(JD_CLIENT_EV_DEVICE_DESTROYED, d, NULL);
     jd_device_clear_queries(d, 0xff);
     jd_free(d);
