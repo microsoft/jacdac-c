@@ -13,17 +13,22 @@
 // An announce packet with lower reset count was spotted (jd_device_t, jd_packet_t)
 // This event is always followed by DEVICE_DESTROYED and DEVICE_CREATED
 #define JD_CLIENT_EV_DEVICE_RESET 0x0003
+
 // A regular packet for named service was received (jd_device_service_t, jd_packet_t)
-#define JD_CLIENT_EV_SERVICE_PACKET 0x0004
+#define JD_CLIENT_EV_SERVICE_PACKET 0x0010
 // A non-regular packet (CRC-ACK, pipe, etc) was received (jd_device_t?, jd_packet_t)
 // This can also happen if packet is received before announce, in which case first argument is NULL.
-#define JD_CLIENT_EV_NON_SERVICE_PACKET 0x0005
+#define JD_CLIENT_EV_NON_SERVICE_PACKET 0x0011
 // A broadcast (JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) packet was received (NULL, jd_packet_t)
-#define JD_CLIENT_EV_BROADCAST_PACKET 0x0006
+#define JD_CLIENT_EV_BROADCAST_PACKET 0x0012
+// Additional copy of an event was received (jd_device_service_t, jd_packet_t)
+// This should most likely be ignored; the first copy is sent as regular JD_CLIENT_EV_SERVICE_PACKET.
+#define JD_CLIENT_EV_REPEATED_EVENT_PACKET 0x0013
+
 // A value of register was first received, or has changed (jd_device_service_t, jd_register_query_t)
-#define JD_CLIENT_EV_SERVICE_REGISTER_CHANGED 0x0007
+#define JD_CLIENT_EV_SERVICE_REGISTER_CHANGED 0x0020
 // Register was marked as not implemented (jd_device_service_t, jd_register_query_t)
-#define JD_CLIENT_EV_SERVICE_REGISTER_NOT_IMPLEMENTED 0x0008
+#define JD_CLIENT_EV_SERVICE_REGISTER_NOT_IMPLEMENTED 0x0021
 
 typedef struct jd_device_service {
     uint32_t service_class;
@@ -60,6 +65,7 @@ typedef struct jd_device {
     jd_register_query_t *_queries;
     uint64_t device_identifier;
     uint8_t num_services;
+    uint8_t _event_counter;
     uint16_t announce_flags;
     char short_id[5];
     uint32_t _expires;

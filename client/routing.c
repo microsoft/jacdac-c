@@ -3,7 +3,7 @@
 #define EVENT_CHECKING 1
 
 static uint32_t next_gc;
-static uint8_t verbose_log;
+static uint8_t verbose_log = 0;
 
 #define EXPIRES_USEC (2000 * 1000)
 jd_device_t *jd_devices;
@@ -78,6 +78,12 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     case JD_CLIENT_EV_DEVICE_RESET:
         DMESG("device reset: %s", d->short_id);
         break;
+    case JD_CLIENT_EV_REPEATED_EVENT_PACKET:
+        if (verbose_log) {
+            DMESG("serv %s/%d[0x%x] - repeated event cmd=%x", jd_service_parent(serv)->short_id,
+                  serv->service_index, serv->service_class, pkt->service_command);
+        }
+        break;
     case JD_CLIENT_EV_SERVICE_PACKET:
         if (verbose_log) {
             DMESG("serv %s/%d[0x%x] - pkt cmd=%x", jd_service_parent(serv)->short_id,
@@ -118,6 +124,7 @@ static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
     d->num_services = num_services;
     d->device_identifier = announce->device_identifier;
     d->_expires = now + EXPIRES_USEC;
+    d->_event_counter = 0xff;
     jd_device_short_id(d->short_id, d->device_identifier);
 
     uint32_t *services = (uint32_t *)announce->data;
@@ -295,6 +302,7 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
 
     jd_device_t *dev = jd_device_lookup(pkt->device_identifier);
     jd_device_service_t *serv = NULL;
+    int ev_code = JD_CLIENT_EV_SERVICE_PACKET;
 
     if (dev) {
         int idx = pkt->service_index & JD_SERVICE_INDEX_MASK;
@@ -326,14 +334,38 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
             dev->_expires = now + EXPIRES_USEC;
         }
 
-        // TODO maintain counter per device and emit SDK events for Jacdac events
+        if (serv) {
+            if (jd_is_event(pkt)) {
+                int pec = (pkt->service_command >> JD_CMD_EVENT_COUNTER_SHIFT) &
+                          JD_CMD_EVENT_COUNTER_MASK;
+                int ec = dev->_event_counter;
+                if (ec == 0xff) {
+                    ec = pec - 1;
+                }
+                ec++;
 
-        if (serv)
+                // how many packets ahead and behind current are we?
+                int ahead = (pec - ec) & JD_CMD_EVENT_COUNTER_MASK;
+                int behind = (ec - pec) & JD_CMD_EVENT_COUNTER_MASK;
+                // ahead == behind == 0 is the usual case, otherwise
+                // behind < 60 means this is an old event (or retransmission of something we already
+                // processed) ahead < 5 means we missed at most 5 events, so we ignore this one and
+                // rely on retransmission of the missed events, and then eventually the current
+                // event
+                if (ahead > 0 && (behind < 60 || ahead < 5)) {
+                    ev_code = JD_CLIENT_EV_REPEATED_EVENT_PACKET;
+                } else {
+                    // we got our event
+                    dev->_event_counter = pec;
+                }
+            }
+
             handle_register(serv, pkt);
+        }
     }
 
     if (serv)
-        jd_client_emit_event(JD_CLIENT_EV_SERVICE_PACKET, serv, pkt);
+        jd_client_emit_event(ev_code, serv, pkt);
     else
         jd_client_emit_event(JD_CLIENT_EV_NON_SERVICE_PACKET, dev, pkt);
     EVENT_LEAVE();
