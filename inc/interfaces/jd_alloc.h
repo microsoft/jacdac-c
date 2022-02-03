@@ -18,13 +18,9 @@ void jd_alloc_init(void);
 
 /**
  * Any dynamic allocations made by the jacdac-c library will use this function.
+ * It zeroes-out the memory and never returns NULL.
  **/
 void* jd_alloc(uint32_t size);
-
-/**
- * Allocate and zero-out the memory.
- **/
-void* jd_alloc0(uint32_t size);
 
 /**
  * Return the amount of memory left to allocated.
