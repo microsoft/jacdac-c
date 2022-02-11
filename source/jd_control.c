@@ -11,15 +11,17 @@
 
 struct srv_state {
     SRV_COMMON;
+#if JD_CONFIG_CONTROL_FLOOD == 1
+    uint8_t flood_size;
+#endif
 #if JD_CONFIG_IDENTIFY == 1
-    uint32_t nextblink;
     uint8_t id_counter;
+    uint32_t nextblink;
 #endif
 #if JD_CONFIG_WATCHDOG == 1
     uint32_t watchdog;
 #endif
 #if JD_CONFIG_CONTROL_FLOOD == 1
-    uint8_t flood_size;
     uint32_t flood_counter;
     uint32_t flood_remaining;
 #endif
