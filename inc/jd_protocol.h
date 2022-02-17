@@ -13,5 +13,6 @@
 #include "interfaces/jd_hw.h"
 #include "interfaces/jd_alloc.h"
 #include "interfaces/jd_app.h"
+#include "interfaces/jd_lora.h"
 
 void jd_init(void);

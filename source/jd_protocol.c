@@ -19,4 +19,6 @@ void jd_init() {
     _jd_phys_start();
 
     jd_status(JD_STATUS_STARTUP);
+
+    jd_lora_init();
 }
