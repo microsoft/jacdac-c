@@ -102,6 +102,8 @@ void jdcon_init(void);
 // Not implemented.
 void oled_init(void);
 
+void lorawan_init(void);
+
 #define JD_JOYSTICK_BUTTONS_INFER_12 0xfff
 // pinX/pinY are the wipers for the two potentiometers on the joystick
 // pinL is the lower reference voltage and pinH is the higher reference voltage (usually you only

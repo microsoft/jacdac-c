@@ -285,8 +285,6 @@ void jd_services_tick() {
 }
 
 static void jd_process_everything_core(void) {
-    jd_lora_process();
-
     jd_frame_t *fr = jd_rx_get_frame();
     if (fr)
         jd_services_process_frame(fr);
