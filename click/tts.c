@@ -86,7 +86,7 @@ static char* Ltrim(char* str) {
 void ByteToStr(uint16_t byte, char* store) {
     char tmp[16];
     memset(tmp, 0, 16);
-    itoa(byte,tmp);
+    itoa10(byte,tmp);
 
     // https://download.mikroe.com/documents/compilers/mikroc/pic/help/conversions_library.htm#bytetostr
     // The output string has fixed width of 4 characters including null character at the end (string termination).
