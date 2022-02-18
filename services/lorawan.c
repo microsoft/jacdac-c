@@ -9,10 +9,16 @@
 
 struct srv_state {
     SRV_COMMON;
+    uint32_t next_tx;
 };
+
+#define DUTY_MS 3000
 
 void lorawan_process(srv_t *state) {
     jd_lora_process();
+    if (jd_should_sample(&state->next_tx, DUTY_MS * 1000)) {
+        jd_lora_send(&now, 4);
+    }
 }
 
 void lorawan_handle_packet(srv_t *state, jd_packet_t *pkt) {
