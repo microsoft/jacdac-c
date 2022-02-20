@@ -93,6 +93,7 @@ void jd_opipe_process() {
 
 static void do_flush(jd_opipe_desc_t *str) {
     JD_ASSERT(str->curr_retry == 0);
+    jd_compute_crc(&str->frame);
     str->curr_retry = 1;
     str->retry_time = now;
 }
