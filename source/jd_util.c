@@ -117,7 +117,7 @@ void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service
     if (service_cmd >> 16)
         jd_panic();
     uint8_t *dst = frame->data + frame->size;
-    unsigned szLeft = (uint8_t *)frame + sizeof(*frame) - dst;
+    unsigned szLeft = frame->data + JD_SERIAL_PAYLOAD_SIZE - dst;
     if (service_size + 4 > szLeft)
         return NULL;
     *dst++ = service_size;
