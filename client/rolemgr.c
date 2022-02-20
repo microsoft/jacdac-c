@@ -17,6 +17,8 @@ struct srv_state {
     jd_role_t *roles;
     uint32_t next_autobind;
     uint32_t changed_timeout;
+    jd_opipe_desc_t list_pipe;
+    jd_role_t *list_ptr;
 };
 
 REG_DEFINITION(                                      //
@@ -88,9 +90,38 @@ static jd_role_t *rolemgr_lookup(srv_t *state, const char *name, int name_len) {
 }
 
 void rolemgr_process(srv_t *state) {
+    while (state->list_ptr) {
+        jd_role_t *r = state->list_ptr;
+
+        unsigned sz = sizeof(jd_role_manager_roles_t) + strlen(r->name);
+        int err = jd_opipe_check_space(&state->list_pipe, sz);
+        if (err == JD_PIPE_TRY_AGAIN)
+            break;
+        if (err != 0) {
+            state->list_ptr = NULL;
+            jd_opipe_close(&state->list_pipe);
+            break;
+        }
+
+        jd_role_manager_roles_t *tmp = jd_alloc(sz);
+        tmp->device_id = r->service ? jd_service_parent(r->service)->device_identifier : 0;
+        tmp->service_idx = r->service ? r->service->service_index : 0;
+        tmp->service_class = r->service_class;
+        memcpy(tmp->role, r->name, strlen(r->name));
+        err = jd_opipe_write(&state->list_pipe, tmp, sz);
+        JD_ASSERT(err == 0);
+        jd_free(tmp);
+
+        state->list_ptr = r->_next;
+
+        if (state->list_ptr == NULL)
+            jd_opipe_close(&state->list_pipe);
+    }
+
     if (jd_should_sample(&state->next_autobind, AUTOBIND_MS * 1000)) {
         rolemgr_autobind(state);
     }
+
     if (jd_should_sample(&state->changed_timeout, 50 * 1000)) {
         if (state->changed) {
             state->changed = 0;
@@ -129,6 +160,9 @@ void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     case JD_ROLE_MANAGER_CMD_LIST_ROLES: // TODO
+        if (jd_opipe_open(&state->list_pipe, pkt) == 0)
+            state->list_ptr = state->roles;
+        break;
 
     default:
         rolemgr_update_allocated(state);
@@ -156,6 +190,13 @@ void rolemgr_device_destroyed(jd_device_t *dev) {
     }
 }
 
+static void stop_list(srv_t *state) {
+    if (state->list_ptr) {
+        state->list_ptr = NULL;
+        jd_opipe_close(&state->list_pipe);
+    }
+}
+
 jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
     srv_t *state = _state;
     if (!state)
@@ -164,6 +205,8 @@ jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
         jd_panic();
     if (rolemgr_lookup(state, name, strlen(name)))
         jd_panic();
+
+    stop_list(state);
 
     jd_role_t *r = jd_alloc(sizeof(jd_role_t));
 
@@ -192,6 +235,7 @@ void jd_role_free(jd_role_t *role) {
     srv_t *state = _state;
     if (state->locked)
         jd_panic();
+    stop_list(state);
     if (state->roles == role) {
         state->roles = NULL;
     } else {

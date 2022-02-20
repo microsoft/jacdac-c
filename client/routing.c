@@ -286,6 +286,7 @@ void jd_client_process(void) {
     }
     jd_client_emit_event(JD_CLIENT_EV_PROCESS, NULL, NULL);
     EVENT_LEAVE();
+    jd_opipe_process();
 }
 
 static void handle_register(jd_device_service_t *serv, jd_packet_t *pkt) {
@@ -344,6 +345,8 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
     if (pkt->flags & JD_FRAME_FLAG_COMMAND) {
 
     } else {
+        jd_opipe_handle_packet(pkt);
+
         // report
         if (pkt->service_index == 0 && pkt->service_command == 0) {
             if (!dev)

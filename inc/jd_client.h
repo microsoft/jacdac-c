@@ -4,6 +4,7 @@
 #pragma once
 
 #include "jd_protocol.h"
+#include "jd_pipes.h"
 
 // An announce packet was first spotted and a device was created (jd_device_t, jd_packet_t)
 #define JD_CLIENT_EV_DEVICE_CREATED 0x0001

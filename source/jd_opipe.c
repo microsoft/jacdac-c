@@ -56,7 +56,7 @@ int jd_opipe_open(jd_opipe_desc_t *str, jd_packet_t *pkt) {
 }
 
 void jd_opipe_handle_packet(jd_packet_t *pkt) {
-    if (pkt->service_index != JD_SERVICE_INDEX_CRC_ACK)
+    if (pkt->service_index != JD_SERVICE_INDEX_CRC_ACK || (pkt->flags & JD_FRAME_FLAG_COMMAND))
         return;
     LOCK();
     for (jd_opipe_desc_t *str = streams; str; str = str->next) {
