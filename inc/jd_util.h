@@ -34,3 +34,9 @@ static inline bool in_future(uint32_t moment) {
 }
 // sizeof(dst) == len*2 + 1
 void jd_to_hex(char *dst, const void *src, size_t len);
+
+#define JD_ASSERT(cond)                                                                            \
+    do {                                                                                           \
+        if (!(cond))                                                                               \
+            jd_panic();                                                                            \
+    } while (0)

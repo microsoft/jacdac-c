@@ -90,8 +90,6 @@ void jd_client_handle_packet(jd_packet_t *pkt);
 void jd_client_log_event(int event_id, void *arg0, void *arg1);
 void jd_client_emit_event(int event_id, void *arg0, void *arg1);
 
-int jd_send_pkt(jd_packet_t *pkt);
-
 // jd_device_t methods
 jd_device_t *jd_device_lookup(uint64_t device_identifier);
 void jd_device_short_id(char short_id[5], uint64_t long_id);

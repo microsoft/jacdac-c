@@ -28,3 +28,10 @@ static inline void jd_send_event(srv_t *srv, uint32_t eventid) {
     jd_send_event_ext(srv, eventid, 0, 0);
 }
 void jd_process_event_queue(void);
+
+// this is needed for pipes and clients, not regular servers
+int jd_send_frame(jd_frame_t *f);
+
+// wrapper around jd_send_frame()
+int jd_send_pkt(jd_packet_t *pkt);
+

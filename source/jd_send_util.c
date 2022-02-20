@@ -23,3 +23,10 @@ int jd_send_not_implemented(jd_packet_t *pkt) {
                                                           .packet_crc = pkt->crc};
     return jd_send(pkt->service_index, JD_CMD_COMMAND_NOT_IMPLEMENTED, &payload, sizeof(payload));
 }
+
+int jd_send_pkt(jd_packet_t *pkt) {
+    pkt->_size = pkt->service_size + 4;
+    jd_frame_t *f = (jd_frame_t *)pkt;
+    jd_compute_crc(f);
+    return jd_send_frame(f);
+}
