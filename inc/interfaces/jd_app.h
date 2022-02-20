@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_APP_H
+#define
 
 #include "jd_config.h"
 
@@ -18,3 +19,5 @@ void app_init_services(void);
  * hardware changes at runtime (e.g. XAC module).
  */
 void app_process(void);
+
+#endif

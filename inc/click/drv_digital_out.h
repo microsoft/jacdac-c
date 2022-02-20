@@ -1,4 +1,6 @@
-#pragma once
+#ifndef DRV_DIGITAL_OUT_H
+#define DRV_DIGITAL_OUT_H
+
 #include "drv_name.h"
 
 typedef struct {
@@ -26,3 +28,5 @@ static inline void digital_out_toggle(digital_out_t *out) {
 static inline void digital_out_write(digital_out_t *out, uint8_t value) {
     pin_set(out->pin, value);
 }
+
+#endif

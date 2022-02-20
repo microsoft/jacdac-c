@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_UTIL_H
+#define JD_UTIL_H
 
 #include "jd_physical.h"
 
@@ -32,3 +33,5 @@ static inline bool in_future(uint32_t moment) {
     extern uint32_t now;
     return ((moment - now) >> 29) == 0;
 }
+
+#endif

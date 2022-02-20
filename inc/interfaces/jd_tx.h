@@ -4,8 +4,8 @@
 /*
  * A transmission queue for JD packets.
  */
-
-#pragma once
+#ifndef JD_TX_H
+#define JD_TX_H
 
 #include "jd_service_framework.h"
 
@@ -38,4 +38,6 @@ void jd_process_event_queue(void);
 #if JD_RAW_FRAME
 extern uint8_t rawFrameSending;
 extern jd_frame_t *rawFrame;
+#endif
+
 #endif
