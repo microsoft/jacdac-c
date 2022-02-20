@@ -59,6 +59,9 @@ static void rolemgr_set(srv_t *state, jd_role_t *role, jd_device_service_t *serv
 }
 
 static void rolemgr_autobind(srv_t *state) {
+    if (!state->auto_bind_enabled)
+        return;
+
     // LOG("autobind");
     state->locked = 1;
     for (jd_role_t *r = state->roles; r; r = r->_next) {
@@ -176,6 +179,7 @@ SRV_DEF(rolemgr, JD_SERVICE_CLASS_ROLE_MANAGER);
 void jd_role_manager_init(void) {
     SRV_ALLOC(rolemgr);
     _state = state;
+    state->auto_bind_enabled = 1;
     // wait with first autobind
     state->next_autobind = now + AUTOBIND_MS * 1000;
 }
