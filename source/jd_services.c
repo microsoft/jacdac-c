@@ -3,6 +3,7 @@
 
 #include "jd_protocol.h"
 #include "jd_client.h"
+#include "jd_pipes.h"
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
@@ -230,6 +231,11 @@ __attribute__((weak)) void jd_app_handle_command(jd_packet_t *pkt) {}
 void jd_services_handle_packet(jd_packet_t *pkt) {
     jd_app_handle_packet(pkt);
 
+#if JD_PIPES
+    jd_opipe_handle_packet(pkt);
+    jd_ipipe_handle_packet(pkt);
+#endif
+
 #if JD_CLIENT
     jd_client_handle_packet(pkt);
 #endif
@@ -288,6 +294,10 @@ void jd_services_tick() {
 
 #if JD_CLIENT
     jd_client_process();
+#endif
+
+#if JD_PIPES
+    jd_opipe_process();
 #endif
 
     jd_tx_flush();

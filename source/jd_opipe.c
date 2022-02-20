@@ -13,17 +13,17 @@
 #define ST_CLOSED_WAITING 0x82
 #define ST_DROPPED 0x08
 
-static jd_opipe_desc_t *streams;
+static jd_opipe_desc_t *opipes;
 
 int _jd_tx_push_frame(jd_frame_t *f, int wait);
 
 static void jd_opipe_unlink(jd_opipe_desc_t *str) {
     if (str->status == ST_FREE)
         return;
-    if (streams == str) {
-        streams = str->next;
+    if (opipes == str) {
+        opipes = str->next;
     } else {
-        for (jd_opipe_desc_t *ss = streams; ss; ss = ss->next)
+        for (jd_opipe_desc_t *ss = opipes; ss; ss = ss->next)
             if (ss->next == str) {
                 ss->next = str->next;
                 break;
@@ -48,8 +48,8 @@ int jd_opipe_open(jd_opipe_desc_t *str, jd_packet_t *pkt) {
     jd_opipe_unlink(str);
     str->status = ST_OPEN;
     str->curr_retry = 0;
-    str->next = streams;
-    streams = str;
+    str->next = opipes;
+    opipes = str;
     UNLOCK();
 
     return JD_PIPE_OK;
@@ -59,7 +59,7 @@ void jd_opipe_handle_packet(jd_packet_t *pkt) {
     if (pkt->service_index != JD_SERVICE_INDEX_CRC_ACK || (pkt->flags & JD_FRAME_FLAG_COMMAND))
         return;
     LOCK();
-    for (jd_opipe_desc_t *str = streams; str; str = str->next) {
+    for (jd_opipe_desc_t *str = opipes; str; str = str->next) {
         if (str->curr_retry && pkt->service_command == str->frame.crc &&
             str->frame.device_identifier == pkt->device_identifier) {
             str->curr_retry = 0;
@@ -73,7 +73,7 @@ void jd_opipe_handle_packet(jd_packet_t *pkt) {
 
 void jd_opipe_process() {
     LOCK();
-    for (jd_opipe_desc_t *str = streams; str; str = str->next) {
+    for (jd_opipe_desc_t *str = opipes; str; str = str->next) {
         if (str->curr_retry && in_past(str->retry_time)) {
             if (str->curr_retry < JD_OPIPE_MAX_RETRIES + 1) {
                 if (jd_send_frame(&str->frame) == 0) {

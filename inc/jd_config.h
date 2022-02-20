@@ -92,4 +92,9 @@
 #define JD_CLIENT 0
 #endif
 
+// pipes by default on in client, off in server
+#ifndef JD_PIPES
+#define JD_PIPES JD_CLIENT
+#endif
+
 #endif

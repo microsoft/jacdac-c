@@ -1,47 +1,43 @@
-#if 0
-
-#include "jdesp.h"
+#include "jd_protocol.h"
+#include "jd_pipes.h"
 
 // TODO timeouts?
 
-static portMUX_TYPE streamMux = portMUX_INITIALIZER_UNLOCKED;
+// we don't lock and instead assume we're not running in an interrupt handler
+#define LOCK()                                                                                     \
+    if (target_in_irq())                                                                           \
+    jd_panic()
+#define UNLOCK() ((void)0)
 
-#define LOCK() portENTER_CRITICAL(&streamMux)
-#define UNLOCK() portEXIT_CRITICAL(&streamMux)
+static jd_ipipe_desc_t *ipipes;
 
-static ipipe_desc_t *streams;
-
-static void ipipe_free(ipipe_desc_t *str) {
-    if (!str->sem)
-        return;
-    if (streams == str) {
-        streams = str->next;
+static void jd_ipipe_free(jd_ipipe_desc_t *str) {
+    if (ipipes == str) {
+        ipipes = str->next;
     } else {
-        for (ipipe_desc_t *ss = streams; ss; ss = ss->next)
+        for (jd_ipipe_desc_t *ss = ipipes; ss; ss = ss->next)
             if (ss->next == str) {
                 ss->next = str->next;
                 break;
             }
     }
-    vSemaphoreDelete(str->sem);
-    str->sem = NULL;
     str->counter = 0;
 }
 
 static bool is_free_port(int p) {
     if (!p)
         return false;
-    for (ipipe_desc_t *ss = streams; ss; ss = ss->next) {
+    for (jd_ipipe_desc_t *ss = ipipes; ss; ss = ss->next) {
         if ((ss->counter >> JD_PIPE_PORT_SHIFT) == p)
             return false;
     }
     return true;
 }
 
-int ipipe_open(ipipe_desc_t *str, ipipe_handler_t handler, ipipe_handler_t meta_handler) {
+int jd_ipipe_open(jd_ipipe_desc_t *str, jd_ipipe_handler_t handler,
+                  jd_ipipe_handler_t meta_handler) {
     LOCK();
-    ipipe_free(str);
-    str->sem = xSemaphoreCreateMutex();
+    jd_ipipe_free(str);
     str->handler = handler;
     str->meta_handler = meta_handler;
     for (;;) {
@@ -51,19 +47,20 @@ int ipipe_open(ipipe_desc_t *str, ipipe_handler_t handler, ipipe_handler_t meta_
             break;
         }
     }
-    str->next = streams;
-    streams = str;
+    str->next = ipipes;
+    ipipes = str;
     UNLOCK();
     return str->counter >> JD_PIPE_PORT_SHIFT;
 }
 
-void ipipe_handle_pkt(jd_packet_t *pkt) {
-    if (pkt->service_number != JD_SERVICE_NUMBER_STREAM)
+void jd_ipipe_handle_packet(jd_packet_t *pkt) {
+    if (pkt->service_index != JD_SERVICE_INDEX_STREAM || jd_is_report(pkt) ||
+        pkt->device_identifier != jd_device_id())
         return;
 
     uint16_t cmd = pkt->service_command;
     int port = cmd >> JD_PIPE_PORT_SHIFT;
-    for (ipipe_desc_t *s = streams; s; s = s->next) {
+    for (jd_ipipe_desc_t *s = ipipes; s; s = s->next) {
         if ((s->counter >> JD_PIPE_PORT_SHIFT) == port) {
             if ((s->counter & JD_PIPE_COUNTER_MASK) == (cmd & JD_PIPE_COUNTER_MASK)) {
                 s->counter = ((s->counter + 1) & JD_PIPE_COUNTER_MASK) |
@@ -75,7 +72,7 @@ void ipipe_handle_pkt(jd_packet_t *pkt) {
                 }
                 if (cmd & JD_PIPE_CLOSE_MASK) {
                     s->meta_handler(s, NULL); // indicate EOF
-                    ipipe_free(s);
+                    jd_ipipe_free(s);
                 }
             }
             break;
@@ -83,10 +80,6 @@ void ipipe_handle_pkt(jd_packet_t *pkt) {
     }
 }
 
-void ipipe_close(ipipe_desc_t *str) {
-    if (!str->sem)
-        return;
-    ipipe_free(str);
+void jd_ipipe_close(jd_ipipe_desc_t *str) {
+    jd_ipipe_free(str);
 }
-
-#endif

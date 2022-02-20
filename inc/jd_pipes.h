@@ -1,5 +1,9 @@
 #pragma once
 
+//
+// Output pipes (data flowing from this device)
+//
+
 #define JD_PIPE_OK 0
 #define JD_PIPE_TRY_AGAIN 1
 #define JD_PIPE_TIMEOUT -1
@@ -21,7 +25,8 @@ typedef struct jd_opipe_desc {
 int jd_opipe_open(jd_opipe_desc_t *str, jd_packet_t *pkt);
 
 // all these functions can return JD_PIPE_TRY_AGAIN
-// can be optionally called before jd_opipe_write*(); if this return JD_PIPE_OK, then write also will
+// can be optionally called before jd_opipe_write*(); if this return JD_PIPE_OK, then write also
+// will
 int jd_opipe_check_space(jd_opipe_desc_t *str, unsigned len);
 int jd_opipe_write(jd_opipe_desc_t *str, const void *data, unsigned len);
 int jd_opipe_write_meta(jd_opipe_desc_t *str, const void *data, unsigned len);
@@ -34,17 +39,18 @@ int jd_opipe_close(jd_opipe_desc_t *str);
 void jd_opipe_handle_packet(jd_packet_t *pkt);
 void jd_opipe_process(void);
 
-#if 0
-typedef struct ipipe_desc ipipe_desc_t;
-typedef void (*ipipe_handler_t)(ipipe_desc_t *istr, jd_packet_t *pkt);
-struct ipipe_desc {
-    ipipe_handler_t handler;
-    ipipe_handler_t meta_handler;
-    struct ipipe_desc *next;
-    SemaphoreHandle_t sem;
+//
+// Input pipes (data flowing to this device)
+//
+
+typedef struct jd_ipipe_desc jd_ipipe_desc_t;
+typedef void (*jd_ipipe_handler_t)(jd_ipipe_desc_t *istr, jd_packet_t *pkt);
+struct jd_ipipe_desc {
+    jd_ipipe_handler_t handler;
+    jd_ipipe_handler_t meta_handler;
+    struct jd_ipipe_desc *next;
     uint16_t counter;
 };
-int ipipe_open(ipipe_desc_t *str, ipipe_handler_t handler, ipipe_handler_t meta_handler);
-void ipipe_close(ipipe_desc_t *str);
-void ipipe_handle_pkt(jd_packet_t *pkt);
-#endif
+int jd_ipipe_open(jd_ipipe_desc_t *str, jd_ipipe_handler_t handler, jd_ipipe_handler_t meta_handler);
+void jd_ipipe_close(jd_ipipe_desc_t *str);
+void jd_ipipe_handle_packet(jd_packet_t *pkt);

@@ -286,7 +286,6 @@ void jd_client_process(void) {
     }
     jd_client_emit_event(JD_CLIENT_EV_PROCESS, NULL, NULL);
     EVENT_LEAVE();
-    jd_opipe_process();
 }
 
 static void handle_register(jd_device_service_t *serv, jd_packet_t *pkt) {
