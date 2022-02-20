@@ -30,6 +30,16 @@
     } while (0)
 #endif
 
+#if __WORDSIZE == 64
+#define JD_64 1
+#define JD_PTRSIZE 8
+#elif __WORDSIZE == 32
+#define JD_64 0
+#define JD_PTRSIZE 4
+#else
+#error "can't determine pointer size"
+#endif
+
 #ifndef JD_CONFIG_TEMPERATURE
 #define JD_CONFIG_TEMPERATURE 0
 #endif

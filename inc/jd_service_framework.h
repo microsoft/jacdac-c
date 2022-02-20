@@ -28,6 +28,7 @@
 #define _REG_OPT8 10
 #define _REG_OPT16 11
 #define _REG_OPT32 12
+#define _REG_PTR 13
 #define REG_I8(v) _REG_(_REG_I8, (v))
 #define REG_U8(v) _REG_(_REG_U8, (v))
 #define REG_I16(v) _REG_(_REG_I16, (v))
@@ -41,6 +42,11 @@
 #define REG_BYTE8(v) _REG_(_REG_BYTE8, (v))
 #define REG_BIT(v) _REG_(_REG_BIT, (v))
 #define REG_BYTES(v, n) _REG_(_REG_BYTES, (v)), n
+#if JD_64
+#define REG_PTR_PADDING() _REG_(_REG_PTR, JD_REG_PADDING)
+#else
+#define REG_PTR_PADDING() REG_U32(JD_REG_PADDING)
+#endif
 
 #define REG_DEFINITION(name, ...) static const uint16_t name[] = {__VA_ARGS__ JD_REG_END};
 
@@ -59,9 +65,9 @@ typedef struct _srv_vt srv_vt_t;
 
 #define SRV_COMMON                                                                                 \
     const srv_vt_t *vt;                                                                            \
-    uint8_t service_index;                                                                        \
+    uint8_t service_index;                                                                         \
     uint8_t srv_flags;
-#define REG_SRV_COMMON REG_BYTES(JD_REG_PADDING, 6)
+#define REG_SRV_COMMON REG_BYTES(JD_REG_PADDING, JD_PTRSIZE + 2)
 
 struct srv_state_common {
     SRV_COMMON;

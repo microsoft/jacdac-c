@@ -23,7 +23,7 @@ struct srv_state {
 
 #define REG_IS_SIGNED(r) ((r) <= 4 && !((r)&1))
 #define REG_IS_OPT(r) ((r) >= _REG_OPT8)
-static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1, 0, 1, 2, 4};
+static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1, 0, 1, 2, 4, JD_PTRSIZE};
 
 static int is_zero(const uint8_t *p, uint32_t sz) {
     while (sz--)
@@ -73,12 +73,12 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
         if (!regsz)
             jd_panic();
 
-        if (tp != _REG_BIT) {
+        if (tp != _REG_BIT && tp != _REG_BYTES) {
             if (bitoffset) {
                 bitoffset = 0;
                 offset++;
             }
-            int align = regsz < 4 ? regsz - 1 : 3;
+            int align = regsz < JD_PTRSIZE ? regsz - 1 : JD_PTRSIZE - 1;
             offset = (offset + align) & ~align;
         }
 
