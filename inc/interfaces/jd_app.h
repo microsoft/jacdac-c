@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 #ifndef JD_APP_H
-#define
+#define JD_APP_H
 
 #include "jd_config.h"
 
