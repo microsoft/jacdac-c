@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_CONTROL_H
+#define JD_CONTROL_H
 
 #include "jd_config.h"
 #include "jd_physical.h"
@@ -21,3 +22,5 @@ void jd_ctrl_init(void);
 void jd_ctrl_process(srv_t *_state);
 void jd_ctrl_handle_packet(srv_t *_state, jd_packet_t *pkt);
 void dump_pkt(jd_packet_t *pkt, const char *msg);
+
+#endif

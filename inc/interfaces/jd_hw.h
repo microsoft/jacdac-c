@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_HW_H
+#define JD_HW_H
 
 /*
  * Hardware abstraction layer.
@@ -96,5 +97,7 @@ void one_init(void);
 int one_reset(void);
 void one_write(uint8_t b);
 uint8_t one_read(void);
+
+#endif
 
 #endif
