@@ -5,7 +5,7 @@
 
 #include "jd_physical.h"
 
-void jd_panic(void);
+__attribute__((noreturn)) void jd_panic(void);
 uint64_t jd_device_id(void);
 
 uint32_t jd_random_around(uint32_t v);
