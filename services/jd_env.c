@@ -39,6 +39,8 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
     case JD_GET(JD_REG_MAX_READING):
         off = 3;
         break;
+#if 0
+    // this has been removed
     case JD_GET(JD_E_CO2_REG_CONDITIONING_PERIOD):
         if (state->api->conditioning_period) {
             tmp = state->api->conditioning_period();
@@ -47,6 +49,7 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
             jd_send_not_implemented(pkt);
             return 0;
         }
+#endif
     default:
         jd_send_not_implemented(pkt);
         return 0;
@@ -59,7 +62,7 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
         return 0;
     tmp = (&env->value)[off];
 
-send_it:
+// send_it:
     jd_send(pkt->service_index, pkt->service_command, &tmp, 4);
     return -(pkt->service_command & 0xfff);
 }

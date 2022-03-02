@@ -24,9 +24,9 @@ void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn);
 // Controller for RGB LED strips (LED pixel service)
 // Supported: WS2812B, APA102, SK9822.
 // Uses SPI pins.
-// In board.h you can define LED_PIXEL_LOCK_TYPE and/or LED_PIXEL_LOCK_NUM_PIXELS to disable writes
+// In board.h you can define LED_STRIP_LOCK_TYPE and/or LED_STRIP_LOCK_NUM_PIXELS to disable writes
 // the respective registers.
-void ledpixel_init(uint8_t default_ledpixel_type, uint32_t default_num_pixels,
+void ledstrip_init(uint8_t default_ledstrip_type, uint32_t default_num_pixels,
                    uint32_t default_max_power, uint8_t variant);
 
 // Sound (buzzer) service on given pin. Uses BUZZER_OFF config from board.h.
@@ -53,7 +53,7 @@ void servo_init(const servo_params_t *params);
 void button_init(uint8_t pin, bool active, uint8_t backlight_pin);
 
 // Temperature and humidity services; often from a single I2C sensor (defined in board.h)
-void thermometer_init(const env_sensor_api_t *api);
+void temperature_init(const env_sensor_api_t *api);
 void humidity_init(const env_sensor_api_t *api);
 void barometer_init(const env_sensor_api_t *api);
 
@@ -78,10 +78,12 @@ void motor_init(uint8_t pin1, uint8_t pin2, uint8_t pin_nSLEEP);
 // Shows "animations" on a single LED, or a strip of parallel-connected LEDs.
 void pwm_light_init(uint8_t pin);
 
+#if 0
 // A touch-sensing service with multiple inputs. pins is a '-1'-terminated array of ADC-enabled
 // input pins. Each pin should be connected to a separate capacitive touch electrode, and also
 // pulled down with a 2M resistor. This is very preliminary.
 void multitouch_init(const uint8_t *pins);
+#endif
 
 // A single-pin touch control; similar to the multi-touch one above.
 // Also preliminary.
@@ -104,14 +106,14 @@ void oled_init(void);
 
 void lorawan_init(void);
 
-#define JD_JOYSTICK_BUTTONS_INFER_12 0xfff
-// pinX/pinY are the wipers for the two potentiometers on the joystick
+#define JD_GAMEPAD_BUTTONS_INFER_12 0xfff
+// pinX/pinY are the wipers for the two potentiometers on the gamepad
 // pinL is the lower reference voltage and pinH is the higher reference voltage (usually you only
-// want one) if the joystick is digital, set pinX to NO_PIN (other pin* don't matter) for every bit
+// want one) if the gamepad is digital, set pinX to NO_PIN (other pin* don't matter) for every bit
 // (1<<X) set in buttons_available, the corresponding pinBtns[X] and ledPins[X] must be set properly
 // (possibly to NO_PIN)
 typedef struct {
-    // sync these with REG_DEFINITION() in joystick.c !
+    // sync these with REG_DEFINITION() in gamepad.c !
     uint32_t buttons_available;
     uint8_t variant;
     // these don't need to be synced
@@ -122,11 +124,11 @@ typedef struct {
     uint8_t pinY;
     uint8_t pinBtns[16];
     uint8_t pinLeds[16];
-} joystick_params_t;
+} gamepad_params_t;
 
-// Initialises a joystick service, in particular an analog version.
-// variant is set according to the service specification. See joystick.h
-void joystick_init(const joystick_params_t *params);
+// Initialises a gamepad service, in particular an analog version.
+// variant is set according to the service specification. See gamepad.h
+void gamepad_init(const gamepad_params_t *params);
 
 // all mult_* values default to 0xff
 typedef struct {
@@ -208,7 +210,7 @@ typedef struct {
     void (*init)(void);
     void (*write_amplitude)(uint8_t amplitude, uint32_t duration_ms);
 } vibration_motor_api_t;
-void vibration_service_init(const vibration_motor_api_t *api);
+void vibration_motor_init(const vibration_motor_api_t *api);
 extern const vibration_motor_api_t aw86224fcr;
 
 void uvindex_init(const env_sensor_api_t *api);
