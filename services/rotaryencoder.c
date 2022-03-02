@@ -9,6 +9,7 @@ struct srv_state {
     SENSOR_COMMON;
     uint8_t state;
     uint8_t pin0, pin1;
+    uint8_t pos_shift;
     uint16_t clicks_per_turn;
     int32_t sample, position;
     uint32_t nextSample;
@@ -26,7 +27,7 @@ static void update(srv_t *state) {
     state->state = (s >> 2);
     if (posMap[s]) {
         state->position += posMap[s];
-        state->sample = state->position >> 2;
+        state->sample = state->position >> state->pos_shift;
     }
 }
 
@@ -37,6 +38,9 @@ static void maybe_init(srv_t *state) {
         pin_setup_input(state->pin0, PIN_PULL_UP);
         pin_setup_input(state->pin1, PIN_PULL_UP);
         update(state);
+        // make sure we start at 0
+        state->position = 0;
+        state->sample = 0;
     }
 }
 
@@ -51,7 +55,8 @@ void rotaryencoder_process(srv_t *state) {
 
 void rotaryencoder_handle_packet(srv_t *state, jd_packet_t *pkt) {
     if (pkt->service_command == JD_GET(JD_ROTARY_ENCODER_REG_CLICKS_PER_TURN))
-        jd_send(state->service_index, JD_GET(JD_ROTARY_ENCODER_REG_CLICKS_PER_TURN), &(state->clicks_per_turn), sizeof(uint16_t));
+        jd_send(state->service_index, JD_GET(JD_ROTARY_ENCODER_REG_CLICKS_PER_TURN),
+                &(state->clicks_per_turn), sizeof(uint16_t));
     else
         sensor_handle_packet_simple(state, pkt, &state->sample, sizeof(state->sample));
 }
@@ -59,9 +64,10 @@ void rotaryencoder_handle_packet(srv_t *state, jd_packet_t *pkt) {
 SRV_DEF(rotaryencoder, JD_SERVICE_CLASS_ROTARY_ENCODER);
 
 // specify pin0/1 so that clockwise rotations gives higher readings
-void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn) {
+void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn, uint32_t flags) {
     SRV_ALLOC(rotaryencoder);
     state->pin0 = pin0;
     state->pin1 = pin1;
     state->clicks_per_turn = clicks_per_turn;
+    state->pos_shift = flags & ROTARY_ENC_FLAG_DENSE ? 1 : 2;
 }
