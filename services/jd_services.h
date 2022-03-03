@@ -19,6 +19,7 @@ void gyroscope_init(const gyroscope_api_t *hw);
 void gyroscope_data_transform(int32_t sample[3]);
 
 #define ROTARY_ENC_FLAG_DENSE 0x01
+#define ROTARY_ENC_FLAG_INVERTED 0x02
 // Rotary encoder service; pin0/1 are connected to two pins of the encoder
 void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn, uint32_t flags);
 
