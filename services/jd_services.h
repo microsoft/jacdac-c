@@ -59,6 +59,8 @@ void servo_init(const servo_params_t *params);
 // backlight_pin is active low, and can be disabled with NO_PIN.
 void button_init(uint8_t pin, bool active, uint8_t backlight_pin);
 
+void switch_init(uint8_t pin, bool active, uint8_t variant);
+
 // Temperature and humidity services; often from a single I2C sensor (defined in board.h)
 void temperature_init(const env_sensor_api_t *api);
 void humidity_init(const env_sensor_api_t *api);
