@@ -31,6 +31,11 @@ void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn, ui
 void ledstrip_init(uint8_t default_ledstrip_type, uint32_t default_num_pixels,
                    uint32_t default_max_power, uint8_t variant);
 
+// This is similar, but for short strips, under 64 pixels.
+// The type and number of pixels are always fixed in this case.
+void leddisplay_init(uint8_t leddisplay_type, uint32_t num_pixels, uint32_t default_max_power,
+                     uint8_t variant);
+
 // Sound (buzzer) service on given pin. Uses BUZZER_OFF config from board.h.
 void buzzer_init(uint8_t pin);
 
@@ -226,6 +231,5 @@ typedef struct motion_cfg {
     uint32_t max_distance;
 } motion_cfg_t;
 void motion_init(const motion_cfg_t *cfg);
-
 
 #endif
