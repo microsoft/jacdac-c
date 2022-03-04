@@ -8,14 +8,14 @@
 struct srv_state {
     SENSOR_COMMON;
     uint8_t pressed;
-    uint8_t pin;
     uint8_t prev_pressed;
-    uint8_t active;
     uint8_t variant;
+    active_cb_t is_active;
+    uint32_t active_state;
 };
 
 static void update(srv_t *state) {
-    state->pressed = pin_get(state->pin) == state->active;
+    state->pressed = state->is_active(&state->active_state);
     if (state->pressed != state->prev_pressed) {
         state->prev_pressed = state->pressed;
         if (state->pressed) {
@@ -40,11 +40,9 @@ void switch_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 SRV_DEF(switch, JD_SERVICE_CLASS_SWITCH);
 
-void switch_init(uint8_t pin, bool active, uint8_t variant) {
+void switch_init(active_cb_t is_active, uint8_t variant) {
     SRV_ALLOC(switch);
-    state->pin = pin;
-    state->active = active;
     state->variant = variant;
-    pin_setup_input(state->pin, state->active == 0 ? PIN_PULL_UP : PIN_PULL_DOWN);
+    state->is_active = is_active;
     update(state);
 }
