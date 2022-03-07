@@ -88,6 +88,9 @@ void motor_init(uint8_t pin1, uint8_t pin2, uint8_t pin_nSLEEP);
 // Shows "animations" on a single LED, or a strip of parallel-connected LEDs.
 void pwm_light_init(uint8_t pin);
 
+// micro:bit-like display
+void dotmatrix_init(void);
+
 #if 0
 // A touch-sensing service with multiple inputs. pins is a '-1'-terminated array of ADC-enabled
 // input pins. Each pin should be connected to a separate capacitive touch electrode, and also
