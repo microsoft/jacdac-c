@@ -56,6 +56,10 @@
 #define JD_CONFIG_STATUS 1
 #endif
 
+#ifndef JD_CONFIG_IGNORE_STATUS
+#define JD_CONFIG_IGNORE_STATUS 0
+#endif
+
 #ifndef JD_CONFIG_IDENTIFY
 #if JD_CONFIG_STATUS == 1
 #define JD_CONFIG_IDENTIFY 0
@@ -66,6 +70,10 @@
 
 #ifndef JD_CONFIG_DEV_SPEC_URL
 #define JD_CONFIG_DEV_SPEC_URL 0
+#endif
+
+#ifndef JD_RAW_FRAME
+#define JD_RAW_FRAME 0
 #endif
 
 #define CONCAT_1(a, b) a##b
@@ -95,6 +103,10 @@
 // pipes by default on in client, off in server
 #ifndef JD_PIPES
 #define JD_PIPES JD_CLIENT
+#endif
+
+#ifndef JD_LORA
+#define JD_LORA 0
 #endif
 
 #endif

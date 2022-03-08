@@ -52,7 +52,8 @@ void button_process(srv_t *state) {
 }
 
 void button_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    sensor_handle_packet_simple(state, pkt, &state->pressed, sizeof(state->pressed));
+    uint16_t pressed = (state->pressed ? 0xffff : 0); 
+    sensor_handle_packet_simple(state, pkt, &pressed, sizeof(pressed));
 }
 
 SRV_DEF(button, JD_SERVICE_CLASS_BUTTON);

@@ -27,8 +27,27 @@ extern const env_sensor_api_t humidity_th02;
 extern const env_sensor_api_t temperature_shtc3;
 extern const env_sensor_api_t humidity_shtc3;
 
+extern const env_sensor_api_t temperature_sht30;
+extern const env_sensor_api_t humidity_sht30;
+
 extern const env_sensor_api_t temperature_ds18b20;
 
-// SG30 sensor on airquality4 click
+extern const env_sensor_api_t temperature_max31855;
+extern const env_sensor_api_t temperature_max6675;
+
+// SGP30 sensor on airquality4 click
 extern const env_sensor_api_t eco2_airquality4;
 extern const env_sensor_api_t tvoc_airquality4;
+
+extern const env_sensor_api_t illuminance_ltr390uv;
+extern const env_sensor_api_t uvindex_ltr390uv;
+
+extern const env_sensor_api_t pressure_cps122;
+extern const env_sensor_api_t temperature_cps122;
+
+extern const env_sensor_api_t temperature_mpl3115a2;
+extern const env_sensor_api_t pressure_mpl3115a2;
+
+extern const env_sensor_api_t ethanol_sgpc3;
+extern const env_sensor_api_t tvoc_sgpc3;
+

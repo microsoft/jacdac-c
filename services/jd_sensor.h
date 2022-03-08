@@ -25,8 +25,9 @@ typedef struct {
     SRV_COMMON;                                                                                    \
     uint8_t streaming_samples;                                                                     \
     uint8_t got_query : 1;                                                                         \
-    uint8_t inited : 1;                                                                            \
+    uint8_t jd_inited : 1;                                                                         \
     uint8_t got_reading : 1;                                                                       \
+    uint8_t reading_pending : 1;                                                                   \
     uint32_t streaming_interval;                                                                   \
     const sensor_api_t *api;                                                                       \
     uint32_t next_streaming
@@ -42,6 +43,7 @@ void sensor_process_simple(srv_t *state, const void *sample, uint32_t sample_siz
 void sensor_process(srv_t *state);
 void sensor_send_status(srv_t *state);
 void *sensor_get_reading(srv_t *state);
+bool sensor_maybe_init(srv_t *state);
 
 // sync layout changes with env_sensor_handle_packet()
 typedef struct {
@@ -56,9 +58,15 @@ void env_sensor_process(srv_t *state);
 
 #define SCALE_TEMP(x) (int)((x)*1024.0 + 0.5)
 #define SCALE_HUM(x) (int)((x)*1024.0 + 0.5)
+#define SCALE_PRESSURE(x) (int)((x)*1024.0 + 0.5)
+#define SCALE_TVOC(x) (int)((x)*1024.0 + 0.5)
+
+#define SCALE_LUX(x) (int)((x)*1024.0 + 0.5)
+#define SCALE_UVI(x) (int)((x)*16 * 1024.0 + 0.5)
 
 #define ERR_HUM(a, b) SCALE_HUM(a), SCALE_HUM(b)
 #define ERR_TEMP(a, b) SCALE_TEMP(a), SCALE_TEMP(b)
+#define ERR_PRESSURE(a, b) SCALE_PRESSURE(a), SCALE_PRESSURE(b)
 #define ERR_END -1, -1
 
 int32_t env_extrapolate_error(int32_t value, const int32_t *error_table);
@@ -87,6 +95,10 @@ typedef struct analog_config {
     uint8_t variant;
     int32_t offset;
     int32_t scale;
+    // all values in ms
+    uint32_t sampling_ms;        // how often to probe the sensor (default 9ms)
+    uint32_t sampling_delay;     // after enabling pinH/pinL how long to wait (default 0)
+    uint32_t streaming_interval; // defaults to 100ms
 } analog_config_t;
 
 #define ANALOG_SENSOR_STATE                                                                        \

@@ -253,9 +253,10 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
             s->vt->handle_pkt(s, pkt);
         }
     } else if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) {
+        uint32_t id = (uint32_t)pkt->device_identifier; // match lower 32-bits
         for (int i = 0; i < num_services; ++i) {
             srv_t *s = services[i];
-            if (pkt->device_identifier == s->vt->service_class) {
+            if (id == s->vt->service_class) {
                 pkt->service_index = i;
                 s->vt->handle_pkt(s, pkt);
             }

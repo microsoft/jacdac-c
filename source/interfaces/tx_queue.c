@@ -6,6 +6,11 @@
 static jd_frame_t *sendFrame;
 static uint8_t bufferPtr, isSending;
 
+#if JD_RAW_FRAME
+uint8_t rawFrameSending;
+jd_frame_t *rawFrame;
+#endif
+
 int jd_tx_is_idle() {
     return !isSending && sendFrame[bufferPtr].size == 0;
 }
@@ -32,12 +37,26 @@ int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsign
 
 // bridge between phys and queue imp, phys calls this to get the next frame.
 jd_frame_t *jd_tx_get_frame(void) {
+#if JD_RAW_FRAME
+    if (rawFrame) {
+        jd_frame_t *r = rawFrame;
+        rawFrame = NULL;
+        rawFrameSending = true;
+        return r;
+    }
+#endif
     isSending = true;
     return &sendFrame[bufferPtr ^ 1];
 }
 
 // bridge between phys and queue imp, marks as sent.
 void jd_tx_frame_sent(jd_frame_t *pkt) {
+#if JD_RAW_FRAME
+    if (rawFrameSending) {
+        rawFrameSending = false;
+        return;
+    }
+#endif
     isSending = false;
 }
 

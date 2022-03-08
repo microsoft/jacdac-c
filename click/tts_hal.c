@@ -95,11 +95,7 @@ void tts_hal_write( uint8_t *buffer,
 void tts_hal_read( uint8_t *buffer,
                    uint16_t count )
 {
-    uint8_t dummy = 0x0;
-    for (int i = 0; i < count; i++) {
-        sspi_tx(&dummy, 1);
-        sspi_rx(&buffer[i], 1);
-    }
+    sspi_rx(buffer, count);
 }
 
 /*************** END OF FUNCTIONS ***************************************************************************/

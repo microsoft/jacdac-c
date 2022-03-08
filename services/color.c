@@ -29,12 +29,12 @@ static void update(srv_t *state) {
 
 void color_process(srv_t *state) {
     // we'll only update once inited, but make sure we update immediately after init
-    if (!state->inited)
+    if (!state->jd_inited)
         state->nextSample = now;
 
     sensor_process_simple(state, &state->sample, sizeof(state->sample));
 
-    if (jd_should_sample(&state->nextSample, 100000) && state->inited)
+    if (jd_should_sample(&state->nextSample, 100000) && state->jd_inited)
         update(state);
 }
 

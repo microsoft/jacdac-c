@@ -30,3 +30,11 @@ int jd_send_pkt(jd_packet_t *pkt) {
     jd_compute_crc(f);
     return jd_send_frame(f);
 }
+
+int jd_block_register(jd_packet_t *pkt, uint16_t reg_code) {
+    if (pkt->service_command == JD_GET(reg_code) || pkt->service_command == JD_SET(reg_code)) {
+        jd_send_not_implemented(pkt);
+        return 1;
+    }
+    return 0;
+}
