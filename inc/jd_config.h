@@ -21,19 +21,19 @@
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         jd_debug_signal_error();                                                                   \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
     } while (0)
 #else
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
     } while (0)
 #endif
 
-#if __WORDSIZE == 64
+#if (__SIZEOF_POINTER__ == 8) || (__WORDSIZE == 64)
 #define JD_64 1
 #define JD_PTRSIZE 8
-#elif __WORDSIZE == 32
+#elif (__SIZEOF_POINTER__ == 4) || (__WORDSIZE == 32)
 #define JD_64 0
 #define JD_PTRSIZE 4
 #else
