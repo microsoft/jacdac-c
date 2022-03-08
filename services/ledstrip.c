@@ -501,7 +501,7 @@ void ledstrip_process(srv_t *state) {
 
     prog_process(state);
 
-    if (in_past(state->auto_refresh) && state->inited)
+    if (in_past(state->auto_refresh) && state->jd_inited)
         state->dirty = 1;
 
     if (!is_enabled(state))
@@ -529,8 +529,8 @@ static void sync_config(srv_t *state) {
         return;
     }
 
-    if (!state->inited) {
-        state->inited = true;
+    if (!state->jd_inited) {
+        state->jd_inited = true;
         px_init(state->ledstrip_type);
     }
 
