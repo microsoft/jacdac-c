@@ -55,6 +55,7 @@ struct srv_state {
     uint8_t pxbuffer[JD_SERIAL_PAYLOAD_SIZE];
     volatile uint8_t in_tx;
     volatile uint8_t dirty;
+    uint8_t needs_clear;
 };
 
 static srv_t *state_;
@@ -70,19 +71,21 @@ void leddisplay_process(srv_t *state) {
     if (in_past(state->auto_refresh))
         state->dirty = 1;
 
-    if (!is_enabled(state))
+    if (!is_enabled(state) && !state->needs_clear)
         return;
 
     if (state->dirty && !state->in_tx) {
         state->dirty = 0;
         state->auto_refresh = now + (64 << 10);
-        if (is_empty((uint32_t *)state->pxbuffer, PX_WORDS(state->numpixels))) {
+        if (!state->needs_clear &&
+            is_empty((uint32_t *)state->pxbuffer, PX_WORDS(state->numpixels))) {
             jd_power_enable(0);
             return;
         } else {
             jd_power_enable(1);
         }
         state->in_tx = 1;
+        state->needs_clear = 0;
         pwr_enter_pll();
         limit_intensity(state);
         px_tx(state->pxbuffer, state->numpixels * 3, state->intensity, tx_done);
@@ -115,6 +118,9 @@ void leddisplay_handle_packet(srv_t *state, jd_packet_t *pkt) {
         }
         break;
     }
+
+    if (is_empty((uint32_t *)state->pxbuffer, PX_WORDS(state->numpixels)) || !is_enabled(state))
+        state->needs_clear = 1;
 }
 
 SRV_DEF(leddisplay, JD_SERVICE_CLASS_LED_DISPLAY);
