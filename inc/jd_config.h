@@ -70,7 +70,7 @@
 #define CONCAT_0(a, b) CONCAT_1(a, b)
 
 #ifndef STATIC_ASSERT
-#define STATIC_ASSERT(e) enum { CONCAT_0(_static_assert_, CONCAT_0(__LINE__,__FILE__)) = 1 / ((e) ? 1 : 0) };
+#define STATIC_ASSERT(e) enum { CONCAT_0(_static_assert_, CONCAT_0(__func__, __LINE__)) = 1 / ((e) ? 1 : 0) };
 #endif
 
 #ifndef JD_EVENT_QUEUE_SIZE
