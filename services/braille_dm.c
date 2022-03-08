@@ -39,7 +39,7 @@ struct srv_state {
 REG_DEFINITION(                                   //
     braille_dm_regs,                                   //
     REG_SRV_COMMON,                         //
-    REG_U32(JD_REG_PADDING),                         //
+    REG_PTR_PADDING(),                         //
     REG_U16(JD_DOT_MATRIX_REG_ROWS),                         //
     REG_U16(JD_DOT_MATRIX_REG_COLUMNS),                         //
     REG_U8(JD_DOT_MATRIX_REG_VARIANT),                //

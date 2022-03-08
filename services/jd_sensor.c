@@ -8,7 +8,6 @@ REG_DEFINITION(                         //
     REG_SRV_COMMON,                     //
     REG_U8(JD_REG_STREAMING_SAMPLES),   //
     REG_U32(JD_REG_STREAMING_INTERVAL), //
-    REG_U32(JD_REG_PADDING),            // next_streaming not accessible
 );
 
 struct srv_state {

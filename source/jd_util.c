@@ -117,7 +117,7 @@ void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service
     if (service_cmd >> 16)
         jd_panic();
     uint8_t *dst = frame->data + frame->size;
-    unsigned szLeft = (uint8_t *)frame + sizeof(*frame) - dst;
+    unsigned szLeft = frame->data + JD_SERIAL_PAYLOAD_SIZE - dst;
     if (service_size + 4 > szLeft)
         return NULL;
     *dst++ = service_size;
@@ -127,7 +127,6 @@ void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service
     frame->size += ALIGN(service_size + 4);
     return dst;
 }
-
 
 bool jd_should_sample(uint32_t *sample, uint32_t period) {
     if (in_future(*sample))
@@ -149,4 +148,14 @@ bool jd_should_sample_delay(uint32_t *sample, uint32_t period) {
     *sample = now + period;
 
     return true;
+}
+
+void jd_to_hex(char *dst, const void *src, size_t len) {
+    const char *hex = "0123456789abcdef";
+    const uint8_t *p = src;
+    for (size_t i = 0; i < len; ++i) {
+        dst[i * 2] = hex[p[i] >> 4];
+        dst[i * 2 + 1] = hex[p[i] & 0xf];
+    }
+    dst[len * 2 + 1] = 0;
 }
