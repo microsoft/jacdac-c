@@ -18,7 +18,7 @@ struct srv_state {
 // this really should return jd_system_status_code_t but that structure is also 32 bits and starts
 // with the status code enum, so for simplicity we just use uint32_t
 static uint32_t get_status_code(srv_t *state) {
-    if (!state->inited)
+    if (!state->jd_inited)
         return JD_STATUS_CODES_SLEEPING;
     if (!state->got_reading)
         return JD_STATUS_CODES_INITIALIZING;
@@ -49,7 +49,7 @@ static int respond_ranges(srv_t *state) {
 int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_GET(JD_REG_INTENSITY):
-        jd_respond_u8(pkt, state->inited ? 1 : 0);
+        jd_respond_u8(pkt, state->jd_inited ? 1 : 0);
         return -JD_REG_INTENSITY;
     case JD_GET(JD_REG_STATUS_CODE):
         jd_respond_u32(pkt, get_status_code(state));
@@ -74,9 +74,9 @@ int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
             state->got_query = 0;
             state->streaming_samples = 0;
             // if sensor supports sleep and was already initialized, put it to sleep
-            if (state->api && state->api->sleep && state->inited) {
+            if (state->api && state->api->sleep && state->jd_inited) {
                 state->got_reading = 0;
-                state->inited = 0;
+                state->jd_inited = 0;
                 state->api->sleep();
                 sensor_send_status(state);
             }
@@ -107,7 +107,7 @@ int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
 void *sensor_get_reading(srv_t *state) {
     if (!state->api)
         jd_panic();
-    if (!state->inited)
+    if (!state->jd_inited)
         return NULL;
     void *r = state->api->get_reading();
     if (r && !state->got_reading) {
@@ -126,10 +126,10 @@ const sensor_range_t *sensor_lookup_range(const sensor_range_t *ranges, int32_t 
     return ranges - 1; // return maximum possible one
 }
 
-static void maybe_init(srv_t *state) {
-    if (!state->inited) {
+bool sensor_maybe_init(srv_t *state) {
+    if (state->got_query && !state->jd_inited) {
         state->got_reading = 0;
-        state->inited = 1;
+        state->jd_inited = 1;
         if (state->api && state->api->init) {
             sensor_send_status(state);
             state->api->init();
@@ -137,14 +137,14 @@ static void maybe_init(srv_t *state) {
         if (!state->api || state->api->get_reading())
             state->got_reading = 1;
         sensor_send_status(state);
+        return true;
     }
+    return false;
 }
 
 void sensor_process(srv_t *state) {
-    if (!state->got_query)
-        return;
-    maybe_init(state);
-    if (state->api && state->api->process)
+    sensor_maybe_init(state);
+    if (state->jd_inited && state->api && state->api->process)
         state->api->process();
 }
 

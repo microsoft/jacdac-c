@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_PROTOCOL_H
+#define JD_PROTOCOL_H
 
 #include "jd_control.h"
 #include "jd_physical.h"
@@ -15,3 +16,5 @@
 #include "interfaces/jd_app.h"
 
 void jd_init(void);
+
+#endif

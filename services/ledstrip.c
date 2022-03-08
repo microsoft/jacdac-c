@@ -4,13 +4,13 @@
 #include "jd_services.h"
 #include "interfaces/jd_pixel.h"
 #include "interfaces/jd_hw_pwr.h"
-#include "jacdac/dist/c/ledpixel.h"
+#include "jacdac/dist/c/ledstrip.h"
 #include "tinyhw.h"
 
-STATIC_ASSERT(LIGHT_TYPE_APA102 == JD_LED_PIXEL_LIGHT_TYPE_APA102);
-STATIC_ASSERT(LIGHT_TYPE_APA_MASK == JD_LED_PIXEL_LIGHT_TYPE_APA102);
-STATIC_ASSERT(LIGHT_TYPE_WS2812B_GRB == JD_LED_PIXEL_LIGHT_TYPE_WS2812B_GRB);
-STATIC_ASSERT(LIGHT_TYPE_SK9822 == JD_LED_PIXEL_LIGHT_TYPE_SK9822);
+STATIC_ASSERT(LIGHT_TYPE_APA102 == JD_LED_STRIP_LIGHT_TYPE_APA102);
+STATIC_ASSERT(LIGHT_TYPE_APA_MASK == JD_LED_STRIP_LIGHT_TYPE_APA102);
+STATIC_ASSERT(LIGHT_TYPE_WS2812B_GRB == JD_LED_STRIP_LIGHT_TYPE_WS2812B_GRB);
+STATIC_ASSERT(LIGHT_TYPE_SK9822 == JD_LED_STRIP_LIGHT_TYPE_SK9822);
 
 #define DEFAULT_INTENSITY 15
 
@@ -72,16 +72,16 @@ typedef union {
 } RGB;
 
 REG_DEFINITION(                                 //
-    ledpixel_regs,                              //
+    ledstrip_regs,                              //
     REG_SRV_COMMON,                             //
-    REG_U8(JD_LED_PIXEL_REG_BRIGHTNESS),        //
-    REG_U8(JD_LED_PIXEL_REG_ACTUAL_BRIGHTNESS), //
-    REG_U8(JD_LED_PIXEL_REG_LIGHT_TYPE),        //
-    REG_U8(JD_LED_PIXEL_REG_VARIANT),           //
-    REG_U16(JD_LED_PIXEL_REG_NUM_PIXELS),       //
-    REG_U16(JD_LED_PIXEL_REG_MAX_POWER),        //
-    REG_U16(JD_LED_PIXEL_REG_MAX_PIXELS),       //
-    REG_U16(JD_LED_PIXEL_REG_NUM_REPEATS),      //
+    REG_U8(JD_LED_STRIP_REG_BRIGHTNESS),        //
+    REG_U8(JD_LED_STRIP_REG_ACTUAL_BRIGHTNESS), //
+    REG_U8(JD_LED_STRIP_REG_LIGHT_TYPE),        //
+    REG_U8(JD_LED_STRIP_REG_VARIANT),           //
+    REG_U16(JD_LED_STRIP_REG_NUM_PIXELS),       //
+    REG_U16(JD_LED_STRIP_REG_MAX_POWER),        //
+    REG_U16(JD_LED_STRIP_REG_MAX_PIXELS),       //
+    REG_U16(JD_LED_STRIP_REG_NUM_REPEATS),      //
 )
 
 struct srv_state {
@@ -89,7 +89,7 @@ struct srv_state {
 
     uint8_t requested_intensity;
     uint8_t intensity;
-    uint8_t ledpixel_type;
+    uint8_t ledstrip_type;
     uint8_t variant;
     uint16_t numpixels;
     uint16_t maxpower;
@@ -168,18 +168,6 @@ static RGB hsv(uint8_t hue, uint8_t sat, uint8_t val) {
     return rgb(r, g, b);
 }
 
-static bool is_empty(const uint32_t *data, uint32_t size) {
-    for (unsigned i = 0; i < size; ++i) {
-        if (data[i])
-            return false;
-    }
-    return true;
-}
-
-static bool is_enabled(srv_t *state) {
-    return state->numpixels > 0 && state->requested_intensity > 0;
-}
-
 static void reset_range(srv_t *state) {
     state->range_ptr = state->range_start;
 }
@@ -238,61 +226,8 @@ static bool set_next(srv_t *state, RGB c) {
     return true;
 }
 
-#define SCALE0(c, i) ((((c)&0xff) * (1 + (i & 0xff))) >> 8)
-#define SCALE(c, i)                                                                                \
-    (SCALE0((c) >> 0, i) << 0) | (SCALE0((c) >> 8, i) << 8) | (SCALE0((c) >> 16, i) << 16)
 
-static void tx_done(void) {
-    pwr_leave_pll();
-    state_->in_tx = 0;
-}
-
-static void limit_intensity(srv_t *state) {
-    uint8_t *d = (uint8_t *)state->pxbuffer;
-    unsigned n = state->numpixels * 3;
-    int prev_intensity = state->intensity;
-    int intensity = state->intensity;
-
-    intensity += 1 + (intensity >> 5);
-    if (intensity > state->requested_intensity)
-        intensity = state->requested_intensity;
-
-    int current_full = 0;
-    int current = 0;
-    int current_prev = 0;
-    while (n--) {
-        uint8_t v = *d++;
-        current += SCALE0(v, intensity);
-        current_prev += SCALE0(v, prev_intensity);
-        current_full += v;
-    }
-
-    // 46uA per step of LED
-    current *= 46;
-    current_prev *= 46;
-    current_full *= 46;
-
-    // 14mA is the chip at 48MHz, 930uA per LED is static
-    int base_current = 14000 + 930 * state->numpixels;
-    int current_limit = state->maxpower * 1000 - base_current;
-
-    if (current <= current_limit) {
-        state->intensity = intensity;
-        // LOG("curr: %dmA; not limiting %d", (base_current + current) / 1000, state->intensity);
-        return;
-    }
-
-    if (current_prev <= current_limit) {
-        return; // no change needed
-    }
-
-    int inten = current_limit / (current_full >> 8) - 1;
-    if (inten < 0)
-        inten = 0;
-    LOG("limiting %d -> %d; %dmA", state->intensity, inten,
-        (base_current + (current_full * inten >> 8)) / 1000);
-    state->intensity = inten;
-}
+#include "led_internal.h"
 
 static RGB prog_fetch_color(srv_t *state) {
     uint32_t ptr = state->prog_ptr;
@@ -558,10 +493,10 @@ static void alloc(srv_t *state) {
     state->pxbuffer = jd_alloc(PX_WORDS(state->maxpixels));
 }
 
-void ledpixel_process(srv_t *state) {
+void ledstrip_process(srv_t *state) {
     // it's important alloc() is called after all services have initalized (and allocated)
     // as it consumes all remaining RAM
-    // the ledpixel_process() function is always called a few times before any packet is handled
+    // the ledstrip_process() function is always called a few times before any packet is handled
     alloc(state);
 
     prog_process(state);
@@ -596,7 +531,7 @@ static void sync_config(srv_t *state) {
 
     if (!state->inited) {
         state->inited = true;
-        px_init(state->ledpixel_type);
+        px_init(state->ledstrip_type);
     }
 
     jd_power_enable(1);
@@ -611,26 +546,26 @@ static void handle_run_cmd(srv_t *state, jd_packet_t *pkt) {
     sync_config(state);
 }
 
-void ledpixel_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void ledstrip_handle_packet(srv_t *state, jd_packet_t *pkt) {
     LOG("cmd: %x", pkt->service_command);
     switch (pkt->service_command) {
-    case JD_LED_PIXEL_CMD_RUN:
+    case JD_LED_STRIP_CMD_RUN:
         handle_run_cmd(state, pkt);
         break;
     default:
-#ifdef LED_PIXEL_LOCK_TYPE
-        if (pkt->service_command == JD_SET(JD_LED_PIXEL_REG_LIGHT_TYPE))
+#ifdef LED_STRIP_LOCK_TYPE
+        if (pkt->service_command == JD_SET(JD_LED_STRIP_REG_LIGHT_TYPE))
             break;
 #endif
-#ifdef LED_PIXEL_LOCK_NUM_PIXELS
-        if (pkt->service_command == JD_SET(JD_LED_PIXEL_REG_NUM_PIXELS))
+#ifdef LED_STRIP_LOCK_NUM_PIXELS
+        if (pkt->service_command == JD_SET(JD_LED_STRIP_REG_NUM_PIXELS))
             break;
 #endif
-        switch (service_handle_register_final(state, pkt, ledpixel_regs)) {
-        case JD_LED_PIXEL_REG_BRIGHTNESS:
+        switch (service_handle_register_final(state, pkt, ledstrip_regs)) {
+        case JD_LED_STRIP_REG_BRIGHTNESS:
             state->intensity = state->requested_intensity;
             break;
-        case JD_LED_PIXEL_REG_NUM_PIXELS:
+        case JD_LED_STRIP_REG_NUM_PIXELS:
             if (state->numpixels > state->maxpixels)
                 state->numpixels = state->maxpixels;
             break;
@@ -639,12 +574,12 @@ void ledpixel_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(ledpixel, JD_SERVICE_CLASS_LED_PIXEL);
-void ledpixel_init(uint8_t default_ledpixel_type, uint32_t default_num_pixels,
+SRV_DEF(ledstrip, JD_SERVICE_CLASS_LED_STRIP);
+void ledstrip_init(uint8_t default_ledstrip_type, uint32_t default_num_pixels,
                    uint32_t default_max_power, uint8_t variant) {
-    SRV_ALLOC(ledpixel);
+    SRV_ALLOC(ledstrip);
     state_ = state; // there is global singleton state
-    state->ledpixel_type = default_ledpixel_type;
+    state->ledstrip_type = default_ledstrip_type;
     state->numpixels = default_num_pixels;
     state->maxpower = default_max_power;
     state->variant = variant;

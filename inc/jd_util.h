@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_UTIL_H
+#define JD_UTIL_H
 
 #include "jd_physical.h"
 
@@ -22,6 +23,10 @@ bool jd_should_sample(uint32_t *sample, uint32_t period);
 // jd_should_sample_delay() will wait at least `period` until next sampling
 bool jd_should_sample_delay(uint32_t *sample, uint32_t period);
 
+static inline bool is_before(uint32_t a, uint32_t b) {
+    return ((b - a) >> 29) == 0;
+}
+
 // check if given timestamp is already in the past, regardless of overflows on 'now'
 // the moment has to be no more than ~500 seconds in the past
 static inline bool in_past(uint32_t moment) {
@@ -32,3 +37,5 @@ static inline bool in_future(uint32_t moment) {
     extern uint32_t now;
     return ((moment - now) >> 29) == 0;
 }
+
+#endif

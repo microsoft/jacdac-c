@@ -86,4 +86,8 @@
 #define JD_WR_OVERHEAD 8
 #endif
 
+#ifndef JD_LORA
+#define JD_LORA 0
+#endif
+
 #endif

@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_DRIVERS_H
+#define JD_DRIVERS_H
 
 #include "jd_service_framework.h"
 #include "interfaces/jd_hw.h"
@@ -31,3 +32,5 @@
     ENV_INIT_N(init, sleep, 1);
 
 #define ENV_INIT_PTRS(n) .init = init##n, .sleep = sleep##n
+
+#endif
