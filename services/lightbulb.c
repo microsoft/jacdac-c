@@ -13,7 +13,7 @@ REG_DEFINITION(                                   //
     bulb_regs,                                   //
     REG_SRV_COMMON,                         //
     REG_U16(JD_LIGHT_BULB_REG_BRIGHTNESS),                         //
-    REG_OPT8(JD_LIGHT_BULB_REG_DIMMEABLE),                         //  
+    REG_OPT8(JD_LIGHT_BULB_REG_DIMMABLE),                         //  
 )
 
 static void reflect_register_state(srv_t* state) {
@@ -25,8 +25,6 @@ static void reflect_register_state(srv_t* state) {
     // inactive
     else
         pin_setup_input(state->pin, PIN_PULL_DOWN);
-
-    jd_send_event_ext(state, (state->intensity > 0) ? JD_LIGHT_BULB_EV_ON : JD_LIGHT_BULB_EV_OFF, 0, 0);
 }
 
 void bulb_process(srv_t * state) {
