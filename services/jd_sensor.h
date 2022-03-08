@@ -24,7 +24,7 @@ typedef struct {
     SRV_COMMON;                                                                                    \
     uint8_t streaming_samples;                                                                     \
     uint8_t got_query : 1;                                                                         \
-    uint8_t inited : 1;                                                                            \
+    uint8_t jd_inited : 1;                                                                         \
     uint8_t got_reading : 1;                                                                       \
     uint8_t reading_pending : 1;                                                                   \
     uint32_t streaming_interval;                                                                   \
@@ -42,6 +42,7 @@ void sensor_process_simple(srv_t *state, const void *sample, uint32_t sample_siz
 void sensor_process(srv_t *state);
 void sensor_send_status(srv_t *state);
 void *sensor_get_reading(srv_t *state);
+bool sensor_maybe_init(srv_t *state);
 
 // sync layout changes with env_sensor_handle_packet()
 typedef struct {

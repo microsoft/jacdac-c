@@ -45,8 +45,7 @@ static void update(srv_t *state) {
 }
 
 static void maybe_init(srv_t *state) {
-    if (state->got_query && !state->inited) {
-        state->inited = true;
+    if (sensor_maybe_init(state)) {
 #ifdef JD_ROTARY_HW
         state->pwm = encoder_init(state->pin0, state->pin1);
         pin_set_pull(state->pin0, PIN_PULL_UP);
@@ -66,7 +65,7 @@ static void maybe_init(srv_t *state) {
 void rotaryencoder_process(srv_t *state) {
     maybe_init(state);
 
-    if (jd_should_sample(&state->nextSample, 900) && state->inited)
+    if (jd_should_sample(&state->nextSample, 900) && state->jd_inited)
         update(state);
 
     sensor_process_simple(state, &state->sample, sizeof(state->sample));
