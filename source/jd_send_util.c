@@ -24,6 +24,13 @@ int jd_send_not_implemented(jd_packet_t *pkt) {
     return jd_send(pkt->service_index, JD_CMD_COMMAND_NOT_IMPLEMENTED, &payload, sizeof(payload));
 }
 
+int jd_send_pkt(jd_packet_t *pkt) {
+    pkt->_size = pkt->service_size + 4;
+    jd_frame_t *f = (jd_frame_t *)pkt;
+    jd_compute_crc(f);
+    return jd_send_frame(f);
+}
+
 int jd_block_register(jd_packet_t *pkt, uint16_t reg_code) {
     if (pkt->service_command == JD_GET(reg_code) || pkt->service_command == JD_SET(reg_code)) {
         jd_send_not_implemented(pkt);
