@@ -21,13 +21,23 @@
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         jd_debug_signal_error();                                                                   \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
     } while (0)
 #else
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
     } while (0)
+#endif
+
+#if (__SIZEOF_POINTER__ == 8) || (__WORDSIZE == 64)
+#define JD_64 1
+#define JD_PTRSIZE 8
+#elif (__SIZEOF_POINTER__ == 4) || (__WORDSIZE == 32)
+#define JD_64 0
+#define JD_PTRSIZE 4
+#else
+#error "can't determine pointer size"
 #endif
 
 #ifndef JD_CONFIG_TEMPERATURE
@@ -89,6 +99,15 @@
 // see set_tick_timer() for how to calibrate this
 #ifndef JD_WR_OVERHEAD
 #define JD_WR_OVERHEAD 8
+#endif
+
+#ifndef JD_CLIENT
+#define JD_CLIENT 0
+#endif
+
+// pipes by default on in client, off in server
+#ifndef JD_PIPES
+#define JD_PIPES JD_CLIENT
 #endif
 
 #ifndef JD_LORA

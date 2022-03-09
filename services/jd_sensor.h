@@ -20,18 +20,19 @@ typedef struct {
     const struct sensor_range *ranges;
 } sensor_api_t;
 
+// make sure 'api' is at 8 byte boundary to avoid alignment issues on 64 bit arch
 #define SENSOR_COMMON                                                                              \
     SRV_COMMON;                                                                                    \
     uint8_t streaming_samples;                                                                     \
     uint8_t got_query : 1;                                                                         \
-    uint8_t inited : 1;                                                                            \
+    uint8_t jd_inited : 1;                                                                         \
     uint8_t got_reading : 1;                                                                       \
     uint8_t reading_pending : 1;                                                                   \
     uint32_t streaming_interval;                                                                   \
-    uint32_t next_streaming;                                                                       \
-    const sensor_api_t *api
+    const sensor_api_t *api;                                                                       \
+    uint32_t next_streaming
 
-#define REG_SENSOR_COMMON REG_BYTES(JD_REG_PADDING, 20)
+#define REG_SENSOR_COMMON REG_BYTES(JD_REG_PADDING, JD_PTRSIZE + 2 + 2 + 4 + JD_PTRSIZE + 4)
 
 int sensor_handle_packet(srv_t *state, jd_packet_t *pkt);
 int sensor_should_stream(srv_t *state);
@@ -42,6 +43,7 @@ void sensor_process_simple(srv_t *state, const void *sample, uint32_t sample_siz
 void sensor_process(srv_t *state);
 void sensor_send_status(srv_t *state);
 void *sensor_get_reading(srv_t *state);
+bool sensor_maybe_init(srv_t *state);
 
 // sync layout changes with env_sensor_handle_packet()
 typedef struct {

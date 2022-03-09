@@ -6,6 +6,12 @@
 #include "interfaces/jd_pwm.h"
 #include "jacdac/dist/c/rotaryencoder.h"
 
+// after any movement, we probe quickly (1000Hz) for 8s, and then go slow (200Hz)
+// on G0, in slow mode we take around 100uA and 300uA in fast mode
+#define GO_SLOW (8 * 1024 * 1024)
+#define PROBE_FAST 1000
+#define PROBE_SLOW 5000
+
 struct srv_state {
     SENSOR_COMMON;
     uint8_t state;
@@ -16,6 +22,7 @@ struct srv_state {
     uint16_t prevpos;
     int32_t sample, position;
     uint32_t nextSample;
+    uint32_t go_slow;
 };
 
 #ifndef JD_ROTARY_HW
@@ -29,15 +36,24 @@ static void update(srv_t *state) {
     state->prevpos = newpos;
 #else
     // based on comments in https://github.com/PaulStoffregen/Encoder/blob/master/Encoder.h
+    pin_set_pull(state->pin0, PIN_PULL_UP);
+    pin_set_pull(state->pin1, PIN_PULL_UP);
     uint16_t s = state->state & 3;
     if (pin_get(state->pin0))
         s |= 4;
     if (pin_get(state->pin1))
         s |= 8;
+#if 1
+    pin_set_pull(state->pin0, PIN_PULL_NONE);
+    pin_set_pull(state->pin1, PIN_PULL_NONE);
+#endif
 
     state->state = (s >> 2);
-    if (posMap[s])
+    if (posMap[s]) {
+        tim_max_sleep = PROBE_FAST;
+        state->go_slow = now + GO_SLOW;
         state->position += posMap[s];
+    }
 #endif
     state->sample = state->position >> (state->pos_shift & 0xf);
     if (state->pos_shift & 0x80)
@@ -45,16 +61,14 @@ static void update(srv_t *state) {
 }
 
 static void maybe_init(srv_t *state) {
-    if (state->got_query && !state->inited) {
-        state->inited = true;
+    if (sensor_maybe_init(state)) {
 #ifdef JD_ROTARY_HW
         state->pwm = encoder_init(state->pin0, state->pin1);
         pin_set_pull(state->pin0, PIN_PULL_UP);
         pin_set_pull(state->pin1, PIN_PULL_UP);
 #else
-        pin_setup_input(state->pin0, PIN_PULL_UP);
-        pin_setup_input(state->pin1, PIN_PULL_UP);
-        tim_max_sleep = 1000;
+        pin_setup_input(state->pin0, PIN_PULL_NONE);
+        pin_setup_input(state->pin1, PIN_PULL_NONE);
 #endif
         update(state);
         // make sure we start at 0
@@ -66,8 +80,15 @@ static void maybe_init(srv_t *state) {
 void rotaryencoder_process(srv_t *state) {
     maybe_init(state);
 
-    if (jd_should_sample(&state->nextSample, 900) && state->inited)
+    if (jd_should_sample(&state->nextSample, 900) && state->jd_inited) {
         update(state);
+#ifndef JD_ROTARY_HW
+        if (state->go_slow && in_past(state->go_slow)) {
+            tim_max_sleep = PROBE_SLOW;
+            state->go_slow = 0;
+        }
+#endif
+    }
 
     sensor_process_simple(state, &state->sample, sizeof(state->sample));
 }
@@ -93,5 +114,7 @@ void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn, ui
     if (flags & ROTARY_ENC_FLAG_INVERTED)
         state->pos_shift |= 0x80;
 
-    state->got_query = 1; // XXX
+#ifndef JD_ROTARY_HW
+    tim_max_sleep = PROBE_SLOW;
+#endif
 }

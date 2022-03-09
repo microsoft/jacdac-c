@@ -54,7 +54,7 @@ struct srv_state {
 REG_DEFINITION(                                   //
     braille_char_regs,                                   //
     REG_SRV_COMMON,                         //
-    REG_U32(JD_REG_PADDING),                         //
+    REG_PTR_PADDING(),                         //
     REG_U8(JD_CHARACTER_SCREEN_REG_ROWS),                         //
     REG_U8(JD_CHARACTER_SCREEN_REG_COLUMNS),                         //
     REG_U8(JD_CHARACTER_SCREEN_REG_VARIANT),                //
