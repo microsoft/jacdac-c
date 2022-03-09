@@ -238,6 +238,6 @@ typedef struct motion_cfg {
 } motion_cfg_t;
 void motion_init(const motion_cfg_t *cfg);
 
-void bulb_service_init(const uint8_t pin);
+void lightbulb_init(uint8_t pin);
 
 #endif
