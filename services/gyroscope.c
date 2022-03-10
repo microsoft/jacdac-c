@@ -15,7 +15,7 @@ extern uint8_t gyroscope_pending;
 
 void gyroscope_process(srv_t *state) {
 #ifdef PIN_ACC_INT
-    if (!gyroscope_pending && state->inited)
+    if (!gyroscope_pending && state->jd_inited)
         return;
     gyroscope_pending = 0;
 #else

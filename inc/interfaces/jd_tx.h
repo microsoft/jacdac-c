@@ -4,8 +4,8 @@
 /*
  * A transmission queue for JD packets.
  */
-
-#pragma once
+#ifndef JD_TX_H
+#define JD_TX_H
 
 #include "jd_service_framework.h"
 
@@ -23,6 +23,12 @@ int jd_respond_u16(jd_packet_t *pkt, uint16_t v);
 int jd_respond_u32(jd_packet_t *pkt, uint32_t v);
 int jd_send_not_implemented(jd_packet_t *pkt);
 
+/**
+ * If pkt contains GET or SET on the given registers, send an error response and return 1.
+ * Otherwise return 0.
+ */
+int jd_block_register(jd_packet_t *pkt, uint16_t reg_code);
+
 void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t data_bytes);
 static inline void jd_send_event(srv_t *srv, uint32_t eventid) {
     jd_send_event_ext(srv, eventid, 0, 0);
@@ -35,3 +41,9 @@ int jd_send_frame(jd_frame_t *f);
 // wrapper around jd_send_frame()
 int jd_send_pkt(jd_packet_t *pkt);
 
+#if JD_RAW_FRAME
+extern uint8_t rawFrameSending;
+extern jd_frame_t *rawFrame;
+#endif
+
+#endif

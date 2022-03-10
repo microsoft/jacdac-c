@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+#if 0
+
 #include "jd_services.h"
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_adc.h"
@@ -255,3 +257,5 @@ void multitouch_init(const uint8_t *pins) {
 
     calibrate(state);
 }
+
+#endif

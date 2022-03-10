@@ -119,7 +119,15 @@ static void rgbled_show(status_ctx_t *state) {
 #endif
 }
 
-static void rgbled_animate(status_ctx_t *state, const jd_control_set_status_light_t *anim) {
+void jd_status_set_ch(int ch, uint8_t v) {
+    status_ctx_t *state = &status_ctx;
+    state->channels[ch].target = v;
+    state->channels[ch].value = v << 8;
+    state->channels[ch].speed = 0;
+    rgbled_show(state);
+}
+
+static void jd_status_set(status_ctx_t *state, const jd_control_set_status_light_t *anim) {
     const uint8_t *to = &anim->to_red;
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
@@ -137,7 +145,7 @@ void jd_status_process() {
     if (state->jd_status && in_past(state->jd_status_stop)) {
         jd_control_set_status_light_t off_color = {
             .speed = jd_status_animations[state->jd_status].color.speed};
-        rgbled_animate(state, &off_color);
+        jd_status_set(state, &off_color);
         state->jd_status = JD_STATUS_OFF;
     }
 
@@ -179,8 +187,9 @@ int jd_status_handle_packet(jd_packet_t *pkt) {
 #endif
 
     case JD_CONTROL_CMD_SET_STATUS_LIGHT:
-        if (pkt->service_size >= sizeof(jd_control_set_status_light_t))
-            rgbled_animate(state, (jd_control_set_status_light_t *)pkt->data);
+        if (pkt->service_size >= sizeof(jd_control_set_status_light_t)) {
+            jd_status_set(state, (jd_control_set_status_light_t *)pkt->data);
+        }
         return 1;
     }
 
@@ -232,9 +241,11 @@ void jd_status(int status) {
         return;
     }
 
-    rgbled_animate(state, &jd_status_animations[status].color);
+#if !JD_CONFIG_IGNORE_STATUS
+    jd_status_set(state, &jd_status_animations[status].color);
     state->jd_status = status;
     state->jd_status_stop = now + jd_status_animations[status].time;
+#endif
 }
 
 #endif

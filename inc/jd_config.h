@@ -21,19 +21,19 @@
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         jd_debug_signal_error();                                                                   \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
     } while (0)
 #else
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
     } while (0)
 #endif
 
-#if __WORDSIZE == 64
+#if (__SIZEOF_POINTER__ == 8) || (__WORDSIZE == 64)
 #define JD_64 1
 #define JD_PTRSIZE 8
-#elif __WORDSIZE == 32
+#elif (__SIZEOF_POINTER__ == 4) || (__WORDSIZE == 32)
 #define JD_64 0
 #define JD_PTRSIZE 4
 #else
@@ -56,6 +56,10 @@
 #define JD_CONFIG_STATUS 1
 #endif
 
+#ifndef JD_CONFIG_IGNORE_STATUS
+#define JD_CONFIG_IGNORE_STATUS 0
+#endif
+
 #ifndef JD_CONFIG_IDENTIFY
 #if JD_CONFIG_STATUS == 1
 #define JD_CONFIG_IDENTIFY 0
@@ -68,10 +72,19 @@
 #define JD_CONFIG_DEV_SPEC_URL 0
 #endif
 
+#ifndef JD_RAW_FRAME
+#define JD_RAW_FRAME 0
+#endif
+
 #define CONCAT_1(a, b) a##b
 #define CONCAT_0(a, b) CONCAT_1(a, b)
+
 #ifndef STATIC_ASSERT
 #define STATIC_ASSERT(e) enum { CONCAT_0(_static_assert_, __LINE__) = 1 / ((e) ? 1 : 0) };
+#endif
+
+#ifndef STATIC_ASSERT_EXT
+#define STATIC_ASSERT_EXT(e, id) enum { CONCAT_0(_static_assert_, CONCAT_0(__LINE__, id)) = 1 / ((e) ? 1 : 0) };
 #endif
 
 #ifndef JD_EVENT_QUEUE_SIZE
@@ -95,6 +108,10 @@
 // pipes by default on in client, off in server
 #ifndef JD_PIPES
 #define JD_PIPES JD_CLIENT
+#endif
+
+#ifndef JD_LORA
+#define JD_LORA 0
 #endif
 
 #endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DRV_NAME_H
+#define DRV_NAME_H
 
 #include "jd_drivers.h"
 
@@ -112,3 +113,5 @@ static inline void Delay_1sec(void) {
 static inline void Delay_ms(int ms) {
     jd_services_sleep_us(ms * 1000);
 }
+
+#endif

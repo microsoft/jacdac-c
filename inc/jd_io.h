@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_IO_H
+#define JD_IO_H
 
 #include "jd_config.h"
 
@@ -13,6 +14,7 @@ void jd_power_enable(int en);
 void jd_status_init(void);
 void jd_status_process(void);
 int jd_status_handle_packet(jd_packet_t *pkt);
+void jd_status_set_ch(int ch, uint8_t v);
 #endif
 
 // sync with jd_status_animations[]
@@ -25,3 +27,5 @@ int jd_status_handle_packet(jd_packet_t *pkt);
 
 // if disabled with JD_CONFIG_STATUS==0, the user has to provide their own impl.
 void jd_status(int status);
+
+#endif

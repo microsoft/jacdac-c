@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_CONTROL_H
+#define JD_CONTROL_H
 
 #include "jd_config.h"
 #include "jd_physical.h"
@@ -42,3 +43,5 @@ static inline bool jd_is_event(jd_packet_t *pkt) {
 static inline bool jd_is_register_get(jd_packet_t *pkt) {
     return pkt->service_index <= JD_SERVICE_INDEX_MAX_NORMAL && JD_IS_GET(pkt->service_command);
 }
+
+#endif

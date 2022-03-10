@@ -162,7 +162,7 @@ void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         rolemgr_set_role(state, pkt);
         break;
 
-    case JD_ROLE_MANAGER_CMD_LIST_ROLES: // TODO
+    case JD_ROLE_MANAGER_CMD_LIST_ROLES:
         if (jd_opipe_open(&state->list_pipe, pkt) == 0)
             state->list_ptr = state->roles;
         break;

@@ -27,16 +27,14 @@ static void update(srv_t *state) {
 }
 
 static void maybe_init(srv_t *state) {
-    if (state->got_query && !state->inited) {
-        state->inited = true;
+    if (sensor_maybe_init(state))
         update(state);
-    }
 }
 
 void flex_process(srv_t *state) {
     maybe_init(state);
 
-    if (jd_should_sample(&state->nextSample, 9000) && state->inited)
+    if (jd_should_sample(&state->nextSample, 9000) && state->jd_inited)
         update(state);
 
     sensor_process_simple(state, &state->sample, sizeof(state->sample));

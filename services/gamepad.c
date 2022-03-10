@@ -4,20 +4,20 @@
 #include "jd_services.h"
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_adc.h"
-#include "jacdac/dist/c/joystick.h"
+#include "jacdac/dist/c/gamepad.h"
 
 struct srv_state {
     SENSOR_COMMON;
-    joystick_params_t params;
-    jd_joystick_direction_t direction;
+    gamepad_params_t params;
+    jd_gamepad_direction_t direction;
     uint32_t nextSample;
 };
 
-REG_DEFINITION(                                 //
-    joystick_regs,                              //
-    REG_SENSOR_COMMON,                          //
-    REG_U32(JD_JOYSTICK_REG_BUTTONS_AVAILABLE), //
-    REG_U8(JD_JOYSTICK_REG_VARIANT),            //
+REG_DEFINITION(                                //
+    gamepad_regs,                              //
+    REG_SENSOR_COMMON,                         //
+    REG_U32(JD_GAMEPAD_REG_BUTTONS_AVAILABLE), //
+    REG_U8(JD_GAMEPAD_REG_VARIANT),            //
 )
 
 #define THRESHOLD_SWITCH 0x3000
@@ -36,12 +36,12 @@ static void update(srv_t *state) {
     }
 
     if (state->params.pinX == 0xff) {
-        state->direction.x = (btns & JD_JOYSTICK_BUTTONS_LEFT)    ? -0x8000
-                             : (btns & JD_JOYSTICK_BUTTONS_RIGHT) ? 0x7fff
-                                                                  : 0;
-        state->direction.y = (btns & JD_JOYSTICK_BUTTONS_UP)     ? -0x8000
-                             : (btns & JD_JOYSTICK_BUTTONS_DOWN) ? 0x7fff
+        state->direction.x = (btns & JD_GAMEPAD_BUTTONS_LEFT)    ? -0x8000
+                             : (btns & JD_GAMEPAD_BUTTONS_RIGHT) ? 0x7fff
                                                                  : 0;
+        state->direction.y = (btns & JD_GAMEPAD_BUTTONS_UP)     ? -0x8000
+                             : (btns & JD_GAMEPAD_BUTTONS_DOWN) ? 0x7fff
+                                                                : 0;
     } else {
         pin_setup_output(state->params.pinH);
         pin_set(state->params.pinH, 1);
@@ -59,22 +59,22 @@ static void update(srv_t *state) {
         state->direction.y = y;
 
         if (state->direction.x <
-            ((btns0 & JD_JOYSTICK_BUTTONS_LEFT) ? -THRESHOLD_KEEP : -THRESHOLD_SWITCH))
-            btns |= JD_JOYSTICK_BUTTONS_LEFT;
+            ((btns0 & JD_GAMEPAD_BUTTONS_LEFT) ? -THRESHOLD_KEEP : -THRESHOLD_SWITCH))
+            btns |= JD_GAMEPAD_BUTTONS_LEFT;
         if (state->direction.x >
-            ((btns0 & JD_JOYSTICK_BUTTONS_RIGHT) ? THRESHOLD_KEEP : THRESHOLD_SWITCH))
-            btns |= JD_JOYSTICK_BUTTONS_RIGHT;
+            ((btns0 & JD_GAMEPAD_BUTTONS_RIGHT) ? THRESHOLD_KEEP : THRESHOLD_SWITCH))
+            btns |= JD_GAMEPAD_BUTTONS_RIGHT;
         if (state->direction.y <
-            ((btns0 & JD_JOYSTICK_BUTTONS_UP) ? -THRESHOLD_KEEP : -THRESHOLD_SWITCH))
-            btns |= JD_JOYSTICK_BUTTONS_UP;
+            ((btns0 & JD_GAMEPAD_BUTTONS_UP) ? -THRESHOLD_KEEP : -THRESHOLD_SWITCH))
+            btns |= JD_GAMEPAD_BUTTONS_UP;
         if (state->direction.y >
-            ((btns0 & JD_JOYSTICK_BUTTONS_DOWN) ? THRESHOLD_KEEP : THRESHOLD_SWITCH))
-            btns |= JD_JOYSTICK_BUTTONS_DOWN;
+            ((btns0 & JD_GAMEPAD_BUTTONS_DOWN) ? THRESHOLD_KEEP : THRESHOLD_SWITCH))
+            btns |= JD_GAMEPAD_BUTTONS_DOWN;
     }
 
     if (btns0 != btns) {
         state->direction.buttons = btns;
-        jd_send_event_ext(state, JD_JOYSTICK_EV_BUTTONS_CHANGED, &state->direction.buttons, 4);
+        jd_send_event_ext(state, JD_GAMEPAD_EV_BUTTONS_CHANGED, &state->direction.buttons, 4);
 
         for (unsigned i = 0; i < sizeof(state->params.pinLeds); ++i) {
             if ((1 << i) & state->params.buttons_available) {
@@ -85,8 +85,7 @@ static void update(srv_t *state) {
 }
 
 static void maybe_init(srv_t *state) {
-    if (state->got_query && !state->inited) {
-        state->inited = true;
+    if (sensor_maybe_init(state)) {
         for (unsigned i = 0; i < sizeof(state->params.pinBtns); ++i) {
             if ((1 << i) & state->params.buttons_available) {
                 pin_setup_input(state->params.pinBtns[i],
@@ -94,30 +93,29 @@ static void maybe_init(srv_t *state) {
                 pin_setup_output(state->params.pinLeds[i]);
             }
         }
-
         update(state);
     }
 }
 
-void joystick_process(srv_t *state) {
+void gamepad_process(srv_t *state) {
     maybe_init(state);
 
-    if (jd_should_sample(&state->nextSample, 9000) && state->inited)
+    if (jd_should_sample(&state->nextSample, 9000) && state->jd_inited)
         update(state);
 
     sensor_process_simple(state, &state->direction, sizeof(state->direction));
 }
 
-void joystick_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (service_handle_register(state, pkt, joystick_regs))
+void gamepad_handle_packet(srv_t *state, jd_packet_t *pkt) {
+    if (service_handle_register(state, pkt, gamepad_regs))
         return;
     sensor_handle_packet_simple(state, pkt, &state->direction, sizeof(state->direction));
 }
 
-SRV_DEF(joystick, JD_SERVICE_CLASS_JOYSTICK);
+SRV_DEF(gamepad, JD_SERVICE_CLASS_GAMEPAD);
 
-void joystick_init(const joystick_params_t *params) {
-    SRV_ALLOC(joystick);
+void gamepad_init(const gamepad_params_t *params) {
+    SRV_ALLOC(gamepad);
     state->params = *params;
 
     for (unsigned i = 0; i < sizeof(state->params.pinBtns); ++i) {
