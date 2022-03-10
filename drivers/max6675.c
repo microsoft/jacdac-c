@@ -27,7 +27,7 @@ static void max6675_init(void) {
     pin_set(PIN_SCS, 1);
     pin_setup_output(PIN_SCS);
 
-    sspi_init();
+    sspi_init(1, 1, 1);
 
     ctx->inited = 1;
 }

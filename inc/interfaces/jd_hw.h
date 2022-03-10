@@ -88,8 +88,8 @@ void dspi_tx(const void *data, uint32_t numbytes, cb_t doneHandler);
 void dspi_xfer(const void *txdata, void *rxdata, uint32_t numbytes, cb_t doneHandler);
 
 // sspic.c
-void sspi_init(void);
-void sspi_tx(uint8_t *data, uint32_t numbytes);
+void sspi_init(bool slow, int cpol, int cpha);
+void sspi_tx(const uint8_t *data, uint32_t numbytes);
 void sspi_rx(uint8_t *buf, uint32_t numbytes);
 
 // onewire.c
@@ -97,6 +97,17 @@ void one_init(void);
 int one_reset(void);
 void one_write(uint8_t b);
 uint8_t one_read(void);
+
+void spiflash_init(void);
+uint64_t spiflash_unique_id(void);
+uint32_t spiflash_num_bytes(void);
+void spiflash_dump_sfdp(void);
+void spiflash_read_bytes(uint32_t addr, void *buffer, uint32_t len);
+void spiflash_write_bytes(uint32_t addr, const void *buffer, uint32_t len);
+void spiflash_erase_4k(uint32_t addr);
+void spiflash_erase_32k(uint32_t addr);
+void spiflash_erase_64k(uint32_t addr);
+void spiflash_erase_chip(void);
 
 #endif
 
