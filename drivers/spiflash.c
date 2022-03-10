@@ -4,7 +4,7 @@
 
 #define SPIFLASH_PAGE_SIZE 256
 
-#ifdef SPI_RX
+#if defined(SPI_RX) && defined(PIN_FLASH_CS)
 
 #define check JD_ASSERT
 
