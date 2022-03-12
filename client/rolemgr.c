@@ -96,7 +96,7 @@ void rolemgr_process(srv_t *state) {
     while (state->list_ptr) {
         jd_role_t *r = state->list_ptr;
 
-        unsigned sz = sizeof(jd_role_manager_roles_t) + strlen(r->name);
+        unsigned sz = offsetof(jd_role_manager_roles_t, role) + strlen(r->name);
         int err = jd_opipe_check_space(&state->list_pipe, sz);
         if (err == JD_PIPE_TRY_AGAIN)
             break;
