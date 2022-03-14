@@ -182,6 +182,14 @@ void jd_services_init() {
     lastDisconnectBlink = tim_get_micros() + 1000000;
 }
 
+void jd_services_deinit() {
+    for (int i = 0; i < num_services; ++i)
+        jd_free(services[i]);
+    jd_free(services);
+    num_services = 0;
+    services = NULL;
+}
+
 void jd_services_packet_queued() {
     packets_sent++;
 }
