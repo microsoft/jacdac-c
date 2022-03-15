@@ -4,7 +4,7 @@
     if (!(cond))                                                                                   \
     jd_panic()
 
-struct _queue {
+struct jd_queue {
     uint16_t front;
     uint16_t back;
     uint16_t size;

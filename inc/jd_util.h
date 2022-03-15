@@ -49,7 +49,7 @@ void jd_to_hex(char *dst, const void *src, size_t len);
 
 
 // jd_queue.c
-typedef struct _queue *jd_queue_t;
+typedef struct jd_queue *jd_queue_t;
 jd_queue_t jd_queue_alloc(unsigned size);
 int jd_queue_push(jd_queue_t q, jd_frame_t *pkt);
 jd_frame_t *jd_queue_front(jd_queue_t q);
