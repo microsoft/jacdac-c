@@ -98,7 +98,7 @@ void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t 
     int reqlen = data_bytes + sizeof(ev_t);
     if (reqlen > JD_EVENT_QUEUE_SIZE)
         return; // too long to queue; shouldn't happen
-    while (JD_EVENT_QUEUE_SIZE - info.qptr < (int)data_bytes)
+    while (JD_EVENT_QUEUE_SIZE - info.qptr < reqlen)
         ev_shift();
 
     ev_t *ev = (ev_t *)((uint8_t *)info.buffer + info.qptr);
