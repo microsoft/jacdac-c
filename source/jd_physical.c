@@ -201,9 +201,17 @@ void jd_rx_completed(int dataLeft) {
         jd_diagnostics.bus_uart_error++;
         return;
     }
+
     uint16_t crc = jd_crc16((uint8_t *)frame + 2, declaredSize - 2);
     if (crc != frame->crc) {
         ERROR("crc err");
+        jd_diagnostics.bus_uart_error++;
+        return;
+    }
+
+    if (declaredSize > JD_SERIAL_PAYLOAD_SIZE + JD_SERIAL_FULL_HEADER_SIZE ||
+        ((jd_packet_t *)frame)->service_size > JD_SERIAL_PAYLOAD_SIZE) {
+        ERROR("bad size");
         jd_diagnostics.bus_uart_error++;
         return;
     }
