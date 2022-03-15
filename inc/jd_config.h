@@ -105,9 +105,17 @@
 #define JD_CLIENT 0
 #endif
 
-// pipes by default on in client, off in server
+// pipes, jd_free(), jd_send_frame() by default on in client, off in server
 #ifndef JD_PIPES
 #define JD_PIPES JD_CLIENT
+#endif
+
+#ifndef JD_FREE_SUPPORTED
+#define JD_FREE_SUPPORTED JD_CLIENT
+#endif
+
+#ifndef JD_SEND_FRAME
+#define JD_SEND_FRAME JD_CLIENT
 #endif
 
 #ifndef JD_LORA
