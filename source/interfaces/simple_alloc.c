@@ -138,7 +138,7 @@ void jd_free(void *ptr) {
     p--;
     JD_ASSERT(GET_TAG(*p) == USED_TAG);
     *p = MARK_FREE(BLOCK_SIZE(*p));
-    memset(p + 1, 0x44, (BLOCK_SIZE(*p) - 1) << 2);
+    memset(p + 1, 0x47, (BLOCK_SIZE(*p) - 1) << 2);
 }
 #else
 uint32_t jd_available_memory() {
