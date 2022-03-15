@@ -141,7 +141,7 @@ void jd_free(void *ptr) {
     memset(p + 1, 0x44, (BLOCK_SIZE(*p) - 1) << 2);
 }
 #else
-uintptr_t jd_available_memory() {
+uint32_t jd_available_memory() {
     return HEAP_END - (uintptr_t)aptr;
 }
 #endif
