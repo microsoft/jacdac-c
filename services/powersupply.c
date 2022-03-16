@@ -29,14 +29,7 @@ static void update_wiper_value(srv_t *state) {
 
     // Lazy implementation, use only the upper 22 bits.
     value >>= 10;
-    int32_t in_minv = state->minimum_voltage >> 10;
-    int32_t in_maxv = state->maximum_voltage >> 10;
-    int32_t out_minv = state->params.min_voltage_wiper_value;
-    int32_t out_maxv = state->params.max_voltage_wiper_value;
-
-    uint32_t wiper_value = (value - in_minv) * (out_maxv - out_minv) / (in_maxv - in_minv) + out_minv;
-
-    state->params.potentiometer->set_wiper(state->params.wiper_channel, wiper_value);
+    state->params.potentiometer->set_wiper(state->params.wiper_channel, state->params.voltage_to_wiper(value));
 }
 
 static void reflect_register_state(srv_t *state) {
@@ -62,7 +55,7 @@ void powersupply_init(const power_supply_params_t params ) {
     SRV_ALLOC(psu);
 
     state->params = params;
-    state->enabled = false;
+    state->enabled = 0;
     state->output_voltage = params.initial_voltage;
     state->minimum_voltage = params.min_voltage;
     state->maximum_voltage = params.max_voltage;
@@ -70,6 +63,5 @@ void powersupply_init(const power_supply_params_t params ) {
     state->params.potentiometer->init();
 
     pin_setup_output(params.enable_pin);
-
-    reflect_register_state(state);
+    pin_set(state->params.enable_pin, (state->params.enable_active_lo) ? 1 : 0);
 }

@@ -9,7 +9,7 @@
 
 static uint8_t mcp_41010_data[] = {0, 0};
 
-static int tx_done = 0;
+static volatile int tx_done = 0;
 static void done_handler(void) {
     tx_done = 1;
 }
@@ -31,11 +31,14 @@ static void mcp41010_set_wiper(uint8_t channel, uint8_t wiper_value) {
     // mcp41010 only has two channels.
     JD_ASSERT(channel < 2);
 
+    // DMESG("SET WIPER[%d]: %d", channel, wiper_value);
+
     mcp_41010_data[0] = MCP_41010_WRITE_DATA | 1 << channel;
     mcp_41010_data[1] = wiper_value;
 
     spi_tx();
 }
+
 static void mcp41010_shutdown(uint8_t channel) {
     // mcp41010 only has two channels.
     JD_ASSERT(channel < 2);

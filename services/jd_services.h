@@ -249,6 +249,7 @@ extern const potentiometer_api_t mcp41010;
 
 typedef struct {
     const potentiometer_api_t* potentiometer;
+    int32_t (*voltage_to_wiper)(int32_t);
     int32_t min_voltage;
     int32_t max_voltage;
     int32_t initial_voltage;
