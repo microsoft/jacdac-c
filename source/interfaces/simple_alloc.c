@@ -74,7 +74,7 @@ void *jd_alloc(uint32_t size) {
 
     size++; // the block size down below includes the one word header
 
-    for (block = aptr; block < HEAP_END_PTR; block += block_size) {
+    for (block = aptr; block != HEAP_END_PTR; block += block_size) {
         block_size = BLOCK_SIZE(*block);
 
         if (GET_TAG(*block) == USED_TAG)
@@ -84,9 +84,7 @@ void *jd_alloc(uint32_t size) {
         // We have a free block. Let's see if the subsequent ones are too. If so, we can merge...
         next = block + block_size;
 
-        while (GET_TAG(*next) == FREE_TAG) {
-            if (next == HEAP_END_PTR)
-                break;
+        while (next != HEAP_END_PTR && GET_TAG(*next) == FREE_TAG) {
             JD_ASSERT(next < HEAP_END_PTR);
 
             // We can merge!
@@ -124,7 +122,7 @@ void *jd_alloc(uint32_t size) {
         jd_panic();
 #endif
 
-    memset(r, 0x00, size << 2);
+    memset(r, 0x00, (size << 2) - 4);
     return r;
 }
 
