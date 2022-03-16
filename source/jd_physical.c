@@ -11,8 +11,7 @@
 #define JD_STATUS_TX_ACTIVE 0x02
 #define JD_STATUS_TX_QUEUED 0x04
 
-static jd_frame_t _rxBuffer[2];
-static jd_frame_t *rxFrame = &_rxBuffer[0];
+static jd_frame_t rxFrame;
 static void set_tick_timer(uint8_t statusClear);
 static volatile uint8_t status;
 
@@ -130,12 +129,12 @@ static void setup_rx_timeout(void) {
     // In that case, we don't want to set any additional timers.
     if (status & JD_STATUS_RX_ACTIVE) {
         uart_flush_rx();
-        uint32_t *p = (uint32_t *)rxFrame;
+        uint32_t *p = (uint32_t *)&rxFrame;
         if (p[0] == 0 && p[1] == 0) {
             rx_timeout(); // didn't get any data after lo-pulse
         } else {
             // got the size - set timeout for whole packet
-            tim_set_timer(JD_FRAME_SIZE(rxFrame) * 12 + 60, rx_timeout);
+            tim_set_timer(JD_FRAME_SIZE(&rxFrame) * 12 + 60, rx_timeout);
         }
     }
 }
@@ -154,7 +153,7 @@ void jd_line_falling() {
     status |= JD_STATUS_RX_ACTIVE;
 
     // 1us faster than memset() on SAMD21
-    uint32_t *p = (uint32_t *)rxFrame;
+    uint32_t *p = (uint32_t *)&rxFrame;
     p[0] = 0;
     p[1] = 0;
     p[2] = 0;
@@ -169,7 +168,7 @@ void jd_line_falling() {
     // pulse1();
     // target_wait_us(2);
 
-    uart_start_rx(rxFrame, sizeof(*rxFrame));
+    uart_start_rx(&rxFrame, sizeof(rxFrame));
     // log_pin_set(1, 0);
 
     // 200us max delay according to spec, +50us to get the first 4 bytes of data
@@ -180,7 +179,7 @@ void jd_line_falling() {
 
 void jd_rx_completed(int dataLeft) {
     LOG("rx cmpl");
-    jd_frame_t *frame = rxFrame;
+    jd_frame_t *frame = &rxFrame;
 
 #ifdef JD_DEBUG_MODE
     jd_debug_signal_read(0);
@@ -223,18 +222,13 @@ void jd_rx_completed(int dataLeft) {
 
     jd_diagnostics.packets_received++;
 
-    // only swap frames just before we're about to process
-    // no reason to swap frames that are dropped above
-    if (rxFrame == &_rxBuffer[0])
-        rxFrame = &_rxBuffer[1];
-    else
-        rxFrame = &_rxBuffer[0];
-
     // pulse1();
     int err = jd_rx_frame_received(frame);
 
-    if (err)
+    if (err) {
+        ERROR("drop RX");
         jd_diagnostics.packets_dropped++;
+    }
 }
 
 void jd_packet_ready(void) {

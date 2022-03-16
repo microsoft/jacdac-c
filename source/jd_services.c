@@ -314,8 +314,10 @@ void jd_services_tick() {
 
 static void jd_process_everything_core(void) {
     jd_frame_t *fr = jd_rx_get_frame();
-    if (fr)
+    if (fr) {
         jd_services_process_frame(fr);
+        jd_rx_release_frame(fr);
+    }
 
     jd_services_tick();
     app_process();
