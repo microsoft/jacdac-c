@@ -1,5 +1,12 @@
 #include "jacs_internal.h"
 
+#define LOGV DMESG
+
+#define RESUME_USER_CODE 1
+#define KEEP_WAITING 0
+
+static bool handle_logmsg(jacs_fiber_t *fiber, bool print);
+
 void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg) {
     jd_device_service_t *serv = ctx->roles[role_idx]->service;
@@ -20,7 +27,8 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
                 ctx->packet.service_index = serv->service_index;
                 ctx->packet.device_identifier = jd_service_parent(serv)->device_identifier;
                 memcpy(ctx->packet.data, jacs_regcache_data(cached), cached->resp_size);
-                // DMESG("cached reg %x sz=%d cmd=%d", code, cached->resp_size, cached->service_command);
+                // DMESG("cached reg %x sz=%d cmd=%d", code, cached->resp_size,
+                // cached->service_command);
                 return;
             }
         }
@@ -29,11 +37,23 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
     jacs_fiber_t *fib = ctx->curr_fiber;
     fib->role_idx = role_idx;
     fib->service_command = code;
-    fib->command_arg = arg;
-    fib->resend_timeout = 20;
+    fib->pkt_kind = JACS_PKT_KIND_REG_GET;
+    fib->pkt_data.reg_get.string_idx = arg;
+    fib->pkt_data.reg_get.resend_timeout = 20;
 
     // DMESG("wait reg %x", code);
     jacs_fiber_sleep(fib, 0);
+}
+
+void jacs_jd_clear_pkt_kind(jacs_fiber_t *fib) {
+    switch (fib->pkt_kind) {
+    case JACS_PKT_KIND_SEND_PKT:
+        jd_free(fib->pkt_data.send_pkt.data);
+        break;
+    default:
+        break;
+    }
+    fib->pkt_kind = JACS_PKT_KIND_NONE;
 }
 
 void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
@@ -49,20 +69,36 @@ void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
 
     if (role->service_class == JD_SERVICE_CLASS_JACSCRIPT_CONDITION) {
         jacs_fiber_sleep(fib, 0);
-        DMESG("wake condition");
+        LOGV("wake condition");
         jacs_jd_wake_role(ctx, role_idx);
         return;
     }
 
     fib->role_idx = role_idx;
     fib->service_command = code;
-    fib->resend_timeout = 20;
 
     unsigned sz = ctx->packet.service_size;
-    fib->payload = jd_alloc(sz);
-    fib->payload_size = sz;
-    memcpy(fib->payload, ctx->packet.data, sz);
+    fib->pkt_kind = JACS_PKT_KIND_SEND_PKT;
+    fib->pkt_data.send_pkt.data = jd_alloc(sz);
+    fib->pkt_data.send_pkt.size = sz;
+    memcpy(fib->pkt_data.send_pkt.data, ctx->packet.data, sz);
     jacs_fiber_sleep(fib, 0);
+}
+
+void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args) {
+    jacs_fiber_t *fib = ctx->curr_fiber;
+
+    fib->role_idx = 0;
+
+    fib->pkt_kind = JACS_PKT_KIND_LOGMSG;
+    fib->service_command = ctx->log_counter & 0xffff;
+    ctx->log_counter++;
+    fib->pkt_data.logmsg.string_idx = string_idx;
+    fib->pkt_data.logmsg.num_args = num_args;
+
+    if (handle_logmsg(fib, true) == RESUME_USER_CODE) {
+        jacs_jd_clear_pkt_kind(fib);
+    }
 }
 
 static void jacs_jd_set_packet(jacs_ctx_t *ctx, unsigned role_idx, unsigned service_command,
@@ -82,13 +118,26 @@ static void jacs_jd_set_packet(jacs_ctx_t *ctx, unsigned role_idx, unsigned serv
 void jacs_jd_wake_role(jacs_ctx_t *ctx, unsigned role_idx) {
     for (jacs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
         if (fiber->role_idx == role_idx) {
-            jacs_fiber_run(fiber);
+            fiber->role_wkp = 1;
+        }
+    }
+
+    int runsome = 1;
+    while (runsome) {
+        runsome = 0;
+        for (jacs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
+            if (fiber->role_wkp) {
+                fiber->role_wkp = 0;
+                jacs_fiber_run(fiber);
+                runsome = 1;
+                break; // can't go to next - fiber might be gone
+            }
         }
     }
 }
 
 static int jacs_jd_reg_arg_length(jacs_ctx_t *ctx, unsigned command_arg) {
-    assert(command_arg != 0);
+    JD_ASSERT(command_arg != 0);
     jd_packet_t *pkt = &ctx->packet;
     int slen = jacs_img_get_string_len(&ctx->img, command_arg);
     if (pkt->service_size >= slen + 1 && pkt->data[slen] == 0 &&
@@ -140,41 +189,35 @@ static bool jacs_jd_pkt_matches_role(jacs_ctx_t *ctx, unsigned role_idx) {
            jd_service_parent(serv)->device_identifier == pkt->device_identifier;
 }
 
-#define RESUME_USER_CODE 1
-#define KEEP_WAITING 0
+static bool retry_soon(jacs_fiber_t *fiber) {
+    jacs_fiber_sleep(fiber, 3);
+    return KEEP_WAITING;
+}
 
-bool jacs_jd_should_run(jacs_fiber_t *fiber) {
-    if (!fiber->service_command) {
-        return RESUME_USER_CODE;
-    }
-
+static bool role_missing(jacs_fiber_t *fiber) {
     jacs_ctx_t *ctx = fiber->ctx;
     jd_device_service_t *serv = ctx->roles[fiber->role_idx]->service;
 
     if (serv == NULL) {
         // role unbound, keep waiting, no timeout
         jacs_fiber_set_wake_time(fiber, 0);
+        return 1;
+    }
+
+    return 0;
+}
+
+static bool handle_reg_get(jacs_fiber_t *fiber) {
+    if (role_missing(fiber))
         return KEEP_WAITING;
-    }
 
-    if (fiber->payload) {
-        jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, fiber->payload,
-                           fiber->payload_size);
-        jd_send_pkt(&ctx->packet);
-        DMESG("send pkt cmd=%x", fiber->service_command);
-        fiber->service_command = 0;
-        jd_free(fiber->payload);
-        fiber->payload = NULL;
-        return RESUME_USER_CODE;
-    }
-
+    jacs_ctx_t *ctx = fiber->ctx;
     jd_packet_t *pkt = &ctx->packet;
-
     if (jd_is_report(pkt) && pkt->service_command &&
         pkt->service_command == fiber->service_command &&
         jacs_jd_pkt_matches_role(ctx, fiber->role_idx)) {
         jacs_regcache_entry_t *q =
-            jacs_jd_update_regcache(ctx, fiber->role_idx, fiber->command_arg);
+            jacs_jd_update_regcache(ctx, fiber->role_idx, fiber->pkt_data.reg_get.string_idx);
         if (q) {
             q = jacs_regcache_mark_used(&ctx->regcache, q);
             return RESUME_USER_CODE;
@@ -184,21 +227,102 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
     if (jacs_now(ctx) >= fiber->wake_time) {
         int arglen = 0;
         const void *argp = NULL;
-        if (fiber->command_arg) {
-            arglen = jacs_img_get_string_len(&ctx->img, fiber->command_arg);
-            argp = jacs_img_get_string_ptr(&ctx->img, fiber->command_arg);
+        if (fiber->pkt_data.reg_get.string_idx) {
+            arglen = jacs_img_get_string_len(&ctx->img, fiber->pkt_data.reg_get.string_idx);
+            argp = jacs_img_get_string_ptr(&ctx->img, fiber->pkt_data.reg_get.string_idx);
         }
 
         jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, argp, arglen);
-        jd_send_pkt(&ctx->packet);
-        DMESG("(re)send pkt cmd=%x", fiber->service_command);
-
-        if (fiber->resend_timeout < 1000)
-            fiber->resend_timeout *= 2;
-        jacs_fiber_sleep(fiber, fiber->resend_timeout);
+        if (jd_send_pkt(&ctx->packet) != 0) {
+            LOGV("(re)send pkt FAILED cmd=%x", fiber->service_command);
+            return retry_soon(fiber);
+        } else {
+            LOGV("(re)send pkt cmd=%x", fiber->service_command);
+            if (fiber->pkt_data.reg_get.resend_timeout < 1000)
+                fiber->pkt_data.reg_get.resend_timeout *= 2;
+            jacs_fiber_sleep(fiber, fiber->pkt_data.reg_get.resend_timeout);
+        }
     }
-
     return KEEP_WAITING;
+}
+
+static bool handle_send_pkt(jacs_fiber_t *fiber) {
+    if (role_missing(fiber))
+        return KEEP_WAITING;
+
+    jacs_ctx_t *ctx = fiber->ctx;
+    jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, fiber->pkt_data.send_pkt.data,
+                       fiber->pkt_data.send_pkt.size);
+    if (jd_send_pkt(&ctx->packet) == 0) {
+        LOGV("send pkt cmd=%x", fiber->service_command);
+        return RESUME_USER_CODE;
+    } else {
+        LOGV("send pkt FAILED cmd=%x", fiber->service_command);
+        return retry_soon(fiber);
+    }
+}
+
+static bool handle_logmsg(jacs_fiber_t *fiber, bool print) {
+    jacs_ctx_t *ctx = fiber->ctx;
+
+    uint16_t low_log_counter = fiber->service_command;
+    bool send_now = low_log_counter == (ctx->log_counter_to_send & 0xffff);
+    if (!send_now && !print)
+        return retry_soon(fiber);
+
+    jd_packet_t *pkt = &ctx->packet;
+    unsigned str_idx = fiber->pkt_data.logmsg.string_idx;
+    unsigned sz = jacs_strformat(
+        jacs_img_get_string_ptr(&ctx->img, str_idx), jacs_img_get_string_len(&ctx->img, str_idx),
+        (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
+        jacs_act_saved_regs_ptr(fiber->activation), fiber->pkt_data.logmsg.num_args, 0);
+    pkt->data[0] = low_log_counter & 0xff;     // log-counter
+    pkt->data[1] = 0;                          // flags
+    pkt->data[JD_SERIAL_PAYLOAD_SIZE - 1] = 0; // make sure to 0-terminate
+    pkt->service_size = sz + 2;
+    pkt->service_command = JD_JACSCRIPT_MANAGER_CMD_LOG_MESSAGE;
+    pkt->service_index = ctx->cfg.mgr_service_idx;
+    pkt->device_identifier = jd_device_id();
+    pkt->_size = (pkt->service_size + 4 + 3) & ~3;
+    pkt->flags = 0;
+
+    if (print)
+        DMESG("JSCR: %s", pkt->data + 2);
+
+    if (!(ctx->flags & JACS_CTX_LOGGING_ENABLED))
+        return RESUME_USER_CODE;
+
+    if (send_now) {
+        if (jd_send_pkt(&ctx->packet) == 0) {
+            // LOGV("log sent");
+            ctx->log_counter_to_send++;
+            return RESUME_USER_CODE;
+        } else {
+            LOGV("send log FAILED");
+            return retry_soon(fiber);
+        }
+    } else {
+        return retry_soon(fiber);
+    }
+}
+
+bool jacs_jd_should_run(jacs_fiber_t *fiber) {
+    if (fiber->pkt_kind == JACS_PKT_KIND_NONE)
+        return RESUME_USER_CODE;
+
+    switch (fiber->pkt_kind) {
+    case JACS_PKT_KIND_REG_GET:
+        return handle_reg_get(fiber);
+
+    case JACS_PKT_KIND_SEND_PKT:
+        return handle_send_pkt(fiber);
+
+    case JACS_PKT_KIND_LOGMSG:
+        return handle_logmsg(fiber, false);
+
+    default:
+        jd_panic();
+    }
 }
 
 static void jacs_jd_update_all_regcache(jacs_ctx_t *ctx, unsigned role_idx) {
@@ -265,6 +389,7 @@ void jacs_jd_reset_packet(jacs_ctx_t *ctx) {
 }
 
 void jacs_jd_init_roles(jacs_ctx_t *ctx) {
+    jd_role_free_all(); // free any previous roles
     unsigned numroles = jacs_img_num_roles(&ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
         const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, idx);
@@ -277,5 +402,14 @@ void jacs_jd_free_roles(jacs_ctx_t *ctx) {
     for (unsigned idx = 0; idx < numroles; ++idx) {
         jd_role_free(ctx->roles[idx]);
         ctx->roles[idx] = NULL;
+    }
+}
+
+void jacs_set_logging(jacs_ctx_t *ctx, uint8_t logging) {
+    if (logging)
+        ctx->flags |= JACS_CTX_LOGGING_ENABLED;
+    else {
+        ctx->flags &= ~JACS_CTX_LOGGING_ENABLED;
+        ctx->log_counter_to_send = ctx->log_counter;
     }
 }

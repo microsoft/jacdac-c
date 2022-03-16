@@ -11,13 +11,29 @@ uint8_t rawFrameSending;
 jd_frame_t *rawFrame;
 #endif
 
+#if JD_SEND_FRAME
+static jd_queue_t send_queue;
+static uint8_t q_sending;
+int jd_send_frame(jd_frame_t *f) {
+    if (target_in_irq())
+        jd_panic();
+    int r = jd_queue_push(send_queue, f);
+    jd_packet_ready();
+    return r;
+}
+#endif
+
 int jd_tx_is_idle() {
     return !isSending && sendFrame[bufferPtr].size == 0;
 }
 
 void jd_tx_init(void) {
-    if (!sendFrame)
+    if (!sendFrame) {
         sendFrame = (jd_frame_t *)jd_alloc(sizeof(jd_frame_t) * 2);
+#if JD_SEND_FRAME
+        send_queue = jd_queue_alloc(sizeof(jd_frame_t) * 2);
+#endif
+    }
 }
 
 int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsigned service_size) {
@@ -45,6 +61,14 @@ jd_frame_t *jd_tx_get_frame(void) {
         return r;
     }
 #endif
+#if JD_SEND_FRAME
+    JD_ASSERT(!q_sending);
+    jd_frame_t *f = jd_queue_front(send_queue);
+    if (f) {
+        q_sending = true;
+        return f;
+    }
+#endif
     isSending = true;
     return &sendFrame[bufferPtr ^ 1];
 }
@@ -54,6 +78,13 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
 #if JD_RAW_FRAME
     if (rawFrameSending) {
         rawFrameSending = false;
+        return;
+    }
+#endif
+#if JD_SEND_FRAME
+    if (q_sending) {
+        jd_queue_shift(send_queue);
+        q_sending = false;
         return;
     }
 #endif

@@ -96,7 +96,7 @@ void rolemgr_process(srv_t *state) {
     while (state->list_ptr) {
         jd_role_t *r = state->list_ptr;
 
-        unsigned sz = sizeof(jd_role_manager_roles_t) + strlen(r->name);
+        unsigned sz = offsetof(jd_role_manager_roles_t, role) + strlen(r->name);
         int err = jd_opipe_check_space(&state->list_pipe, sz);
         if (err == JD_PIPE_TRY_AGAIN)
             break;
@@ -163,8 +163,12 @@ void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     case JD_ROLE_MANAGER_CMD_LIST_ROLES:
-        if (jd_opipe_open(&state->list_pipe, pkt) == 0)
-            state->list_ptr = state->roles;
+        if (jd_opipe_open(&state->list_pipe, pkt) == 0) {
+            if (NULL == (state->list_ptr = state->roles)) {
+                // if nothing to list, close immediately
+                jd_opipe_close(&state->list_pipe);
+            }
+        }
         break;
 
     default:
@@ -241,7 +245,7 @@ void jd_role_free(jd_role_t *role) {
         jd_panic();
     stop_list(state);
     if (state->roles == role) {
-        state->roles = NULL;
+        state->roles = role->_next;
     } else {
         jd_role_t *q;
         for (q = state->roles; q; q = q->_next) {
@@ -255,4 +259,17 @@ void jd_role_free(jd_role_t *role) {
     }
     role->name = NULL;
     jd_free(role);
+}
+
+void jd_role_free_all() {
+    srv_t *state = _state;
+    if (state->locked)
+        jd_panic();
+    stop_list(state);
+    while (state->roles) {
+        jd_role_t *r = state->roles;
+        state->roles = r->_next;
+        r->name = NULL;
+        jd_free(r);
+    }
 }

@@ -9,19 +9,18 @@ static uint8_t verbose_log = 0;
 jd_device_t *jd_devices;
 
 #if EVENT_CHECKING
-#include <assert.h>
 static uint8_t event_scope;
 #define EVENT_ENTER()                                                                              \
     do {                                                                                           \
-        assert(event_scope == 0);                                                                  \
+        JD_ASSERT(event_scope == 0);                                                               \
         event_scope = 1;                                                                           \
     } while (0)
 #define EVENT_LEAVE()                                                                              \
     do {                                                                                           \
-        assert(event_scope == 1);                                                                  \
+        JD_ASSERT(event_scope == 1);                                                               \
         event_scope = 0;                                                                           \
     } while (0)
-#define EVENT_CHECK() assert(event_scope == 1)
+#define EVENT_CHECK() JD_ASSERT(event_scope == 1)
 #else
 #define EVENT_ENTER() ((void)0)
 #define EVENT_LEAVE() ((void)0)

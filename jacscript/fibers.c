@@ -43,6 +43,7 @@ void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time) {
 }
 
 static void free_fiber(jacs_fiber_t *fiber) {
+    jacs_jd_clear_pkt_kind(fiber);
     jacs_ctx_t *ctx = fiber->ctx;
     if (ctx->fibers == fiber) {
         ctx->fibers = fiber->next;
@@ -54,20 +55,18 @@ static void free_fiber(jacs_fiber_t *fiber) {
             oops();
         f->next = fiber->next;
     }
-    if (fiber->payload)
-        jd_free(fiber->payload);
     jd_free(fiber);
 }
 
 void jacs_fiber_return_from_call(jacs_activation_t *act) {
     if (act->caller) {
-        jd_free(act);
         jacs_fiber_activate(act->caller);
+        jd_free(act);
     } else {
         jacs_fiber_t *fiber = act->fiber;
-        if (fiber->flags & JACS_FIBER_FLAG_PENDING) {
+        if (fiber->pending) {
             DMESG("re-run fiber %d ", fiber->bottom_function_idx);
-            fiber->flags &= ~JACS_FIBER_FLAG_PENDING;
+            fiber->pending = 0;
             act->pc = act->func->start >> 1;
         } else {
             DMESG("free fiber %d", fiber->bottom_function_idx);
@@ -81,14 +80,13 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx) {
     jacs_fiber_t *f = ctx->fibers;
     while (f) {
         ctx->fibers = f->next;
+        jacs_jd_clear_pkt_kind(f);
         jacs_activation_t *act = f->activation;
         while (act) {
             jacs_activation_t *n = act->caller;
             jd_free(act);
             act = n;
         }
-        if (f->payload)
-            jd_free(f->payload);
         jd_free(f);
         f = ctx->fibers;
     }
@@ -101,11 +99,11 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
         for (fiber = ctx->fibers; fiber; fiber = fiber->next) {
             if (fiber->bottom_function_idx == fidx) {
                 if (op == JACS_OPCALL_BG_MAX1_PEND1) {
-                    if (fiber->flags & JACS_FIBER_FLAG_PENDING) {
+                    if (fiber->pending) {
                         ctx->registers[0] = 3;
                         // DMESG("fiber already pending %d", fidx);
                     } else {
-                        fiber->flags |= JACS_FIBER_FLAG_PENDING;
+                        fiber->pending = 1;
                         // DMESG("pend fiber %d", fidx);
                         ctx->registers[0] = 2;
                     }
@@ -142,8 +140,8 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
     if (!jacs_jd_should_run(fiber))
         return;
 
+    jacs_jd_clear_pkt_kind(fiber);
     fiber->role_idx = JACS_NO_ROLE;
-    fiber->service_command = 0;
     jacs_fiber_set_wake_time(fiber, 0);
 
     ctx->a = ctx->b = ctx->c = ctx->d = 0;
@@ -163,10 +161,11 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
     if (!code)
         code = JACS_PANIC_REBOOT;
     if (!ctx->error_code) {
+        ctx->error_pc = ctx->curr_fn ? ctx->curr_fn->pc : 0;
         if (code == JACS_PANIC_REBOOT) {
             DMESG("RESTART requested");
         } else {
-            DMESG("PANIC %d at pc=%d", code, ctx->curr_fn ? ctx->curr_fn->pc : 0);
+            DMESG("PANIC %d at pc=%d", code, ctx->error_pc);
         }
         ctx->error_code = code;
     }

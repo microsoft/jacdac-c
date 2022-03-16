@@ -14,25 +14,28 @@ static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     jacs_fiber_start(ctx, 0, 0, JACS_OPCALL_BG);
 }
 
-jacs_ctx_t *jacs_create_ctx(const uint8_t *img, uint32_t size) {
+jacs_ctx_t *jacs_create_ctx(const uint8_t *img, uint32_t size, const jacs_cfg_t *cfg) {
     if (jacs_verify(img, size))
         return NULL;
     jacs_ctx_t *ctx = jd_alloc(sizeof(*ctx));
+    ctx->cfg = *cfg;
     setup_ctx(ctx, img);
     return ctx;
 }
 
 static void jacs_enter(jacs_ctx_t *ctx) {
-    assert((ctx->flags & JACS_CTX_FLAG_BUSY) == 0);
+    JD_ASSERT((ctx->flags & JACS_CTX_FLAG_BUSY) == 0);
     ctx->flags |= JACS_CTX_FLAG_BUSY;
 }
 
 static void jacs_leave(jacs_ctx_t *ctx) {
-    assert((ctx->flags & JACS_CTX_FLAG_BUSY) != 0);
+    JD_ASSERT((ctx->flags & JACS_CTX_FLAG_BUSY) != 0);
     ctx->flags &= ~JACS_CTX_FLAG_BUSY;
 }
 
-unsigned jacs_error_code(jacs_ctx_t *ctx) {
+unsigned jacs_error_code(jacs_ctx_t *ctx, unsigned *pc) {
+    if (pc)
+        *pc = ctx->error_pc;
     return ctx->error_code;
 }
 
@@ -63,6 +66,7 @@ void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *
 
 static void clear_ctx(jacs_ctx_t *ctx) {
     jacs_enter(ctx);
+    jd_role_free_all();
     jacs_regcache_free_all(&ctx->regcache);
     jacs_fiber_free_all_fibers(ctx);
     jd_free(ctx->globals);
@@ -77,6 +81,8 @@ void jacs_restart(jacs_ctx_t *ctx) {
 }
 
 void jacs_free_ctx(jacs_ctx_t *ctx) {
-    clear_ctx(ctx);
-    jd_free(ctx);
+    if (ctx) {
+        clear_ctx(ctx);
+        jd_free(ctx);
+    }
 }

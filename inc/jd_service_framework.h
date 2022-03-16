@@ -101,6 +101,11 @@ int service_handle_register_final(srv_t *state, jd_packet_t *pkt, const uint16_t
 void jd_services_init(void);
 
 /**
+ * De-allocates all services. This is not normally used, except when tracing memory leaks.
+ */
+void jd_services_deinit(void);
+
+/**
  * Called by jd_process_everything()
  **/
 void jd_services_tick(void);
