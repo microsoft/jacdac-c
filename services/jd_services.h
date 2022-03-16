@@ -240,4 +240,24 @@ void motion_init(const motion_cfg_t *cfg);
 
 void lightbulb_init(uint8_t pin);
 
+typedef struct {
+    void (*init)(void);
+    void (*set_wiper)(uint8_t, uint8_t);
+    void (*shutdown)(uint8_t);
+} potentiometer_api_t;
+extern const potentiometer_api_t mcp41010;
+
+typedef struct {
+    const potentiometer_api_t* potentiometer;
+    int32_t min_voltage;
+    int32_t max_voltage;
+    int32_t initial_voltage;
+    uint8_t min_voltage_wiper_value;
+    uint8_t max_voltage_wiper_value;
+    uint8_t enable_pin;
+    bool enable_active_lo;
+    uint8_t wiper_channel;
+} power_supply_params_t;
+void powersupply_init(const power_supply_params_t params);
+
 #endif
