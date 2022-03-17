@@ -1,3 +1,5 @@
+#ifdef PIN_CS
+
 #include "jd_drivers.h"
 #include "jd_services.h"
 #include "board.h"
@@ -46,3 +48,5 @@ static void mcp41010_init(void) {
 
 const dig_pot_api_t mcp41010 = {
     .init = mcp41010_init, .set_wiper = mcp41010_set_wiper, .shutdown = mcp41010_shutdown};
+
+#endif
