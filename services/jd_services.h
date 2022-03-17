@@ -242,14 +242,15 @@ void lightbulb_init(uint8_t pin);
 
 typedef struct {
     void (*init)(void);
-    void (*set_wiper)(uint8_t, uint8_t);
-    void (*shutdown)(uint8_t);
-} potentiometer_api_t;
-extern const potentiometer_api_t mcp41010;
+    void (*set_wiper)(uint8_t channel, uint32_t wiper_value);
+    void (*shutdown)(uint8_t channel);
+} dig_pot_api_t;
+extern const dig_pot_api_t mcp41010;
 
 typedef struct {
-    const potentiometer_api_t* potentiometer;
-    int32_t (*voltage_to_wiper)(int32_t);
+    const dig_pot_api_t* potentiometer;
+    // voltage in mV
+    int32_t (*voltage_to_wiper)(int32_t voltage);
     int32_t min_voltage;
     int32_t max_voltage;
     int32_t initial_voltage;
