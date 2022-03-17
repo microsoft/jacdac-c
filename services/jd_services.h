@@ -262,4 +262,12 @@ typedef struct {
 } power_supply_params_t;
 void powersupply_init(const power_supply_params_t params);
 
+typedef struct {
+    void (*init)(uint8_t i2c_address);
+    int (*read_differential)(uint8_t channel1, uint8_t channel2);
+    int (*read_absolute)(uint8_t channel);
+    void (*set_gain)(int32_t gain_mv);
+} adc_api_t;
+extern const adc_api_t ads1115;
+
 #endif
