@@ -69,7 +69,7 @@ jd_frame_t *jd_tx_get_frame(void) {
         return f;
     }
 #endif
-    isSending = true;
+    isSending = 2;
     return &sendFrame[bufferPtr ^ 1];
 }
 
@@ -88,19 +88,22 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
         return;
     }
 #endif
-    isSending = false;
+    isSending = 0;
 }
 
 void jd_tx_flush() {
     if (target_in_irq())
         jd_panic();
-    if (isSending)
+    if (isSending == 1) {
+        jd_packet_ready();
         return;
+    }
     if (sendFrame[bufferPtr].size == 0)
         return;
     sendFrame[bufferPtr].device_identifier = jd_device_id();
     jd_compute_crc(&sendFrame[bufferPtr]);
     bufferPtr ^= 1;
+    isSending = 1;
     jd_packet_ready();
     jd_services_packet_queued();
 
