@@ -3,7 +3,7 @@
 
 #include "jd_protocol.h"
 
-#define FIRST_DELAY 15 // first repetition send after N ms
+#define FIRST_DELAY 20 // first repetition send after N ms
 #define SECOND_DELAY 50 // second sent after additional N ms
 
 typedef struct {
