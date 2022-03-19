@@ -80,7 +80,7 @@ static int readReg(uint8_t reg) {
     return r;
 }
 
-static void lps33hwtr_reset(void) {
+void __attribute__((unused)) lps33hwtr_reset(void) {
 
     ctx_t *ctx = &state;
     ctx->ctrl1 = readReg(LPS33HW_CTRL_REG1);
@@ -138,15 +138,7 @@ static void lps33hwtr_init(void) {
     writeReg(LPS33HW_CTRL_REG1, ctx->ctrl1 | 0x02);
 }
 
-static void lps33hwtr_reset_pressure(void) {
-    uint8_t configInterrupt = readReg(LPS33HW_INTERRUPT_CFG);
-    configInterrupt &= ~(0x08);
-    configInterrupt |= ((uint8_t)0x01 << 5);
-
-    writeReg(LPS33HW_INTERRUPT_CFG, configInterrupt);
-}
-
-static void lps33hwtr_set_pressure_zero(void) {
+void __attribute__((unused)) lps33hwtr_set_pressure_zero(void) {
     uint8_t configInterrupt = readReg(LPS33HW_INTERRUPT_CFG);
     configInterrupt &= ~(0x08);
     configInterrupt |= ((uint8_t)0x01 << 4);
@@ -154,7 +146,7 @@ static void lps33hwtr_set_pressure_zero(void) {
     writeReg(LPS33HW_INTERRUPT_CFG, configInterrupt);
 }
 
-static uint32_t lps33hwtr_get_pressure(void) {
+uint32_t __attribute__((unused)) lps33hwtr_get_pressure(void) {
 
     uint32_t data[3];
     readData(LPS33HW_PRESS_OUT_XL, (uint8_t *)data, 3);
@@ -164,7 +156,7 @@ static uint32_t lps33hwtr_get_pressure(void) {
     return pressure;
 }
 
-static int32_t lps33hwtr_get_temperature(void) {
+int32_t __attribute__((unused)) lps33hwtr_get_temperature(void) {
     int32_t temp;
     int16_t rtemp = (readReg(LPS33HW_TEMP_OUT_H) << 8);
     rtemp |= readReg(LPS33HW_TEMP_OUT_L);
