@@ -282,7 +282,7 @@ typedef struct {
     // maximum expected voltage to be measured.
     int32_t gain_mv;
     sensor_api_t* api;
-} analogmeasurement_params_t;
-void analogmeasurement_init(const analogmeasurement_params_t params);
+} voltagemeasurement_params_t;
+void voltagemeasurement_init(const voltagemeasurement_params_t params);
 
 #endif
