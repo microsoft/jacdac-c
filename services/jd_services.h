@@ -285,4 +285,16 @@ typedef struct {
 } voltagemeasurement_params_t;
 void voltagemeasurement_init(const voltagemeasurement_params_t params);
 
+typedef struct {
+    const adc_api_t* adc;
+    char* measurement_name;
+    uint32_t channel1;
+    uint32_t channel2;
+    uint8_t i2c_address;
+    // maximum expected voltage to be measured.
+    int32_t gain_mv;
+    sensor_api_t* api;
+} currentmeasurement_params_t;
+void currentmeasurement_init(const currentmeasurement_params_t params);
+
 #endif
