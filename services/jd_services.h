@@ -264,10 +264,25 @@ void powersupply_init(const power_supply_params_t params);
 
 typedef struct {
     void (*init)(uint8_t i2c_address);
-    int (*read_differential)(uint8_t channel1, uint8_t channel2);
-    int (*read_absolute)(uint8_t channel);
+    float (*read_differential)(uint8_t channel1, uint8_t channel2);
+    float (*read_absolute)(uint8_t channel);
     void (*set_gain)(int32_t gain_mv);
+    void (*process)(void);
+    void (*sleep)(void);
 } adc_api_t;
 extern const adc_api_t ads1115;
+
+typedef struct {
+    const adc_api_t* adc;
+    uint8_t measurement_type;
+    char* measurement_name;
+    uint32_t channel1;
+    uint32_t channel2;
+    uint8_t i2c_address;
+    // maximum expected voltage to be measured.
+    int32_t gain_mv;
+    sensor_api_t* api;
+} analogmeasurement_params_t;
+void analogmeasurement_init(const analogmeasurement_params_t params);
 
 #endif

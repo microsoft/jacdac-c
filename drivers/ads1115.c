@@ -28,7 +28,7 @@
  * Programmable gain:
  *   000 : FSR = ±6.144 V(1)
  *   001 : FSR = ±4.096 V(1)
- *   010 : FSR = ±2.048 V (default) 
+ *   010 : FSR = ±2.048 V (default)
  *   011 : FSR = ±1.024 V
  *   100 : FSR = ±0.512 V
  *   101 : FSR = ±0.256 V
@@ -46,9 +46,9 @@
  *   001 : 16 SPS
  *   010 : 32 SPS
  *   011 : 64 SPS
- *   100 : 128 SPS (default) 
+ *   100 : 128 SPS (default)
  *   101 : 250 SPS
- *   110 : 475 SPS 
+ *   110 : 475 SPS
  *   111 : 860 SPS
  **/
 #define ADS1115_CONF_DR 5
@@ -103,9 +103,14 @@ typedef struct {
 
 #define ADS1115_GAIN_MAP_LEN 8
 static const ads1115_gain_map_t gain_map[ADS1115_CHANNEL_MAP_LEN] = {
-    {.gain = 6144, .bitmsk = 0x0, .lsb_mv = 0.1875}, {.gain = 4096, .bitmsk = 0x1, .lsb_mv = 0.125}, {.gain = 2048, .bitmsk = 0x2, .lsb_mv = 0.0625},
-    {.gain = 1024, .bitmsk = 0x3, .lsb_mv = 0.03125}, {.gain = 512, .bitmsk = 0x4, .lsb_mv = 0.015625},  {.gain = 256, .bitmsk = 0x5, .lsb_mv = 0.0078125},
-    {.gain = 256, .bitmsk = 0x6, .lsb_mv = 0.0078125},  {.gain = 256, .bitmsk = 0x7, .lsb_mv = 0.0078125},
+    {.gain = 6144, .bitmsk = 0x0, .lsb_mv = 0.1875},
+    {.gain = 4096, .bitmsk = 0x1, .lsb_mv = 0.125},
+    {.gain = 2048, .bitmsk = 0x2, .lsb_mv = 0.0625},
+    {.gain = 1024, .bitmsk = 0x3, .lsb_mv = 0.03125},
+    {.gain = 512, .bitmsk = 0x4, .lsb_mv = 0.015625},
+    {.gain = 256, .bitmsk = 0x5, .lsb_mv = 0.0078125},
+    {.gain = 256, .bitmsk = 0x6, .lsb_mv = 0.0078125},
+    {.gain = 256, .bitmsk = 0x7, .lsb_mv = 0.0078125},
 };
 
 // +/- 2.048V by default
@@ -154,29 +159,18 @@ static inline float ads1115_gain_mult(uint8_t bitmsk) {
 
 #define ADS1115_MAX_RETRIES 10000
 
-static void ads1115_read_i2c(uint8_t reg, uint8_t* data, uint8_t len) {
-    i2c_write(ads1115_address);
-    i2c_write(reg);
-    i2c_read_ex(ads1115_address, data, len);
-}
-
-static void ads1115_write_i2c(uint8_t reg, uint8_t* data, uint8_t len) {
-    i2c_write(ads1115_address);
-    i2c_write(reg);
-    i2c_read_ex(ads1115_address, data, len);
-}
-
 static int ads1115_read(void) {
     int16_t res = 0;
     int retries = 0;
 
 #ifdef PIN_ACC_INT
     // alert/drdy pin is set to active lo in configure
-    while (pin_get(PIN_ACC_INT) == 1 && retries++ < ADS1115_MAX_RETRIES);
-        // conversion time is 1/DR
-        // we configure DR to 860
+    while (pin_get(PIN_ACC_INT) == 1 && retries++ < ADS1115_MAX_RETRIES)
+        ;
+    // conversion time is 1/DR
+    // we configure DR to 860
     DMESG("RETRIES %d", retries);
-    JD_ASSERT(retries < ADS1115_MAX_RETRIES);    
+    JD_ASSERT(retries < ADS1115_MAX_RETRIES);
     // DMESG("RETRIES %d", retries);
 #else
     while (1) {
@@ -208,7 +202,7 @@ static void ads1115_configure(uint8_t pos_chan, uint8_t neg_chan) {
 
     uint16_t value = (channel_bitmsk << ADS1115_CONF_MUX);
 
-    // single shot start 
+    // single shot start
     value |= (1 << ADS1115_CONF_OS);
     // single shot
     value |= (1 << ADS1115_CONF_MODE);
@@ -220,7 +214,7 @@ static void ads1115_configure(uint8_t pos_chan, uint8_t neg_chan) {
 
 #ifdef PIN_ACC_INT
     // latching comparator!
-    // value |= (1 << ADS1115_CONF_COMP_LAT);    
+    // value |= (1 << ADS1115_CONF_COMP_LAT);
 #else
     // alert/rdy high impedance
     value |= (0x3 << ADS1115_CONF_COMP_QUE);
@@ -236,16 +230,14 @@ static void ads1115_configure(uint8_t pos_chan, uint8_t neg_chan) {
     // DMESG("CONF GET: %x", value);
 }
 
-static int ads1115_read_absolute(uint8_t channel) {
+static float ads1115_read_absolute(uint8_t channel) {
     ads1115_configure(channel, ADS1115_GND_CHAN);
-    return (int)((float)ads1115_read() * ads1115_gain_mult(gain_bitmsk));
+    return ((float)ads1115_read() * ads1115_gain_mult(gain_bitmsk)) / 1000.0;
 }
 
-static int ads1115_read_differential(uint8_t pos_channel, uint8_t neg_channel) {
+static float ads1115_read_differential(uint8_t pos_channel, uint8_t neg_channel) {
     ads1115_configure(pos_channel, neg_channel);
-    volatile float f = (float)ads1115_read() * ads1115_gain_mult(gain_bitmsk);
-    while(1);
-    return (int)f;
+    return ((float)ads1115_read() * ads1115_gain_mult(gain_bitmsk)) / 1000.0;
 }
 
 static void ads1115_init(uint8_t i2c_address) {
@@ -263,9 +255,11 @@ static void ads1115_init(uint8_t i2c_address) {
 #endif
 }
 
-const adc_api_t ads1115 = {
-    .init = ads1115_init,
-    .read_differential = ads1115_read_differential,
-    .read_absolute = ads1115_read_absolute,
-    .set_gain = ads1115_set_gain
-};
+static void ads1115_nop(void) {}
+
+const adc_api_t ads1115 = {.init = ads1115_init,
+                           .read_differential = ads1115_read_differential,
+                           .read_absolute = ads1115_read_absolute,
+                           .set_gain = ads1115_set_gain,
+                           .process = ads1115_nop,
+                           .sleep = ads1115_nop};
