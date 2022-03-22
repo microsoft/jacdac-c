@@ -250,10 +250,10 @@ extern const dig_pot_api_t mcp41010;
 typedef struct {
     const dig_pot_api_t* potentiometer;
     // voltage in mV
-    int32_t (*voltage_to_wiper)(int32_t voltage);
-    int32_t min_voltage;
-    int32_t max_voltage;
-    int32_t initial_voltage;
+    int32_t (*voltage_to_wiper)(float voltage);
+    float min_voltage;
+    float max_voltage;
+    float initial_voltage;
     uint8_t min_voltage_wiper_value;
     uint8_t max_voltage_wiper_value;
     uint8_t enable_pin;
@@ -282,8 +282,8 @@ typedef struct {
     // maximum expected voltage to be measured.
     int32_t gain_mv;
     sensor_api_t* api;
-} voltagemeasurement_params_t;
-void voltagemeasurement_init(const voltagemeasurement_params_t params);
+} dcvoltagemeasurement_params_t;
+void dcvoltagemeasurement_init(const dcvoltagemeasurement_params_t params);
 
 typedef struct {
     const adc_api_t* adc;
@@ -294,7 +294,7 @@ typedef struct {
     // maximum expected voltage to be measured.
     int32_t gain_mv;
     sensor_api_t* api;
-} currentmeasurement_params_t;
-void currentmeasurement_init(const currentmeasurement_params_t params);
+} dccurrentmeasurement_params_t;
+void dccurrentmeasurement_init(const dccurrentmeasurement_params_t params);
 
 #endif

@@ -5,9 +5,9 @@
 struct srv_state {
     SRV_COMMON;
     uint8_t enabled;
-    int32_t output_voltage;
-    int32_t minimum_voltage;
-    int32_t maximum_voltage;
+    double output_voltage;
+    double minimum_voltage;
+    double maximum_voltage;
     power_supply_params_t params;
 };
 
@@ -15,17 +15,14 @@ REG_DEFINITION(                                   //
     psu_regs,                                     //
     REG_SRV_COMMON,                               //
     REG_U8(JD_POWER_SUPPLY_REG_ENABLED),          //
-    REG_I32(JD_POWER_SUPPLY_REG_OUTPUT_VOLTAGE),  //
-    REG_I32(JD_POWER_SUPPLY_REG_MINIMUM_VOLTAGE), //
-    REG_I32(JD_POWER_SUPPLY_REG_MAXIMUM_VOLTAGE), //
+    REG_BYTE8(JD_POWER_SUPPLY_REG_OUTPUT_VOLTAGE),  //
+    REG_BYTE8(JD_POWER_SUPPLY_REG_MINIMUM_VOLTAGE), //
+    REG_BYTE8(JD_POWER_SUPPLY_REG_MAXIMUM_VOLTAGE), //
 )
 
 static void update_wiper_value(srv_t *state) {
-    int32_t value = state->output_voltage;
-    // Lazy implementation, use only the upper 22 bits.
-    value >>= 10;
     state->params.potentiometer->set_wiper(state->params.wiper_channel,
-                                           state->params.voltage_to_wiper(value));
+                                           state->params.voltage_to_wiper(state->output_voltage));
 }
 
 static void reflect_register_state(srv_t *state) {
