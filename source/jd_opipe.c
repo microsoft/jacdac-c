@@ -39,13 +39,15 @@ int jd_opipe_open(jd_opipe_desc_t *str, jd_packet_t *pkt) {
     jd_pipe_cmd_t *sc = (jd_pipe_cmd_t *)pkt->data;
     jd_frame_t *f = &str->frame;
 
-    memset(f, 0, sizeof(str->frame));
-    f->device_identifier = sc->device_identifier;
-    f->flags = JD_FRAME_FLAG_COMMAND | JD_FRAME_FLAG_ACK_REQUESTED;
-    str->counter = sc->port_num << JD_PIPE_PORT_SHIFT;
+    if (sc->device_identifier == 0)
+        return JD_PIPE_ERROR;
+
 
     LOCK();
     jd_opipe_unlink(str);
+    f->device_identifier = sc->device_identifier;
+    f->flags = JD_FRAME_FLAG_COMMAND | JD_FRAME_FLAG_ACK_REQUESTED;
+    str->counter = sc->port_num << JD_PIPE_PORT_SHIFT;
     str->status = ST_OPEN;
     str->curr_retry = 0;
     str->next = opipes;

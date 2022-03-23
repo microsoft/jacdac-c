@@ -12,6 +12,7 @@
 
 void jd_rx_init(void);
 int jd_rx_frame_received(jd_frame_t *frame);
-jd_frame_t* jd_rx_get_frame(void);
+jd_frame_t *jd_rx_get_frame(void);
+void jd_rx_release_frame(jd_frame_t *frame);
 
 #endif

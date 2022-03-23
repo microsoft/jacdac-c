@@ -3,6 +3,9 @@
 
 #include "jd_protocol.h"
 
+#define FIRST_DELAY 20 // first repetition send after N ms
+#define SECOND_DELAY 50 // second sent after additional N ms
+
 typedef struct {
     uint32_t timestamp;
     uint8_t service_size;
@@ -65,7 +68,7 @@ static void do_process_event_queue(void) {
                     ev->service_index = 0xff; // not sure this can happen
                 }
             } else {
-                ev->timestamp += 50 * 1000;
+                ev->timestamp += SECOND_DELAY * 1000;
                 ev->service_index |= 0x80;
             }
         }
@@ -98,7 +101,7 @@ void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t 
     int reqlen = data_bytes + sizeof(ev_t);
     if (reqlen > JD_EVENT_QUEUE_SIZE)
         return; // too long to queue; shouldn't happen
-    while (JD_EVENT_QUEUE_SIZE - info.qptr < (int)data_bytes)
+    while (JD_EVENT_QUEUE_SIZE - info.qptr < reqlen)
         ev_shift();
 
     ev_t *ev = (ev_t *)((uint8_t *)info.buffer + info.qptr);
@@ -109,6 +112,6 @@ void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t 
     // no randomization; it's somewhat often to generate multiple events in the same tick
     // they will this way get the same re-transmission time, and thus be packed in one frame
     // on both re-transmissions
-    ev->timestamp = now + 20 * 1000;
+    ev->timestamp = now + FIRST_DELAY * 1000;
     info.qptr += ev_size(ev);
 }

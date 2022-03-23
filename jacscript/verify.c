@@ -19,6 +19,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
+// next error 1149
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -44,7 +45,6 @@ static int fail(int code, uint32_t offset) {
     MUST_CONTAIN_PTR(code, container, (sect)->start);                                              \
     MUST_CONTAIN_PTR(code, container, (sect)->start + (sect)->length)
 
-// next error 1144
 static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
     const uint8_t *imgdata = img->data;
     uint32_t offset;
@@ -173,14 +173,14 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
         } break;
 
         case JACS_OPTOP_JUMP: { // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
-            uint32_t pc2 = pc + 1;
+            int pc2 = pc + 1;
             if (arg8 & (1 << 7)) {
                 pc2 -= b;
             } else {
                 pc2 += b;
             }
             CHECK(1105, pc2 >= 0);                                            // jump before
-            CHECK(1106, pc2 < numinstr);                                      // jump after
+            CHECK(1106, pc2 < (int)numinstr);                                 // jump after
             CHECK(1107, pc2 == 0 || !jacs_is_prefix_instr(funcode[pc2 - 1])); // jump into prefix
             if (!(arg8 & (1 << 6)))
                 lastOK = true;
@@ -213,10 +213,10 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             case JACS_OPSYNC_SETUP_BUFFER: // A-size
                 CHECK(1113, a <= 236);     // setup buffer size in range
                 break;
-            case JACS_OPSYNC_LOG_FORMAT:
             case JACS_OPSYNC_FORMAT:                        // A-string-index B-numargs
                 CHECK(1114, c <= 236);                      // offset in range
                 CHECK(1115, a < jacs_img_num_strings(img)); // str in range
+                CHECK(1147, b <= JACS_NUM_REGS);
                 break;
             case JACS_OPSYNC_STR0EQ:
                 CHECK(1116, c <= 236);                      // offset in range
@@ -254,7 +254,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 break;
             case JACS_OPASYNC_SEND_CMD:                   // A-role, B-code
                 CHECK(1124, a < jacs_img_num_roles(img)); // role idx
-                CHECK(1125, b <= 0xffff);                 // cmd code
+                // CHECK(1125, b <= 0xffff);                 // cmd code
                 break;
             case JACS_OPASYNC_QUERY_REG:                  // A-role, B-code, C-timeout
                 CHECK(1126, a < jacs_img_num_roles(img)); // role idx
@@ -264,6 +264,12 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1128, a < jacs_img_num_roles(img)); // role idx
                 CHECK(1129, b >> 8 != 0);                 // arg!=0
                 CHECK(1130, b >> 8 < jacs_img_num_strings(img)); // num str
+                break;
+            case JACS_OPASYNC_LOG_FORMAT: // A-string-index B-numargs
+                CHECK(1144, c == 0);
+                CHECK(1145, a < jacs_img_num_strings(img));
+                CHECK(1146, b < JACS_NUM_REGS);
+                CHECK(1148, (d & ((1 << b) - 1)) == ((1 << b) - 1));
                 break;
             default:
                 CHECK(1131, false); // invalid async code
@@ -282,8 +288,8 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
 }
 
 int jacs_verify(const uint8_t *imgdata, uint32_t size) {
-    assert(((uintptr_t)imgdata & 3) == 0);
-    assert(size > sizeof(jacs_img_header_t));
+    JD_ASSERT(((uintptr_t)imgdata & 3) == 0);
+    JD_ASSERT(size > sizeof(jacs_img_header_t));
     uint32_t offset = 0;
     const jacs_img_header_t *header = (const jacs_img_header_t *)imgdata;
     jacs_img_t _img;

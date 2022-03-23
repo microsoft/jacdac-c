@@ -12,7 +12,7 @@
 #include "jd_physical.h"
 
 uint64_t hw_device_id(void);
-void hw_panic(void);
+__attribute((noreturn)) void hw_panic(void);
 
 extern uint32_t now;
 
@@ -82,7 +82,7 @@ void bspi_send(const void *src, uint32_t len);
 void bspi_recv(void *dst, uint32_t len);
 void bspi_init(void);
 
-//dspi.c
+// dspi.c
 void dspi_init(bool slow, int cpol, int cpha);
 void dspi_tx(const void *data, uint32_t numbytes, cb_t doneHandler);
 void dspi_xfer(const void *txdata, void *rxdata, uint32_t numbytes, cb_t doneHandler);
