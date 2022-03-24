@@ -65,11 +65,6 @@ static srv_t *state_;
 
 #include "led_internal.h"
 
-static inline RGB rgb(uint8_t r, uint8_t g, uint8_t b) {
-    RGB x = {.r = r, .g = g, .b = b};
-    return x;
-}
-
 void leddisplay_process(srv_t *state) {
     if (in_past(state->auto_refresh))
         state->dirty = 1;
