@@ -84,7 +84,8 @@
 #endif
 
 #ifndef STATIC_ASSERT_EXT
-#define STATIC_ASSERT_EXT(e, id) enum { CONCAT_0(_static_assert_, CONCAT_0(__LINE__, id)) = 1 / ((e) ? 1 : 0) };
+#define STATIC_ASSERT_EXT(e, id)                                                                   \
+    enum { CONCAT_0(_static_assert_, CONCAT_0(__LINE__, id)) = 1 / ((e) ? 1 : 0) };
 #endif
 
 #ifndef JD_EVENT_QUEUE_SIZE

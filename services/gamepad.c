@@ -36,12 +36,12 @@ static void update(srv_t *state) {
     }
 
     if (state->params.pinX == 0xff) {
-        state->direction.x = (btns & JD_GAMEPAD_BUTTONS_LEFT)    ? -0x8000
-                             : (btns & JD_GAMEPAD_BUTTONS_RIGHT) ? 0x7fff
-                                                                 : 0;
-        state->direction.y = (btns & JD_GAMEPAD_BUTTONS_UP)     ? -0x8000
-                             : (btns & JD_GAMEPAD_BUTTONS_DOWN) ? 0x7fff
-                                                                : 0;
+        state->direction.x = (btns & JD_GAMEPAD_BUTTONS_LEFT)
+                                 ? -0x8000
+                                 : (btns & JD_GAMEPAD_BUTTONS_RIGHT) ? 0x7fff : 0;
+        state->direction.y = (btns & JD_GAMEPAD_BUTTONS_UP)
+                                 ? -0x8000
+                                 : (btns & JD_GAMEPAD_BUTTONS_DOWN) ? 0x7fff : 0;
     } else {
         pin_setup_output(state->params.pinH);
         pin_set(state->params.pinH, 1);

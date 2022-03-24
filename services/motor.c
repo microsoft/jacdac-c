@@ -35,7 +35,7 @@ struct srv_state {
 
 REG_DEFINITION(                   //
     motor_regs,                   //
-    REG_SRV_COMMON,                 //
+    REG_SRV_COMMON,               //
     REG_I16(JD_MOTOR_REG_DUTY),   //
     REG_U8(JD_MOTOR_REG_ENABLED), //
 )

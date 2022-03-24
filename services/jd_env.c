@@ -62,7 +62,7 @@ int env_sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
         return 0;
     tmp = (&env->value)[off];
 
-// send_it:
+    // send_it:
     jd_send(pkt->service_index, pkt->service_command, &tmp, 4);
     return -(pkt->service_command & 0xfff);
 }

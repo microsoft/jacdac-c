@@ -42,7 +42,6 @@ int jd_opipe_open(jd_opipe_desc_t *str, jd_packet_t *pkt) {
     if (sc->device_identifier == 0)
         return JD_PIPE_ERROR;
 
-
     LOCK();
     jd_opipe_unlink(str);
     f->device_identifier = sc->device_identifier;

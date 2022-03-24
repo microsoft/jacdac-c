@@ -51,6 +51,7 @@ struct jd_ipipe_desc {
     struct jd_ipipe_desc *next;
     uint16_t counter;
 };
-int jd_ipipe_open(jd_ipipe_desc_t *str, jd_ipipe_handler_t handler, jd_ipipe_handler_t meta_handler);
+int jd_ipipe_open(jd_ipipe_desc_t *str, jd_ipipe_handler_t handler,
+                  jd_ipipe_handler_t meta_handler);
 void jd_ipipe_close(jd_ipipe_desc_t *str);
 void jd_ipipe_handle_packet(jd_packet_t *pkt);

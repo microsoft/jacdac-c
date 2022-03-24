@@ -12,5 +12,4 @@ void pwm_enable(uint8_t pwm_id, bool enabled);
 uint8_t encoder_init(uint8_t pinA, uint8_t pinB);
 uint32_t encoder_get(uint8_t pwm);
 
-
 #endif

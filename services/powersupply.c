@@ -11,10 +11,10 @@ struct srv_state {
     power_supply_params_t params;
 };
 
-REG_DEFINITION(                                   //
-    psu_regs,                                     //
-    REG_SRV_COMMON,                               //
-    REG_U8(JD_POWER_SUPPLY_REG_ENABLED),          //
+REG_DEFINITION(                                     //
+    psu_regs,                                       //
+    REG_SRV_COMMON,                                 //
+    REG_U8(JD_POWER_SUPPLY_REG_ENABLED),            //
     REG_BYTE8(JD_POWER_SUPPLY_REG_OUTPUT_VOLTAGE),  //
     REG_BYTE8(JD_POWER_SUPPLY_REG_MINIMUM_VOLTAGE), //
     REG_BYTE8(JD_POWER_SUPPLY_REG_MAXIMUM_VOLTAGE), //

@@ -229,7 +229,6 @@ static bool set_next(srv_t *state, RGB c) {
     return true;
 }
 
-
 #include "led_internal.h"
 
 static RGB prog_fetch_color(srv_t *state) {

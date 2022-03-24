@@ -101,7 +101,8 @@ static inline jd_device_service_t *jd_device_get_service(jd_device_t *dev, unsig
 
 // jd_device_service_t  methods
 static inline jd_device_t *jd_service_parent(jd_device_service_t *serv) {
-    return (jd_device_t *)((uint8_t *)(serv - serv->service_index) - offsetof(jd_device_t, services));
+    return (jd_device_t *)((uint8_t *)(serv - serv->service_index) -
+                           offsetof(jd_device_t, services));
 }
 int jd_service_send_cmd(jd_device_service_t *serv, uint16_t service_command, const void *data,
                         size_t datasize);

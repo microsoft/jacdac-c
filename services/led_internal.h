@@ -65,4 +65,3 @@ static void tx_done(void) {
     pwr_leave_pll();
     state_->in_tx = 0;
 }
-

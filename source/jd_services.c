@@ -110,9 +110,9 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
                 } else {
                     LOG("too little @%d - %x", offset, reg);
                     memcpy(sptr, pkt->data, pkt->service_size);
-                    int fill = !REG_IS_SIGNED(tp)                          ? 0
-                               : (pkt->data[pkt->service_size - 1] & 0x80) ? 0xff
-                                                                           : 0;
+                    int fill = !REG_IS_SIGNED(tp)
+                                   ? 0
+                                   : (pkt->data[pkt->service_size - 1] & 0x80) ? 0xff : 0;
                     memset(sptr + pkt->service_size, fill, regsz - pkt->service_size);
                 }
                 return reg;

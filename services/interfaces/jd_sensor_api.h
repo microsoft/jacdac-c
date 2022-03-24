@@ -53,4 +53,3 @@ extern const env_sensor_api_t tvoc_sgpc3;
 
 extern const env_sensor_api_t pressure_lps33hwtr;
 extern const env_sensor_api_t temperature_lps33hwtr;
-

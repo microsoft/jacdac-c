@@ -10,11 +10,11 @@ struct srv_state {
     double measurement;
 };
 
-REG_DEFINITION(                                    //
-    dccurrentmeasurement_regs,                                    //
-    REG_SENSOR_COMMON,                                //
-    REG_BYTES(JD_D_CCURRENT_MEASUREMENT_REG_MEASUREMENT_NAME, 20),                //
-    REG_BYTES(JD_D_CCURRENT_MEASUREMENT_REG_MEASUREMENT, 8),                //
+REG_DEFINITION(                                                    //
+    dccurrentmeasurement_regs,                                     //
+    REG_SENSOR_COMMON,                                             //
+    REG_BYTES(JD_D_CCURRENT_MEASUREMENT_REG_MEASUREMENT_NAME, 20), //
+    REG_BYTES(JD_D_CCURRENT_MEASUREMENT_REG_MEASUREMENT, 8),       //
 )
 
 void dccurrentmeasurement_process(srv_t *state) {

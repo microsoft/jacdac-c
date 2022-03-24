@@ -136,8 +136,7 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 #if JD_CONFIG_DEV_SPEC_URL == 1
     case JD_GET(JD_CONTROL_REG_DEVICE_SPECIFICATION_URL):
-        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_spec_url,
-                strlen(app_spec_url));
+        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_spec_url, strlen(app_spec_url));
         break;
 #endif
 

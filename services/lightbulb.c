@@ -13,7 +13,7 @@ REG_DEFINITION(                            //
     bulb_regs,                             //
     REG_SRV_COMMON,                        //
     REG_U16(JD_LIGHT_BULB_REG_BRIGHTNESS), //
-    REG_U8(JD_LIGHT_BULB_REG_DIMMABLE),  //
+    REG_U8(JD_LIGHT_BULB_REG_DIMMABLE),    //
 )
 
 static void reflect_register_state(srv_t *state) {

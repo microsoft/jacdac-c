@@ -45,12 +45,12 @@ static void cps122_init(void) {
 
     ctx->inited = 1;
     i2c_init();
-    #if 0
+#if 0
     uint8_t buf[5];
     int id = i2c_read_reg_buf(CPS122_ADDR, CPS122_GD, buf, sizeof(buf));
     if (id < 0)
         hw_panic();
-    #endif
+#endif
 }
 
 static void cps122_process(void) {
@@ -109,4 +109,3 @@ const env_sensor_api_t pressure_cps122 = {
     .process = cps122_process,
     .get_reading = cps122_pressure,
 };
-

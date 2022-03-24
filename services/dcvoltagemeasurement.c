@@ -11,12 +11,12 @@ struct srv_state {
     double measurement;
 };
 
-REG_DEFINITION(                                    //
-    dcvoltagemeasurement_regs,                                    //
-    REG_SENSOR_COMMON,                                //
-    REG_U8(JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE),                   //
-    REG_BYTES(JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME, 20),                //
-    REG_BYTES(JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT, 8),                //
+REG_DEFINITION(                                                    //
+    dcvoltagemeasurement_regs,                                     //
+    REG_SENSOR_COMMON,                                             //
+    REG_U8(JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE),        //
+    REG_BYTES(JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME, 20), //
+    REG_BYTES(JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT, 8),       //
 )
 
 void dcvoltagemeasurement_process(srv_t *state) {
@@ -29,7 +29,8 @@ void dcvoltagemeasurement_process(srv_t *state) {
 void dcvoltagemeasurement_handle_packet(srv_t *state, jd_packet_t *pkt) {
     int r = sensor_handle_packet(state, pkt);
 
-    if (r == JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE || r == JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME)
+    if (r == JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE ||
+        r == JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME)
         service_handle_register(state, pkt, dcvoltagemeasurement_regs);
 }
 

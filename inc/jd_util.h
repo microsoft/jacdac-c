@@ -47,7 +47,6 @@ void jd_to_hex(char *dst, const void *src, size_t len);
             jd_panic();                                                                            \
     } while (0)
 
-
 // jd_queue.c
 typedef struct jd_queue *jd_queue_t;
 jd_queue_t jd_queue_alloc(unsigned size);
