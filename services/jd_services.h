@@ -210,6 +210,7 @@ typedef struct {
     uint8_t pin_relay_led;
     uint8_t drive_active_lo;
     uint8_t led_active_lo;
+    bool initial_state;
 } relay_params_t;
 void relay_service_init(const relay_params_t *params);
 
