@@ -58,7 +58,6 @@ void relay_service_init(const relay_params_t *params) {
 
     state->max_switching_current = params->max_switching_current;
     state->variant = params->relay_variant;
-    state->intensity = 0;
-    pin_set(state->params.pin_relay_drive, (state->params.drive_active_lo ? 1 : 0));
-    pin_set(state->params.pin_relay_led, (state->params.led_active_lo ? 1 : 0));
+    state->intensity = (params->initial_state) ? 1 : 0;
+    reflect_register_state(state);
 }
