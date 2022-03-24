@@ -1,7 +1,6 @@
 #include "jd_services.h"
 #include "interfaces/jd_pins.h"
 #include "jacdac/dist/c/vibrationmotor.h"
-#include "lib.h"
 
 #define MAX_SEQUENCE 118
 
@@ -12,6 +11,10 @@ struct srv_state {
     const vibration_motor_api_t *api;
     jd_vibration_motor_vibrate_t sequence[MAX_SEQUENCE];
 };
+
+static inline int min(int a, int b) {
+    return a < b ? a : b;
+}
 
 #if 1
 void vibration_process(srv_t *state) {

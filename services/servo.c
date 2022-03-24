@@ -88,8 +88,8 @@ void servo_handle_packet(srv_t *state, jd_packet_t *pkt) {
             // otherwise, clamp the supplied user config
             // the clamping values are chosen so that the multiplication in pulse computation
             // doesn't overflow we take a larger positive max_angle for linear servos
-            p->min_angle = clamp(-360 << 16, p->min_angle, 1024 << 16);
-            p->max_angle = clamp(-360 << 16, p->max_angle, 1024 << 16);
+            p->min_angle = clamp(-(360 << 16), p->min_angle, 1024 << 16);
+            p->max_angle = clamp(-(360 << 16), p->max_angle, 1024 << 16);
             p->min_pulse = clamp(0, p->min_pulse, 6000);
             p->max_pulse = clamp(0, p->max_pulse, 6000);
         }

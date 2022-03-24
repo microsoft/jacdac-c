@@ -29,7 +29,7 @@ void dcvoltagemeasurement_process(srv_t *state) {
 void dcvoltagemeasurement_handle_packet(srv_t *state, jd_packet_t *pkt) {
     int r = sensor_handle_packet(state, pkt);
 
-    if (r == JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE || JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME)
+    if (r == JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE || r == JD_D_CVOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME)
         service_handle_register(state, pkt, dcvoltagemeasurement_regs);
 }
 

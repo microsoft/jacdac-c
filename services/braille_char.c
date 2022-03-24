@@ -2,7 +2,6 @@
 #include "interfaces/jd_pins.h"
 #include "jacdac/dist/c/characterscreen.h"
 #include "braille_common.h"
-#include "lib.h"
 
 #define STATE_DIRTY 0x01
 #define STATE_UPD_PENDING 0x02
@@ -48,18 +47,18 @@ struct srv_state {
     uint8_t text_dir;
     char string[60];
     uint8_t flags;
-    const uint8_t* cell_map;
+    const uint8_t *cell_map;
 };
 
-REG_DEFINITION(                                   //
-    braille_char_regs,                                   //
-    REG_SRV_COMMON,                         //
-    REG_PTR_PADDING(),                         //
-    REG_U8(JD_CHARACTER_SCREEN_REG_ROWS),                         //
-    REG_U8(JD_CHARACTER_SCREEN_REG_COLUMNS),                         //
-    REG_U8(JD_CHARACTER_SCREEN_REG_VARIANT),                //
-    REG_U8(JD_CHARACTER_SCREEN_REG_TEXT_DIRECTION),                // 
-    REG_BYTES(JD_CHARACTER_SCREEN_REG_MESSAGE, 4),                         //
+REG_DEFINITION(                                     //
+    braille_char_regs,                              //
+    REG_SRV_COMMON,                                 //
+    REG_PTR_PADDING(),                              //
+    REG_U8(JD_CHARACTER_SCREEN_REG_ROWS),           //
+    REG_U8(JD_CHARACTER_SCREEN_REG_COLUMNS),        //
+    REG_U8(JD_CHARACTER_SCREEN_REG_VARIANT),        //
+    REG_U8(JD_CHARACTER_SCREEN_REG_TEXT_DIRECTION), //
+    REG_BYTES(JD_CHARACTER_SCREEN_REG_MESSAGE, 4),  //
 )
 static void set_pattern(srv_t *state, uint8_t cell, uint8_t bit_pattern) {
     cell = state->cell_map[cell];
@@ -70,15 +69,19 @@ static void set_pattern(srv_t *state, uint8_t cell, uint8_t bit_pattern) {
     }
 }
 
-static void update_bitmask(srv_t * state) {
+static inline int min(int a, int b) {
+    return a < b ? a : b;
+}
+
+static void update_bitmask(srv_t *state) {
     BrClrPtn();
 
     int i = 0;
     int cell = 0;
 
-    int len = 0; 
+    int len = 0;
 
-    char* ptr = state->string;
+    char *ptr = state->string;
     while (*(ptr++) >= ' ')
         len++;
 
@@ -92,7 +95,7 @@ static void update_bitmask(srv_t * state) {
         // numbers require special handling
         else if (current >= '0' && current <= '9') {
             //
-            if (i > 0 && (state->string[i-1] >= '0' && state->string[i-1] <= '9')) {
+            if (i > 0 && (state->string[i - 1] >= '0' && state->string[i - 1] <= '9')) {
                 // number pattern already sent
             } else
                 set_pattern(state, cell++, braille_number);
@@ -105,31 +108,31 @@ static void update_bitmask(srv_t * state) {
             current = 0b01000110; // ?
 
             switch (state->string[i]) {
-                case ',':
-                    current = 0b00000010; // ,
-                    break;
-                case ';':
-                    current = 0b00000110; // ;
-                    break;
-                case ':':
-                    current = 0b00100010; // :
-                    break;
-                case '.':
-                    current = 0b01100010; // .
-                    break;
-                case '!':
-                    current = 0b00100110; // !
-                    break;
-                case '(':
-                case ')':
-                    current = 0b01100110; // !
-                    break;
-                case '"':
-                    current = 0b01000110;
-                    break;
-                case '_':
-                    current = 0b01000100; // _
-                    break;
+            case ',':
+                current = 0b00000010; // ,
+                break;
+            case ';':
+                current = 0b00000110; // ;
+                break;
+            case ':':
+                current = 0b00100010; // :
+                break;
+            case '.':
+                current = 0b01100010; // .
+                break;
+            case '!':
+                current = 0b00100110; // !
+                break;
+            case '(':
+            case ')':
+                current = 0b01100110; // !
+                break;
+            case '"':
+                current = 0b01000110;
+                break;
+            case '_':
+                current = 0b01000100; // _
+                break;
             }
 
             set_pattern(state, cell++, current);
@@ -144,7 +147,7 @@ static void update_bitmask(srv_t * state) {
     state->flags |= STATE_DIRTY;
 }
 
-void braille_char_process(srv_t * state) {
+void braille_char_process(srv_t *state) {
     if (state->flags & STATE_DIRTY) {
         BrRfshPtn(state->api);
         state->flags &= ~STATE_DIRTY;
@@ -156,10 +159,10 @@ void braille_char_process(srv_t * state) {
     }
 }
 
-void handle_disp_write(srv_t * state, jd_packet_t* pkt) {
+void handle_disp_write(srv_t *state, jd_packet_t *pkt) {
     memset(state->string, 0, sizeof(state->string));
     memcpy(state->string, pkt->data, min(pkt->service_size, state->cols));
-    
+
     // update already in progress
     if (state->flags & STATE_DIRTY) {
         state->flags |= STATE_UPD_PENDING;
@@ -172,18 +175,19 @@ void handle_disp_write(srv_t * state, jd_packet_t* pkt) {
 void braille_char_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     switch (pkt->service_command) {
-        default:
-            switch (service_handle_register_final(state, pkt, braille_char_regs)) {
-                case JD_CHARACTER_SCREEN_REG_MESSAGE:
-                    if (JD_SET(JD_CHARACTER_SCREEN_REG_MESSAGE) == pkt->service_command)
-                        handle_disp_write(state, pkt);
-                    break;
-            }
+    default:
+        switch (service_handle_register_final(state, pkt, braille_char_regs)) {
+        case JD_CHARACTER_SCREEN_REG_MESSAGE:
+            if (JD_SET(JD_CHARACTER_SCREEN_REG_MESSAGE) == pkt->service_command)
+                handle_disp_write(state, pkt);
+            break;
+        }
     }
 }
 
 SRV_DEF(braille_char, JD_SERVICE_CLASS_CHARACTER_SCREEN);
-void braille_char_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols, const uint8_t* cell_map) {
+void braille_char_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols,
+                       const uint8_t *cell_map) {
     SRV_ALLOC(braille_char);
 
     state->api = params;
