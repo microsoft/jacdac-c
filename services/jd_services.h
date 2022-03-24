@@ -241,4 +241,61 @@ void motion_init(const motion_cfg_t *cfg);
 
 void lightbulb_init(uint8_t pin);
 
+typedef struct {
+    void (*init)(void);
+    void (*set_wiper)(uint8_t channel, uint32_t wiper_value);
+    void (*shutdown)(uint8_t channel);
+} dig_pot_api_t;
+extern const dig_pot_api_t mcp41010;
+
+typedef struct {
+    const dig_pot_api_t* potentiometer;
+    // voltage in mV
+    int32_t (*voltage_to_wiper)(float voltage);
+    float min_voltage;
+    float max_voltage;
+    float initial_voltage;
+    uint8_t min_voltage_wiper_value;
+    uint8_t max_voltage_wiper_value;
+    uint8_t enable_pin;
+    bool enable_active_lo;
+    uint8_t wiper_channel;
+} power_supply_params_t;
+void powersupply_init(const power_supply_params_t params);
+
+typedef struct {
+    void (*init)(uint8_t i2c_address);
+    float (*read_differential)(uint8_t channel1, uint8_t channel2);
+    float (*read_absolute)(uint8_t channel);
+    void (*set_gain)(int32_t gain_mv);
+    void (*process)(void);
+    void (*sleep)(void);
+} adc_api_t;
+extern const adc_api_t ads1115;
+
+typedef struct {
+    const adc_api_t* adc;
+    uint8_t measurement_type;
+    char* measurement_name;
+    uint32_t channel1;
+    uint32_t channel2;
+    uint8_t i2c_address;
+    // maximum expected voltage to be measured.
+    int32_t gain_mv;
+    sensor_api_t* api;
+} dcvoltagemeasurement_params_t;
+void dcvoltagemeasurement_init(const dcvoltagemeasurement_params_t params);
+
+typedef struct {
+    const adc_api_t* adc;
+    char* measurement_name;
+    uint32_t channel1;
+    uint32_t channel2;
+    uint8_t i2c_address;
+    // maximum expected voltage to be measured.
+    int32_t gain_mv;
+    sensor_api_t* api;
+} dccurrentmeasurement_params_t;
+void dccurrentmeasurement_init(const dccurrentmeasurement_params_t params);
+
 #endif
