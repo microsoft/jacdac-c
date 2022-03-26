@@ -110,9 +110,9 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
                 } else {
                     LOG("too little @%d - %x", offset, reg);
                     memcpy(sptr, pkt->data, pkt->service_size);
-                    int fill = !REG_IS_SIGNED(tp)
-                                   ? 0
-                                   : (pkt->data[pkt->service_size - 1] & 0x80) ? 0xff : 0;
+                    int fill = !REG_IS_SIGNED(tp)                          ? 0
+                               : (pkt->data[pkt->service_size - 1] & 0x80) ? 0xff
+                                                                           : 0;
                     memset(sptr + pkt->service_size, fill, regsz - pkt->service_size);
                 }
                 return reg;
@@ -313,14 +313,20 @@ void jd_services_tick() {
 }
 
 static void jd_process_everything_core(void) {
-    jd_frame_t *fr = jd_rx_get_frame();
-    if (fr) {
-        jd_services_process_frame(fr);
-        jd_rx_release_frame(fr);
-    }
+    for (;;) {
+        jd_frame_t *fr = jd_rx_get_frame();
+        if (fr) {
+            jd_services_process_frame(fr);
+            jd_rx_release_frame(fr);
+        }
 
-    jd_services_tick();
-    app_process();
+        jd_services_tick();
+        app_process();
+
+        // if no frame was received, stop
+        if (fr == NULL)
+            break;
+    }
 }
 
 static void refresh_now(void) {
