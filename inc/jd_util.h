@@ -40,6 +40,8 @@ static inline bool in_future(uint32_t moment) {
 
 // sizeof(dst) == len*2 + 1
 void jd_to_hex(char *dst, const void *src, size_t len);
+// sizeof(dst) >= strlen(dst)/2; returns length of dst
+int jd_from_hex(void *dst, const char *src);
 
 #define JD_ASSERT(cond)                                                                            \
     do {                                                                                           \

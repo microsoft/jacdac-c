@@ -159,3 +159,31 @@ void jd_to_hex(char *dst, const void *src, size_t len) {
     }
     dst[len * 2 - 1] = 0;
 }
+
+static int hexdig(char c) {
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    c |= 0x20;
+    if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    return -1;
+}
+
+int jd_from_hex(void *dst, const char *src) {
+    uint8_t *dp = dst;
+    int prev = 0;
+    for (;;) {
+        while (*src && hexdig(*src) == -1)
+            src++;
+        if (!*src)
+            break;
+        int v = hexdig(*src++);
+        if (prev == 0)
+            prev = (v << 4) | 0x100; // make sure it's not zero
+        else {
+            *dp++ = (prev | v) & 0xff;
+            prev = 0;
+        }
+    }
+    return dp - (uint8_t *)dst;
+}
