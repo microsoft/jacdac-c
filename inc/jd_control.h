@@ -40,6 +40,10 @@ static inline bool jd_is_event(jd_packet_t *pkt) {
            (pkt->service_command & JD_CMD_EVENT_MASK) != 0;
 }
 
+static inline int jd_event_code(jd_packet_t *pkt) {
+    return jd_is_event(pkt) ? (pkt->service_command & JD_CMD_EVENT_CODE_MASK) : -1;
+}
+
 static inline bool jd_is_register_get(jd_packet_t *pkt) {
     return pkt->service_index <= JD_SERVICE_INDEX_MAX_NORMAL && JD_IS_GET(pkt->service_command);
 }

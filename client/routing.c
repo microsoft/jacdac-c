@@ -401,3 +401,11 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
         jd_client_emit_event(JD_CLIENT_EV_NON_SERVICE_PACKET, dev, pkt);
     EVENT_LEAVE();
 }
+
+void jd_pkt_setup_broadcast(jd_packet_t *dst, uint32_t service_class, uint16_t service_command) {
+    memset(dst, 0, sizeof(*dst));
+    dst->flags = JD_FRAME_FLAG_BROADCAST | JD_FRAME_FLAG_COMMAND;
+    dst->device_identifier = JD_DEVICE_IDENTIFIER_BROADCAST_MARK | service_class;
+    dst->service_command = service_command;
+    dst->service_index = JD_SERVICE_INDEX_BROADCAST;
+}

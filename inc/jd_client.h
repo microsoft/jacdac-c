@@ -85,6 +85,8 @@ typedef struct jd_device {
 
 extern jd_device_t *jd_devices;
 
+void jd_pkt_setup_broadcast(jd_packet_t *dst, uint32_t service_class, uint16_t service_command);
+
 void jd_client_process(void);
 void jd_client_handle_packet(jd_packet_t *pkt);
 
