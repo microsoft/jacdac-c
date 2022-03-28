@@ -187,3 +187,10 @@ int jd_from_hex(void *dst, const char *src) {
     }
     return dp - (uint8_t *)dst;
 }
+
+#if JD_VERBOSE_ASSERT
+void jd_assert_fail(const char *expr, const char *file, unsigned line, const char *funname) {
+    DMESG("assertion '%s' failed at %s:%d in %s", expr, file, line, funname);
+    jd_panic();
+}
+#endif

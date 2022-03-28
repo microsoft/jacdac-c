@@ -43,10 +43,18 @@ void jd_to_hex(char *dst, const void *src, size_t len);
 // sizeof(dst) >= strlen(dst)/2; returns length of dst
 int jd_from_hex(void *dst, const char *src);
 
+#if JD_VERBOSE_ASSERT
+__attribute__((noreturn)) void jd_assert_fail(const char *expr, const char *file, unsigned line,
+                                              const char *funname);
+#else
+#define jd_assert_fail(...) jd_panic()
+#endif
+
 #define JD_ASSERT(cond)                                                                            \
     do {                                                                                           \
-        if (!(cond))                                                                               \
-            jd_panic();                                                                            \
+        if (!(cond)) {                                                                             \
+            jd_assert_fail(#cond, __FILE__, __LINE__, __func__);                                   \
+        }                                                                                          \
     } while (0)
 
 // jd_queue.c

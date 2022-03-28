@@ -123,4 +123,8 @@
 #define JD_LORA 0
 #endif
 
+#ifndef JD_VERBOSE_ASSERT
+#define JD_VERBOSE_ASSERT 0
+#endif
+
 #endif
