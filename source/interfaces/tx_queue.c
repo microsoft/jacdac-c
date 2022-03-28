@@ -18,12 +18,23 @@ int jd_send_frame(jd_frame_t *f) {
     if (target_in_irq())
         jd_panic();
     int r = jd_queue_push(send_queue, f);
+    if (r)
+        ERROR("send_frm ovf");
     jd_packet_ready();
     return r;
 }
 #endif
 
 int jd_tx_is_idle() {
+#if JD_RAW_FRAME
+    if (rawFrame || rawFrameSending)
+        return 0;
+#endif
+#if JD_SEND_FRAME
+    if (q_sending || jd_queue_front(send_queue))
+        return 0;
+#endif
+
     return !isSending && sendFrame[bufferPtr].size == 0;
 }
 
@@ -69,8 +80,11 @@ jd_frame_t *jd_tx_get_frame(void) {
         return f;
     }
 #endif
-    isSending = 2;
-    return &sendFrame[bufferPtr ^ 1];
+    if (isSending == 1) {
+        isSending = 2;
+        return &sendFrame[bufferPtr ^ 1];
+    }
+    return NULL;
 }
 
 // bridge between phys and queue imp, marks as sent.
@@ -88,7 +102,13 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
         return;
     }
 #endif
+
     isSending = 0;
+
+#if JD_RAW_FRAME || JD_SEND_FRAME
+    if (!jd_tx_is_idle())
+        jd_packet_ready();
+#endif
 }
 
 void jd_tx_flush() {
