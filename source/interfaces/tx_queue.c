@@ -96,20 +96,21 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
 #if JD_RAW_FRAME
     if (rawFrameSending) {
         rawFrameSending = false;
-        return;
+        goto done;
     }
 #endif
 #if JD_SEND_FRAME
     if (q_sending) {
         jd_queue_shift(send_queue);
         q_sending = false;
-        return;
+        goto done;
     }
 #endif
 
     isSending = 0;
 
-    if (has_oob_frame())
+done:
+    if (isSending == 1 || has_oob_frame())
         jd_packet_ready();
 }
 
