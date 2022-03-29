@@ -25,17 +25,21 @@ int jd_send_frame(jd_frame_t *f) {
 }
 #endif
 
-int jd_tx_is_idle() {
+static int has_oob_frame(void) {
 #if JD_RAW_FRAME
     if (rawFrame || rawFrameSending)
-        return 0;
+        return 1;
 #endif
 #if JD_SEND_FRAME
     if (q_sending || jd_queue_front(send_queue))
-        return 0;
+        return 1;
 #endif
 
-    return !isSending && sendFrame[bufferPtr].size == 0;
+    return 0;
+}
+
+int jd_tx_is_idle() {
+    return !has_oob_frame() && !isSending && sendFrame[bufferPtr].size == 0;
 }
 
 void jd_tx_init(void) {
@@ -105,17 +109,15 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
 
     isSending = 0;
 
-#if JD_RAW_FRAME || JD_SEND_FRAME
-    if (!jd_tx_is_idle())
+    if (has_oob_frame())
         jd_packet_ready();
-#endif
 }
 
 void jd_tx_flush() {
     if (target_in_irq())
         jd_panic();
     if (isSending == 1) {
-        jd_packet_ready();
+        // jd_packet_ready();
         return;
     }
     if (sendFrame[bufferPtr].size == 0)
