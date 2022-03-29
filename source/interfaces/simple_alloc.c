@@ -113,6 +113,7 @@ void *jd_alloc(uint32_t size) {
         *block = MARK_USED(size);
     }
     void *r = block + 1;
+    memset(r, 0x00, (size << 2) - 4);
 
 #else
     jd_alloc_stack_check();
@@ -120,9 +121,9 @@ void *jd_alloc(uint32_t size) {
     aptr += size;
     if ((uintptr_t)aptr > HEAP_END)
         jd_panic();
+    memset(r, 0x00, size << 2);
 #endif
 
-    memset(r, 0x00, (size << 2) - 4);
     return r;
 }
 
