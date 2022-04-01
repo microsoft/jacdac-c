@@ -13,8 +13,8 @@ struct srv_state {
 REG_DEFINITION(                                                    //
     dccurrentmeasurement_regs,                                     //
     REG_SENSOR_COMMON,                                             //
-    REG_BYTES(JD_D_CCURRENT_MEASUREMENT_REG_MEASUREMENT_NAME, 20), //
-    REG_BYTES(JD_D_CCURRENT_MEASUREMENT_REG_MEASUREMENT, 8),       //
+    REG_BYTES(JD_DC_CURRENT_MEASUREMENT_REG_MEASUREMENT_NAME, 20), //
+    REG_BYTES(JD_DC_CURRENT_MEASUREMENT_REG_MEASUREMENT, 8),       //
 )
 
 void dccurrentmeasurement_process(srv_t *state) {
@@ -27,11 +27,11 @@ void dccurrentmeasurement_process(srv_t *state) {
 void dccurrentmeasurement_handle_packet(srv_t *state, jd_packet_t *pkt) {
     int r = sensor_handle_packet(state, pkt);
 
-    if (r == JD_D_CCURRENT_MEASUREMENT_REG_MEASUREMENT_NAME)
+    if (r == JD_DC_CURRENT_MEASUREMENT_REG_MEASUREMENT_NAME)
         service_handle_register(state, pkt, dccurrentmeasurement_regs);
 }
 
-SRV_DEF(dccurrentmeasurement, JD_SERVICE_CLASS_D_CCURRENT_MEASUREMENT);
+SRV_DEF(dccurrentmeasurement, JD_SERVICE_CLASS_DC_CURRENT_MEASUREMENT);
 void dccurrentmeasurement_init(const dccurrentmeasurement_params_t params) {
     SRV_ALLOC(dccurrentmeasurement);
     state->streaming_interval = 100;

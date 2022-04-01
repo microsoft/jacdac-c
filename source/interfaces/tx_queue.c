@@ -108,6 +108,7 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
 #endif
 
     isSending = 0;
+    goto done; // avoid warning
 
 done:
     if (isSending == 1 || has_oob_frame())
