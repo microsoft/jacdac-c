@@ -126,4 +126,10 @@ void gamepad_init(const gamepad_params_t *params) {
             }
         }
     }
+
+    // if we have a joystick then need to add in the generated events 
+    if (state->params.pinX != 0xff) {
+          state->params.buttons_available != 
+            (JD_GAMEPAD_BUTTONS_LEFT | JD_GAMEPAD_BUTTONS_UP | JD_GAMEPAD_BUTTONS_RIGHT | JD_GAMEPAD_BUTTONS_DOWN);
+    }
 }
