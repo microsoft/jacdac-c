@@ -250,9 +250,9 @@ void jd_itoa(int n, char *s) {
     jd_string_reverse(s);
 }
 
-static void writeNum(char *buf, uint32_t n, bool full) {
+static void writeNum(char *buf, uintptr_t n, bool full) {
     int i = 0;
-    int sh = 28;
+    int sh = sizeof(uintptr_t) * 8 - 4;
     while (sh >= 0) {
         int d = (n >> sh) & 0xf;
         if (full || d || sh == 0 || i) {
@@ -276,7 +276,7 @@ static void writeNum(char *buf, uint32_t n, bool full) {
 int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
     const char *end = format;
     unsigned ptr = 0, sz;
-    char buf[16];
+    char buf[sizeof(uintptr_t) * 2 + 8];
 
     for (;;) {
         char c = *end++;
@@ -286,12 +286,51 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
             if (c == 0)
                 break;
 
+#if JD_64
+            c = *end++;
+            buf[1] = 0;
+            switch (c) {
+            case 'c':
+                buf[0] = va_arg(ap, int);
+                break;
+            case 'd':
+                jd_itoa(va_arg(ap, int), buf);
+                break;
+            case 'x':
+            case 'X':
+                buf[0] = '0';
+                buf[1] = 'x';
+                writeNum(buf + 2, va_arg(ap, int), false);
+                break;
+            case 'p':
+                buf[0] = '0';
+                buf[1] = 'x';
+                writeNum(buf + 2, va_arg(ap, uintptr_t), false);
+                break;
+            case 's': {
+                const char *val = va_arg(ap, const char *);
+                WRITEN(val, strlen(val));
+                buf[0] = 0;
+                break;
+            }
+            case '%':
+                buf[0] = c;
+                break;
+            default:
+                buf[0] = '?';
+                break;
+            }
+            format = end;
+            WRITEN(buf, strlen(buf));
+        }
+#else
             uint32_t val = va_arg(ap, uint32_t);
 #if JD_LORA
             uint8_t fmtc = 0;
             while ('0' <= *end && *end <= '9')
                 fmtc = *end++;
 #endif
+
             c = *end++;
             buf[1] = 0;
             switch (c) {
@@ -329,6 +368,7 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
             format = end;
             WRITEN(buf, strlen(buf));
         }
+#endif
     }
 
     return ptr;
