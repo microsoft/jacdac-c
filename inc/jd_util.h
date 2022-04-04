@@ -5,6 +5,7 @@
 #define JD_UTIL_H
 
 #include "jd_physical.h"
+#include <stdarg.h>
 
 __attribute__((noreturn)) void jd_panic(void);
 uint64_t jd_device_id(void);
@@ -65,5 +66,10 @@ jd_frame_t *jd_queue_front(jd_queue_t q);
 void jd_queue_shift(jd_queue_t q);
 void jd_queue_test(void);
 int jd_queue_will_fit(jd_queue_t q, unsigned size);
+
+void jd_itoa(int n, char *s);
+void jd_string_reverse(char *s);
+int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap);
+int jd_sprintf(char *dst, unsigned dstsize, const char *format, ...);
 
 #endif

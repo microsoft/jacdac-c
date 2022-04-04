@@ -25,11 +25,7 @@ void jdcon_logv(int level, const char *format, va_list ap) {
     if (level < ctx->minPri)
         return;
     char buf[100];
-#ifdef CODAL_DMESG_H
-    codal_vsprintf(buf, sizeof(buf), format, ap);
-#else
-    vsnprintf(buf, sizeof(buf), format, ap);
-#endif
+    jd_vsprintf(buf, sizeof(buf), format, ap);
     jd_send(ctx->service_index, JD_LOGGER_CMD_DEBUG + level, buf, strlen(buf));
 }
 
