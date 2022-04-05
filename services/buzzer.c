@@ -8,7 +8,7 @@
 #include "jacdac/dist/c/buzzer.h"
 
 #ifndef BUZZER_OFF
-#define BUZZER_OFF 1
+#define BUZZER_OFF 0
 #endif
 
 struct srv_state {
@@ -42,7 +42,7 @@ static void set_pwr(srv_t *state, int on) {
 
 static void play_tone(srv_t *state, uint32_t period, uint32_t duty) {
     duty = (duty * state->volume) >> 8;
-#if BUZZER_OFF == 1
+#if BUZZER_OFF == 0
     duty = period - duty;
 #endif
     set_pwr(state, 1);
