@@ -146,7 +146,6 @@ void braille_dm_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols,
     memset(state->dots, 0, DOTS_MAX);
 
     BrClrPtn();
-
-    BrClrAllDots(state->api);
+    BrRfshPtn(state->api);
     target_wait_us(3000);
 }

@@ -1,5 +1,7 @@
 #include "braille_common.h"
 
+#ifdef BRAILLE_HACK
+
 #define MAXBRROW 4
 #define MAXBRCOL 8
 #define MAXBRPHASE 2 // Up, Down
@@ -314,3 +316,5 @@ void BrSetSingleDot(const hbridge_api_t *api, uint16_t row, uint16_t col, bool s
     api->write_raw(0x0001);
     delay(BRWAITHIZ);
 }
+
+#endif

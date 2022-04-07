@@ -202,7 +202,6 @@ void braille_char_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols
     state->api->init();
 
     BrClrPtn();
-
-    BrClrAllDots(state->api);
+    BrRfshPtn(state->api);
     target_wait_us(3000);
 }
