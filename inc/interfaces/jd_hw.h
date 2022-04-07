@@ -89,8 +89,8 @@ void dspi_xfer(const void *txdata, void *rxdata, uint32_t numbytes, cb_t doneHan
 
 // sspic.c
 void sspi_init(bool slow, int cpol, int cpha);
-void sspi_tx(const uint8_t *data, uint32_t numbytes);
-void sspi_rx(uint8_t *buf, uint32_t numbytes);
+void sspi_tx(const void *data, uint32_t numbytes);
+void sspi_rx(void *buf, uint32_t numbytes);
 
 // onewire.c
 void one_init(void);

@@ -197,6 +197,7 @@ void braille_dm_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols,
 void braille_char_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols,
                        const uint8_t *cell_map);
 extern const hbridge_api_t ncv7726b;
+extern const hbridge_api_t ncv7726b_daisy;
 
 // initialises a relay service.
 // relay state is the driver pin, some relays also have a feedback pin to show whether they are
