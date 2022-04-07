@@ -108,8 +108,8 @@ static void sgpc3_process(void) {
                 ctx->inited = 3;
             }
 
-            uint32_t tvoc = (data[0] << 8) | data[1];
-            uint32_t ethanol = (data[3] << 8) | data[4];
+            int tvoc = (data[0] << 8) | data[1];
+            int ethanol = (data[3] << 8) | data[4];
 
             DMESG("TV %d %d", tvoc, ethanol);
 
