@@ -88,7 +88,7 @@ void dspi_tx(const void *data, uint32_t numbytes, cb_t doneHandler);
 void dspi_xfer(const void *txdata, void *rxdata, uint32_t numbytes, cb_t doneHandler);
 
 // sspic.c
-void sspi_init(bool slow, int cpol, int cpha);
+void sspi_init(int slow, int cpol, int cpha);
 void sspi_tx(const void *data, uint32_t numbytes);
 void sspi_rx(void *buf, uint32_t numbytes);
 

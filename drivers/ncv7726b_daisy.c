@@ -25,7 +25,7 @@ static inline uint16_t flip(uint16_t v) {
 }
 
 static void ncv7726b_write_state(void) {
-    uint16_t base = 0; //SRR;
+    uint16_t base = SRR;
 
     for (int shift = 0; shift <= 6; shift += 6) {
         pin_set(PIN_SCS, 0);
@@ -76,10 +76,11 @@ static void ncv7726b_channel_clear(uint8_t ch) {
 
 static void ncv7726b_clear_all(void) {
     memset(&channel_en, 0, sizeof(channel_en));
+    memset(&channel_hs, 0, sizeof(channel_hs)); // for clarity of trace
 }
 
 static void ncv7726b_init(void) {
-    sspi_init(false, 0, 1);
+    sspi_init(1, 0, 1);
     pin_set(PIN_SCS, 1);
     pin_setup_output(PIN_SCS);
 }
