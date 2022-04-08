@@ -15,6 +15,7 @@ struct srv_state {
     uint8_t variant;
     uint8_t flags;
     uint8_t dots[DOTS_MAX];
+    braille_get_channels_t get_channels;
 };
 
 REG_DEFINITION(                         //
@@ -26,9 +27,40 @@ REG_DEFINITION(                         //
     REG_U8(JD_DOT_MATRIX_REG_VARIANT),  //
 )
 
+#define BrGetPtn(x, y) ((state->dots[y] & (1 << (x))) != 0)
+
+// BrRfshPtn: Refresh and load new braille pattern
+static void braille_dm_send(srv_t *state) {
+    const hbridge_api_t *api = state->api;
+
+    for (int col = 0; col < state->cols; ++col) {
+        for (int row = 0; row < state->rows; ++row) {
+            api->clear_all();
+
+            uint32_t ch = state->get_channels(row, col);
+            uint16_t ch0 = ch & 0xffff;
+            uint16_t ch1 = (ch >> 16) & 0xffff;
+
+            if (!BrGetPtn(row, col)) {
+                api->channel_set(ch0, 0);
+                api->channel_set(ch1, 1);
+            } else {
+                api->channel_set(ch0, 1);
+                api->channel_set(ch1, 0);
+            }
+
+            api->write_channels();
+            jd_services_sleep_us(7000);
+            api->clear_all();
+            api->write_channels();
+            jd_services_sleep_us(4000);
+        }
+    }
+}
+
 void braille_dm_process(srv_t *state) {
     if (state->flags & STATE_DIRTY) {
-        braille_send(state->api, state->dots);
+        braille_dm_send(state);
         state->flags &= ~STATE_DIRTY;
     }
 }
@@ -51,7 +83,7 @@ void braille_dm_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 SRV_DEF(braille_dm, JD_SERVICE_CLASS_DOT_MATRIX);
 void braille_dm_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols,
-                     const uint8_t *cell_map) {
+                     braille_get_channels_t get_channels) {
     SRV_ALLOC(braille_dm);
 
     state->api = params;
@@ -59,6 +91,7 @@ void braille_dm_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols,
     state->cols = cols;
     state->variant = JD_DOT_MATRIX_VARIANT_BRAILLE;
     state->flags = 0;
+    state->get_channels = get_channels;
 
     state->api->init();
 
@@ -67,6 +100,6 @@ void braille_dm_init(const hbridge_api_t *params, uint16_t rows, uint16_t cols,
 
     memset(state->dots, 0, DOTS_MAX);
 
-    braille_send(state->api, state->dots);
+    braille_dm_send(state);
     target_wait_us(3000);
 }

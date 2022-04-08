@@ -191,8 +191,9 @@ typedef struct {
     uint16_t (*write_raw)(uint16_t);
 } hbridge_api_t;
 // dot matrix (pixel set/clear)
+typedef uint32_t (*braille_get_channels_t)(int row, int col);
 void braille_dm_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols,
-                     const uint8_t *cell_map);
+                     braille_get_channels_t get_channels);
 // character interface (character level set/clear)
 void braille_char_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols,
                        const uint8_t *cell_map);
