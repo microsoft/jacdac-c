@@ -197,6 +197,9 @@ void braille_dm_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols,
 // character interface (character level set/clear)
 void braille_char_init(const hbridge_api_t *api, uint16_t rows, uint16_t cols,
                        const uint8_t *cell_map);
+// new Unicode-based interface
+void braille_display_init(const hbridge_api_t *params, uint8_t length,
+                          braille_get_channels_t get_channels);
 extern const hbridge_api_t ncv7726b;
 extern const hbridge_api_t ncv7726b_daisy;
 
