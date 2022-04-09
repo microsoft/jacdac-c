@@ -1,23 +1,21 @@
 #include "jd_drivers.h"
 #include "jd_services.h"
 
-#define CAP1298_ADDR    0x28
+#define CAP1298_ADDR 0x28
 
-#define PROD_ID_ADDR    0xFD
-#define PROD_ID_VAL     0x71
+#define PROD_ID_ADDR 0xFD
+#define PROD_ID_VAL 0x71
 
-#define MFR_ID_ADDR     0xFD
-#define MFR_ID_VAL      0x5D
+#define MFR_ID_ADDR 0xFD
+#define MFR_ID_VAL 0x5D
 
-#define INT_EN_ADDR     0x27
+#define INT_EN_ADDR 0x27
 
-#define MAIN_CONTROL_ADDR       0x0
-#define GEN_STATUS_ADDR         0x2
-#define SEN_STATUS_ADDR         0x3
+#define MAIN_CONTROL_ADDR 0x0
+#define GEN_STATUS_ADDR 0x2
+#define SEN_STATUS_ADDR 0x3
 
-#define MULTI_TOUCH_CFG_ADDR    0x2a
-
-
+#define MULTI_TOUCH_CFG_ADDR 0x2a
 
 static void writeReg(uint8_t reg, uint8_t val) {
     i2c_write_reg(CAP1298_ADDR, reg, val);
@@ -33,7 +31,7 @@ static int readReg(uint8_t reg) {
     return r;
 }
 
-void* cap1298_read(void) {
+void *cap1298_read(void) {
     uint8_t gen_status;
     uint8_t sen_status;
     static uint32_t sample[1];
@@ -41,7 +39,7 @@ void* cap1298_read(void) {
     readData(SEN_STATUS_ADDR, &sen_status, 1);
     writeReg(MAIN_CONTROL_ADDR, 0b00000000);
     // DMESG("G: %x S: %x", gen_status, sen_status);
-    sample[0] = sen_status; 
+    sample[0] = sen_status;
     return sample;
 }
 
@@ -55,7 +53,7 @@ void cap1298_cfg(void) {
 }
 
 void cap1298_init(void) {
-    
+
     i2c_init();
 
     target_wait_us(1000);

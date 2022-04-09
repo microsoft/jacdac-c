@@ -91,8 +91,8 @@ static void update(srv_t *state) {
 
     for (int i = 0; i < state->numpins; ++i) {
         pin_t *p = &state->pins[i];
-        
-        p->reading = ((channel_data  & (1 << i)) > 0) ? 1 : 0;
+
+        p->reading = ((channel_data & (1 << i)) > 0) ? 1 : 0;
         state->readings[i] = p->reading;
 
         bool was_pressed = p->ticks_pressed >= PRESS_TICKS;
