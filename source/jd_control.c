@@ -11,15 +11,17 @@
 
 struct srv_state {
     SRV_COMMON;
+#if JD_CONFIG_CONTROL_FLOOD == 1
+    uint8_t flood_size;
+#endif
 #if JD_CONFIG_IDENTIFY == 1
-    uint32_t nextblink;
     uint8_t id_counter;
+    uint32_t nextblink;
 #endif
 #if JD_CONFIG_WATCHDOG == 1
     uint32_t watchdog;
 #endif
 #if JD_CONFIG_CONTROL_FLOOD == 1
-    uint8_t flood_size;
     uint32_t flood_counter;
     uint32_t flood_remaining;
 #endif
@@ -134,8 +136,7 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 #if JD_CONFIG_DEV_SPEC_URL == 1
     case JD_GET(JD_CONTROL_REG_DEVICE_SPECIFICATION_URL):
-        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_spec_url,
-                strlen(app_spec_url));
+        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_spec_url, strlen(app_spec_url));
         break;
 #endif
 

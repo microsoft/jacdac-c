@@ -43,16 +43,14 @@ static void analog_update(srv_t *state) {
 }
 
 void analog_process(srv_t *state) {
-    if (state->got_query && !state->inited) {
-        state->inited = true;
+    if (sensor_maybe_init(state))
         analog_update(state);
-    }
 
     int sampling_ms = state->config->sampling_ms * 1000;
     if (!sampling_ms)
         sampling_ms = 9000;
 
-    if (jd_should_sample(&state->nextSample, sampling_ms) && state->inited)
+    if (jd_should_sample(&state->nextSample, sampling_ms) && state->jd_inited)
         analog_update(state);
 
     sensor_process_simple(state, &state->sample, sizeof(state->sample));

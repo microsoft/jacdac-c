@@ -213,7 +213,7 @@ static void process_events(srv_t *state) {
 
 void accelerometer_process(srv_t *state) {
 #ifdef PIN_ACC_INT
-    if (!got_accelerometer_int && state->inited)
+    if (!got_accelerometer_int && state->jd_inited)
         return;
     got_accelerometer_int = 0;
     gyroscope_pending = 1;

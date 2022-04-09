@@ -72,7 +72,7 @@ void text_to_speech_init(uint8_t volume, uint32_t rate, uint32_t pitch, char* la
     // data ready
     pin_setup_input(MIKROBUS_INT, PIN_PULL_NONE);
 
-    sspi_init();
+    sspi_init(1, 1, 1);
 
     tts_init();
     tts_setup();

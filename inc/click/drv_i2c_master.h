@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DRV_I2C_MASTER_H
+#define DRV_I2C_MASTER_H
 
 #include "drv_name.h"
 
@@ -66,3 +67,5 @@ static inline int i2c_master_write_then_read(i2c_master_t *obj, const uint8_t *w
 }
 
 static inline void i2c_master_close(i2c_master_t *obj) {}
+
+#endif

@@ -21,6 +21,7 @@ extern "C" {
 #define JD_FRAME_FLAG_ACK_REQUESTED 0x02
 // the device_identifier contains target service class number
 #define JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS 0x04
+#define JD_FRAME_FLAG_BROADCAST 0x04
 // set on frames not received from the JD-wire
 #define JD_FRAME_FLAG_LOOPBACK 0x40
 // when set, the packet may have different layout and should be dropped
@@ -32,6 +33,10 @@ extern "C" {
 #define JD_SERVICE_INDEX_MASK 0x3f
 #define JD_SERVICE_INDEX_CRC_ACK 0x3f
 #define JD_SERVICE_INDEX_STREAM 0x3e
+#define JD_SERVICE_INDEX_BROADCAST 0x3d
+#define JD_SERVICE_INDEX_MAX_NORMAL 0x30
+
+#define JD_DEVICE_IDENTIFIER_BROADCAST_MARK 0xAAAAAAAA00000000
 
 #define JD_PIPE_COUNTER_MASK 0x001f
 #define JD_PIPE_CLOSE_MASK 0x0020

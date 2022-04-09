@@ -4,8 +4,8 @@
 /*
  * A transmission queue for JD packets.
  */
-
-#pragma once
+#ifndef JD_TX_H
+#define JD_TX_H
 
 #include "jd_service_framework.h"
 
@@ -35,7 +35,15 @@ static inline void jd_send_event(srv_t *srv, uint32_t eventid) {
 }
 void jd_process_event_queue(void);
 
+// this is needed for pipes and clients, not regular servers
+int jd_send_frame(jd_frame_t *f);
+
+// wrapper around jd_send_frame()
+int jd_send_pkt(jd_packet_t *pkt);
+
 #if JD_RAW_FRAME
 extern uint8_t rawFrameSending;
 extern jd_frame_t *rawFrame;
+#endif
+
 #endif

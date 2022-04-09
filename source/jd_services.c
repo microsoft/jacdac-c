@@ -3,6 +3,8 @@
 
 #include "jd_protocol.h"
 #include "jd_services.h"
+#include "jd_client.h"
+#include "jd_pipes.h"
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
@@ -23,7 +25,7 @@ struct srv_state {
 
 #define REG_IS_SIGNED(r) ((r) <= 4 && !((r)&1))
 #define REG_IS_OPT(r) ((r) >= _REG_OPT8)
-static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1, 0, 1, 2, 4};
+static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1, 0, 1, 2, 4, JD_PTRSIZE};
 
 static int is_zero(const uint8_t *p, uint32_t sz) {
     while (sz--)
@@ -40,15 +42,16 @@ int service_handle_register_final(srv_t *state, jd_packet_t *pkt, const uint16_t
 }
 
 int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]) {
-    bool is_get = (pkt->service_command >> 12) == (JD_CMD_GET_REGISTER >> 12);
-    bool is_set = (pkt->service_command >> 12) == (JD_CMD_SET_REGISTER >> 12);
+    uint16_t cmd = pkt->service_command;
+    bool is_get = JD_IS_GET(cmd);
+    bool is_set = JD_IS_SET(cmd);
     if (!is_get && !is_set)
         return 0;
 
     if (is_set && pkt->service_size == 0)
         return 0;
 
-    int reg = pkt->service_command & 0xfff;
+    int reg = JD_REG_CODE(cmd);
 
     if (reg >= 0xf00) // these are reserved
         return 0;
@@ -72,12 +75,12 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
         if (!regsz)
             jd_panic();
 
-        if (tp != _REG_BIT) {
+        if (tp != _REG_BIT && tp != _REG_BYTES) {
             if (bitoffset) {
                 bitoffset = 0;
                 offset++;
             }
-            int align = regsz < 4 ? regsz - 1 : 3;
+            int align = regsz < JD_PTRSIZE ? regsz - 1 : JD_PTRSIZE - 1;
             offset = (offset + align) & ~align;
         }
 
@@ -180,6 +183,14 @@ void jd_services_init() {
     lastDisconnectBlink = tim_get_micros() + 1000000;
 }
 
+void jd_services_deinit() {
+    for (int i = 0; i < num_services; ++i)
+        jd_free(services[i]);
+    jd_free(services);
+    num_services = 0;
+    services = NULL;
+}
+
 void jd_services_packet_queued() {
     packets_sent++;
 }
@@ -228,6 +239,15 @@ __attribute__((weak)) void jd_app_handle_command(jd_packet_t *pkt) {}
 
 void jd_services_handle_packet(jd_packet_t *pkt) {
     jd_app_handle_packet(pkt);
+
+#if JD_PIPES
+    jd_opipe_handle_packet(pkt);
+    jd_ipipe_handle_packet(pkt);
+#endif
+
+#if JD_CLIENT
+    jd_client_handle_packet(pkt);
+#endif
 
     if (!(pkt->flags & JD_FRAME_FLAG_COMMAND)) {
         if (pkt->service_index == 0)
@@ -282,16 +302,32 @@ void jd_services_tick() {
     jd_status_process();
 #endif
 
+#if JD_CLIENT
+    jd_client_process();
+#endif
+
+#if JD_PIPES
+    jd_opipe_process();
+#endif
+
     jd_tx_flush();
 }
 
 static void jd_process_everything_core(void) {
-    jd_frame_t *fr = jd_rx_get_frame();
-    if (fr)
-        jd_services_process_frame(fr);
+    for (;;) {
+        jd_frame_t *fr = jd_rx_get_frame();
+        if (fr) {
+            jd_services_process_frame(fr);
+            jd_rx_release_frame(fr);
+        }
 
-    jd_services_tick();
-    app_process();
+        jd_services_tick();
+        app_process();
+
+        // if no frame was received, stop
+        if (fr == NULL)
+            break;
+    }
 }
 
 static void refresh_now(void) {

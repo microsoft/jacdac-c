@@ -117,7 +117,7 @@ void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service
     if (service_cmd >> 16)
         jd_panic();
     uint8_t *dst = frame->data + frame->size;
-    unsigned szLeft = (uint8_t *)frame + sizeof(*frame) - dst;
+    unsigned szLeft = frame->data + JD_SERIAL_PAYLOAD_SIZE - dst;
     if (service_size + 4 > szLeft)
         return NULL;
     *dst++ = service_size;
@@ -127,7 +127,6 @@ void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service
     frame->size += ALIGN(service_size + 4);
     return dst;
 }
-
 
 bool jd_should_sample(uint32_t *sample, uint32_t period) {
     if (in_future(*sample))
@@ -149,4 +148,236 @@ bool jd_should_sample_delay(uint32_t *sample, uint32_t period) {
     *sample = now + period;
 
     return true;
+}
+
+void jd_to_hex(char *dst, const void *src, size_t len) {
+    const char *hex = "0123456789abcdef";
+    const uint8_t *p = src;
+    for (size_t i = 0; i < len; ++i) {
+        dst[i * 2] = hex[p[i] >> 4];
+        dst[i * 2 + 1] = hex[p[i] & 0xf];
+    }
+    dst[len * 2 - 1] = 0;
+}
+
+static int hexdig(char c) {
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    c |= 0x20;
+    if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    return -1;
+}
+
+int jd_from_hex(void *dst, const char *src) {
+    uint8_t *dp = dst;
+    int prev = 0;
+    for (;;) {
+        while (*src && hexdig(*src) == -1)
+            src++;
+        if (!*src)
+            break;
+        int v = hexdig(*src++);
+        if (prev == 0)
+            prev = (v << 4) | 0x100; // make sure it's not zero
+        else {
+            *dp++ = (prev | v) & 0xff;
+            prev = 0;
+        }
+    }
+    return dp - (uint8_t *)dst;
+}
+
+#if JD_VERBOSE_ASSERT
+void jd_assert_fail(const char *expr, const char *file, unsigned line, const char *funname) {
+    DMESG("assertion '%s' failed at %s:%d in %s", expr, file, line, funname);
+    jd_panic();
+}
+#endif
+
+/**
+ * Performs an in buffer reverse of a given char array.
+ *
+ * @param s the string to reverse.
+ */
+void jd_string_reverse(char *s) {
+    if (s == NULL)
+        return;
+
+    char *j;
+    int c;
+
+    j = s + strlen(s) - 1;
+
+    while (s < j) {
+        c = *s;
+        *s++ = *j;
+        *j-- = c;
+    }
+}
+
+/**
+ * Converts a given integer into a string representation.
+ *
+ * @param n The number to convert.
+ *
+ * @param s A pointer to the buffer where the resulting string will be stored.
+ */
+void jd_itoa(int n, char *s) {
+    int i = 0;
+    int positive = (n >= 0);
+
+    if (s == NULL)
+        return;
+
+    // Record the sign of the number,
+    // Ensure our working value is positive.
+    unsigned k = positive ? n : -n;
+
+    // Calculate each character, starting with the LSB.
+    do {
+        s[i++] = (k % 10) + '0';
+    } while ((k /= 10) > 0);
+
+    // Add a negative sign as needed
+    if (!positive)
+        s[i++] = '-';
+
+    // Terminate the string.
+    s[i] = '\0';
+
+    // Flip the order.
+    jd_string_reverse(s);
+}
+
+static void writeNum(char *buf, uintptr_t n, bool full) {
+    int i = 0;
+    int sh = sizeof(uintptr_t) * 8 - 4;
+    while (sh >= 0) {
+        int d = (n >> sh) & 0xf;
+        if (full || d || sh == 0 || i) {
+            buf[i++] = d > 9 ? 'A' + d - 10 : '0' + d;
+        }
+        sh -= 4;
+    }
+    buf[i] = 0;
+}
+
+#define WRITEN(p, sz_)                                                                             \
+    do {                                                                                           \
+        sz = sz_;                                                                                  \
+        ptr += sz;                                                                                 \
+        if (ptr < dstsize) {                                                                       \
+            memcpy(dst + ptr - sz, p, sz);                                                         \
+            dst[ptr] = 0;                                                                          \
+        }                                                                                          \
+    } while (0)
+
+int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
+    const char *end = format;
+    unsigned ptr = 0, sz;
+    char buf[sizeof(uintptr_t) * 2 + 8];
+
+    for (;;) {
+        char c = *end++;
+        if (c == 0 || c == '%') {
+            if (format != end)
+                WRITEN(format, end - format - 1);
+            if (c == 0)
+                break;
+
+#if JD_64
+            c = *end++;
+            buf[1] = 0;
+            switch (c) {
+            case 'c':
+                buf[0] = va_arg(ap, int);
+                break;
+            case 'd':
+                jd_itoa(va_arg(ap, int), buf);
+                break;
+            case 'x':
+            case 'X':
+                buf[0] = '0';
+                buf[1] = 'x';
+                writeNum(buf + 2, va_arg(ap, int), false);
+                break;
+            case 'p':
+                buf[0] = '0';
+                buf[1] = 'x';
+                writeNum(buf + 2, va_arg(ap, uintptr_t), false);
+                break;
+            case 's': {
+                const char *val = va_arg(ap, const char *);
+                WRITEN(val, strlen(val));
+                buf[0] = 0;
+                break;
+            }
+            case '%':
+                buf[0] = c;
+                break;
+            default:
+                buf[0] = '?';
+                break;
+            }
+            format = end;
+            WRITEN(buf, strlen(buf));
+        }
+#else
+            uint32_t val = va_arg(ap, uint32_t);
+#if JD_LORA
+            uint8_t fmtc = 0;
+            while ('0' <= *end && *end <= '9')
+                fmtc = *end++;
+#endif
+
+            c = *end++;
+            buf[1] = 0;
+            switch (c) {
+            case 'c':
+                buf[0] = val;
+                break;
+            case 'd':
+                jd_itoa(val, buf);
+                break;
+            case 'x':
+            case 'p':
+            case 'X':
+                buf[0] = '0';
+                buf[1] = 'x';
+                writeNum(buf + 2, val, c != 'x');
+#if JD_LORA
+                if (c == 'X' && fmtc == '2') {
+                    buf[0] = buf[8];
+                    buf[1] = buf[9];
+                    buf[2] = 0;
+                }
+#endif
+                break;
+            case 's':
+                WRITEN((char *)(void *)val, strlen((char *)(void *)val));
+                buf[0] = 0;
+                break;
+            case '%':
+                buf[0] = c;
+                break;
+            default:
+                buf[0] = '?';
+                break;
+            }
+            format = end;
+            WRITEN(buf, strlen(buf));
+        }
+#endif
+    }
+
+    return ptr;
+}
+
+int jd_sprintf(char *dst, unsigned dstsize, const char *format, ...) {
+    va_list arg;
+    va_start(arg, format);
+    int r = jd_vsprintf(dst, dstsize, format, arg);
+    va_end(arg);
+    return r;
 }

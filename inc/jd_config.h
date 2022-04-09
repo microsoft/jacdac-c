@@ -21,13 +21,23 @@
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         jd_debug_signal_error();                                                                   \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
     } while (0)
 #else
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                   \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
     } while (0)
+#endif
+
+#if (__SIZEOF_POINTER__ == 8) || (__WORDSIZE == 64)
+#define JD_64 1
+#define JD_PTRSIZE 8
+#elif (__SIZEOF_POINTER__ == 4) || (__WORDSIZE == 32)
+#define JD_64 0
+#define JD_PTRSIZE 4
+#else
+#error "can't determine pointer size"
 #endif
 
 #ifndef JD_CONFIG_TEMPERATURE
@@ -68,8 +78,14 @@
 
 #define CONCAT_1(a, b) a##b
 #define CONCAT_0(a, b) CONCAT_1(a, b)
+
 #ifndef STATIC_ASSERT
 #define STATIC_ASSERT(e) enum { CONCAT_0(_static_assert_, __LINE__) = 1 / ((e) ? 1 : 0) };
+#endif
+
+#ifndef STATIC_ASSERT_EXT
+#define STATIC_ASSERT_EXT(e, id)                                                                   \
+    enum { CONCAT_0(_static_assert_, CONCAT_0(__LINE__, id)) = 1 / ((e) ? 1 : 0) };
 #endif
 
 #ifndef JD_EVENT_QUEUE_SIZE
@@ -84,6 +100,31 @@
 // see set_tick_timer() for how to calibrate this
 #ifndef JD_WR_OVERHEAD
 #define JD_WR_OVERHEAD 8
+#endif
+
+#ifndef JD_CLIENT
+#define JD_CLIENT 0
+#endif
+
+// pipes, jd_free(), jd_send_frame() by default on in client, off in server
+#ifndef JD_PIPES
+#define JD_PIPES JD_CLIENT
+#endif
+
+#ifndef JD_FREE_SUPPORTED
+#define JD_FREE_SUPPORTED JD_CLIENT
+#endif
+
+#ifndef JD_SEND_FRAME
+#define JD_SEND_FRAME JD_CLIENT
+#endif
+
+#ifndef JD_LORA
+#define JD_LORA 0
+#endif
+
+#ifndef JD_VERBOSE_ASSERT
+#define JD_VERBOSE_ASSERT 0
 #endif
 
 #endif

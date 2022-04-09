@@ -10,15 +10,15 @@ struct srv_state {
     relay_params_t params;
 };
 
-REG_DEFINITION(                                   //
-    relay_regs,                                   //
-    REG_SRV_COMMON,                         //
-    REG_U8(JD_RELAY_REG_CLOSED),                 //
+REG_DEFINITION(                                    //
+    relay_regs,                                    //
+    REG_SRV_COMMON,                                //
+    REG_U8(JD_RELAY_REG_ACTIVE),                   //
     REG_OPT8(JD_RELAY_REG_VARIANT),                //
-    REG_OPT32(JD_RELAY_REG_MAX_SWITCHING_CURRENT),            //
+    REG_OPT32(JD_RELAY_REG_MAX_SWITCHING_CURRENT), //
 )
 
-static void reflect_register_state(srv_t* state) {
+static void reflect_register_state(srv_t *state) {
     // active
     if (state->intensity) {
         pin_set(state->params.pin_relay_drive, (state->params.drive_active_lo ? 0 : 1));
@@ -29,24 +29,22 @@ static void reflect_register_state(srv_t* state) {
         pin_set(state->params.pin_relay_drive, (state->params.drive_active_lo ? 1 : 0));
         pin_set(state->params.pin_relay_led, (state->params.led_active_lo ? 1 : 0));
     }
-
-    jd_send_event_ext(state, (state->intensity > 0) ? JD_RELAY_EV_ACTIVE : JD_RELAY_EV_INACTIVE, 0, 0);
 }
 
-void relay_process(srv_t * state) {
+void relay_process(srv_t *state) {
     (void)state;
     // bool server_state = state->intensity;
 
-    // if (state->params.pin_relay_feedback != NO_PIN && server_state != (bool)pin_get(state->params.pin_relay_feedback))
+    // if (state->params.pin_relay_feedback != NO_PIN && server_state !=
+    // (bool)pin_get(state->params.pin_relay_feedback))
     //     hw_panic();
 }
 
-
 void relay_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (service_handle_register_final(state, pkt, relay_regs)) {
-        case JD_RELAY_REG_CLOSED:
-            reflect_register_state(state);
-            break;
+    case JD_RELAY_REG_ACTIVE:
+        reflect_register_state(state);
+        break;
     }
 }
 
@@ -60,7 +58,6 @@ void relay_service_init(const relay_params_t *params) {
 
     state->max_switching_current = params->max_switching_current;
     state->variant = params->relay_variant;
-    state->intensity = 0;
-    pin_set(state->params.pin_relay_drive, (state->params.drive_active_lo ? 1 : 0));
-    pin_set(state->params.pin_relay_led, (state->params.led_active_lo ? 1 : 0));
+    state->intensity = (params->initial_state) ? 1 : 0;
+    reflect_register_state(state);
 }

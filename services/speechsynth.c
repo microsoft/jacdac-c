@@ -21,18 +21,18 @@ struct srv_state {
     uint8_t flags;
 };
 
-REG_DEFINITION(                                   //
-    speech_synth_regs,                                   //
-    REG_SRV_COMMON,                         //
+REG_DEFINITION(        //
+    speech_synth_regs, //
+    REG_SRV_COMMON,    //
     REG_U32(JD_REG_PADDING),
-    REG_BYTES(JD_REG_PADDING,20),                 // don't know how to do strings properly yet
-    REG_U32(JD_SPEECH_SYNTHESIS_REG_PITCH),                //
-    REG_U32(JD_SPEECH_SYNTHESIS_REG_RATE),                //
-    REG_U8(JD_SPEECH_SYNTHESIS_REG_ENABLED),           //
-    REG_U8(JD_SPEECH_SYNTHESIS_REG_VOLUME),                //
+    REG_BYTES(JD_REG_PADDING, 20),           // don't know how to do strings properly yet
+    REG_U32(JD_SPEECH_SYNTHESIS_REG_PITCH),  //
+    REG_U32(JD_SPEECH_SYNTHESIS_REG_RATE),   //
+    REG_U8(JD_SPEECH_SYNTHESIS_REG_ENABLED), //
+    REG_U8(JD_SPEECH_SYNTHESIS_REG_VOLUME),  //
 )
 
-void speech_synth_process(srv_t * state) {
+void speech_synth_process(srv_t *state) {
     if (state->flags & SPEAK_CMD) {
         state->api->speak(phrase);
         state->flags &= ~SPEAK_CMD;
@@ -42,7 +42,7 @@ void speech_synth_process(srv_t * state) {
         state->api->cancel();
         state->flags &= ~CANCEL_CMD;
     }
-    
+
     if (state->flags & SET_LANG) {
         state->api->set_language(state->lang);
         state->flags &= ~SET_LANG;
@@ -66,7 +66,7 @@ void speech_synth_process(srv_t * state) {
 
 // often underlying tts apis perform a synchronous wait, which can only happen in process.
 // flag to process later
-void handle_speak_cmd(srv_t * state, jd_packet_t* pkt) {
+void handle_speak_cmd(srv_t *state, jd_packet_t *pkt) {
     if (!state->enabled)
         return;
     memset(phrase, 0, 200);
@@ -74,36 +74,36 @@ void handle_speak_cmd(srv_t * state, jd_packet_t* pkt) {
     state->flags |= SPEAK_CMD;
 }
 
-void handle_cancel_cmd(srv_t * state, jd_packet_t* pkt) {
+void handle_cancel_cmd(srv_t *state, jd_packet_t *pkt) {
     state->flags |= CANCEL_CMD;
 }
 
 void speech_synth_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
-        case JD_SPEECH_SYNTHESIS_CMD_SPEAK:
-            handle_speak_cmd(state, pkt);
+    case JD_SPEECH_SYNTHESIS_CMD_SPEAK:
+        handle_speak_cmd(state, pkt);
+        break;
+    case JD_SPEECH_SYNTHESIS_CMD_CANCEL:
+        handle_cancel_cmd(state, pkt);
+        break;
+    default:
+        switch (service_handle_register_final(state, pkt, speech_synth_regs)) {
+        case JD_SPEECH_SYNTHESIS_REG_LANG:
+            state->flags |= SET_LANG;
             break;
-        case JD_SPEECH_SYNTHESIS_CMD_CANCEL:
-            handle_cancel_cmd(state, pkt);
+
+        case JD_SPEECH_SYNTHESIS_REG_VOLUME:
+            state->flags |= SET_VOLUME;
             break;
-        default:
-            switch (service_handle_register_final(state, pkt, speech_synth_regs)) {
-                case JD_SPEECH_SYNTHESIS_REG_LANG:
-                    state->flags |= SET_LANG;
-                    break;
 
-                case JD_SPEECH_SYNTHESIS_REG_VOLUME:
-                    state->flags |= SET_VOLUME;
-                    break;
-                
-                case JD_SPEECH_SYNTHESIS_REG_PITCH:
-                    state->flags |= SET_PITCH;
-                    break;
+        case JD_SPEECH_SYNTHESIS_REG_PITCH:
+            state->flags |= SET_PITCH;
+            break;
 
-                case JD_SPEECH_SYNTHESIS_REG_RATE:
-                    state->flags |= SET_RATE;
-                    break;
-            }
+        case JD_SPEECH_SYNTHESIS_REG_RATE:
+            state->flags |= SET_RATE;
+            break;
+        }
     }
 }
 
@@ -118,5 +118,5 @@ void speech_synthesis_init(const speech_synth_api_t *params) {
     state->enabled = 1;
     memset(state->lang, 0, sizeof(state->lang));
     memcpy(state->lang, "en-US", sizeof("en-US"));
-    state->api->init(state->volume,state->rate, state->pitch, state->lang);
+    state->api->init(state->volume, state->rate, state->pitch, state->lang);
 }

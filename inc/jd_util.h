@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#pragma once
+#ifndef JD_UTIL_H
+#define JD_UTIL_H
 
 #include "jd_physical.h"
+#include <stdarg.h>
 
-void jd_panic(void);
+__attribute__((noreturn)) void jd_panic(void);
 uint64_t jd_device_id(void);
 
 uint32_t jd_random_around(uint32_t v);
@@ -22,6 +24,10 @@ bool jd_should_sample(uint32_t *sample, uint32_t period);
 // jd_should_sample_delay() will wait at least `period` until next sampling
 bool jd_should_sample_delay(uint32_t *sample, uint32_t period);
 
+static inline bool is_before(uint32_t a, uint32_t b) {
+    return ((b - a) >> 29) == 0;
+}
+
 // check if given timestamp is already in the past, regardless of overflows on 'now'
 // the moment has to be no more than ~500 seconds in the past
 static inline bool in_past(uint32_t moment) {
@@ -32,3 +38,38 @@ static inline bool in_future(uint32_t moment) {
     extern uint32_t now;
     return ((moment - now) >> 29) == 0;
 }
+
+// sizeof(dst) == len*2 + 1
+void jd_to_hex(char *dst, const void *src, size_t len);
+// sizeof(dst) >= strlen(dst)/2; returns length of dst
+int jd_from_hex(void *dst, const char *src);
+
+#if JD_VERBOSE_ASSERT
+__attribute__((noreturn)) void jd_assert_fail(const char *expr, const char *file, unsigned line,
+                                              const char *funname);
+#else
+#define jd_assert_fail(...) jd_panic()
+#endif
+
+#define JD_ASSERT(cond)                                                                            \
+    do {                                                                                           \
+        if (!(cond)) {                                                                             \
+            jd_assert_fail(#cond, __FILE__, __LINE__, __func__);                                   \
+        }                                                                                          \
+    } while (0)
+
+// jd_queue.c
+typedef struct jd_queue *jd_queue_t;
+jd_queue_t jd_queue_alloc(unsigned size);
+int jd_queue_push(jd_queue_t q, jd_frame_t *pkt);
+jd_frame_t *jd_queue_front(jd_queue_t q);
+void jd_queue_shift(jd_queue_t q);
+void jd_queue_test(void);
+int jd_queue_will_fit(jd_queue_t q, unsigned size);
+
+void jd_itoa(int n, char *s);
+void jd_string_reverse(char *s);
+int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap);
+int jd_sprintf(char *dst, unsigned dstsize, const char *format, ...);
+
+#endif
