@@ -20,18 +20,15 @@ REG_DEFINITION(                                                    //
 )
 
 void dcvoltagemeasurement_process(srv_t *state) {
-    sensor_process(state);
     void *tmp = sensor_get_reading(state);
     memcpy(&state->measurement, tmp, sizeof(state->measurement));
     sensor_process_simple(state, &state->measurement, sizeof(state->measurement));
 }
 
 void dcvoltagemeasurement_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    int r = sensor_handle_packet(state, pkt);
-
-    if (r == JD_DC_VOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE ||
-        r == JD_DC_VOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME)
-        service_handle_register(state, pkt, dcvoltagemeasurement_regs);
+    if (service_handle_register(state, pkt, dcvoltagemeasurement_regs))
+        return;
+    sensor_handle_packet_simple(state, pkt, &state->measurement, sizeof(state->measurement));
 }
 
 SRV_DEF(dcvoltagemeasurement, JD_SERVICE_CLASS_DC_VOLTAGE_MEASUREMENT);
@@ -40,6 +37,5 @@ void dcvoltagemeasurement_init(const dcvoltagemeasurement_params_t params) {
     state->streaming_interval = 100;
     state->api = params.api;
     state->measurement_type = params.measurement_type;
-    memset(state->measurement_name, 0, 20);
     memcpy(state->measurement_name, params.measurement_name, strlen(params.measurement_name));
 }
