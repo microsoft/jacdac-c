@@ -7,6 +7,9 @@
 #define ADS1115_LO_THRESH_REG 0x2
 #define ADS1115_HI_THRESH_REG 0x3
 
+//#define LOG JD_LOG
+#define LOG JD_NOLOG
+
 /**
  * Bit positions for CONF register
  **/
@@ -126,7 +129,7 @@ static inline uint8_t ads1115_channel_bitmsk(uint8_t pos_channel, uint8_t neg_ch
         ads1115_channel_map_t c = channel_map[i];
 
         if (pos_channel == c.pos_chan && neg_channel == c.neg_chan) {
-            DMESG("CHAN FOUND: %d, %x", i, c.bitmsk);
+            LOG("CHAN FOUND: %d, %x", i, c.bitmsk);
             return c.bitmsk;
         }
     }
@@ -166,12 +169,12 @@ static int ads1115_read(void) {
 #ifdef PIN_ACC_INT
     // alert/drdy pin is set to active lo in configure
     while (pin_get(PIN_ACC_INT) == 1 && retries++ < ADS1115_MAX_RETRIES)
-        ;
+        jd_services_sleep_us(300);
     // conversion time is 1/DR
     // we configure DR to 860
-    DMESG("RETRIES %d", retries);
+    LOG("RETRIES %d", retries);
     JD_ASSERT(retries < ADS1115_MAX_RETRIES);
-    // DMESG("RETRIES %d", retries);
+    // LOG("RETRIES %d", retries);
 #else
     while (1) {
         // ads1115_read_i2c(ADS1115_CONF_REG, &res, 2);
@@ -188,7 +191,8 @@ static int ads1115_read(void) {
     res = 0;
     target_wait_us(30);
     int rsp = i2c_read_reg_buf(ads1115_address, ADS1115_CONV_REG, &res, 2);
-    DMESG("REC: %x %x %d", res & 0xffff, flip(res) & 0xffff, rsp);
+    (void)rsp;
+    LOG("REC: %x %x %d", res & 0xffff, flip(res) & 0xffff, rsp);
     // ads1115_read_i2c(ADS1115_CONV_REG, &res, 2);
     return flip(res);
 }
@@ -208,7 +212,7 @@ static void ads1115_configure(uint8_t pos_chan, uint8_t neg_chan) {
     value |= (1 << ADS1115_CONF_MODE);
     // set gain
     value |= (gain_bitmsk << ADS1115_CONF_PGA);
-    DMESG("GAIN BITMSK %x", gain_bitmsk & 0x7);
+    LOG("GAIN BITMSK %x", gain_bitmsk & 0x7);
     // set conversion rate to max (860 SPS)
     value |= (0x7 << ADS1115_CONF_DR);
 
@@ -222,12 +226,12 @@ static void ads1115_configure(uint8_t pos_chan, uint8_t neg_chan) {
 
     value = flip(value);
 
-    DMESG("CFG: %x ", value);
-    // DMESG("CONF SET: %x", value);
+    LOG("CFG: %x ", value);
+    // LOG("CONF SET: %x", value);
     i2c_write_reg_buf(ads1115_address, ADS1115_CONF_REG, &value, 2);
     // target_wait_us(100);
     // i2c_read_reg_buf(ads1115_address, ADS1115_CONF_REG, &value, 2);
-    // DMESG("CONF GET: %x", value);
+    // LOG("CONF GET: %x", value);
 }
 
 static float ads1115_read_absolute(uint8_t channel) {
