@@ -11,6 +11,9 @@ extern const accelerometer_api_t accelerometer_kx023;
 extern const accelerometer_api_t accelerometer_qma7981;
 extern const accelerometer_api_t accelerometer_lsm6ds;
 
+typedef sensor_api_t captouch_api_t;
+extern const captouch_api_t captouch_cap1298;
+
 typedef sensor_api_t gyroscope_api_t;
 extern const gyroscope_api_t gyroscope_lsm6ds;
 

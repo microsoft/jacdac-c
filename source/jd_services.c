@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 #include "jd_protocol.h"
+#include "jd_services.h"
 #include "jd_client.h"
 #include "jd_pipes.h"
 
