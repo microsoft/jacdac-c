@@ -25,7 +25,7 @@
 // #define SAVE_HISTORY 1
 
 #define PRESS_THRESHOLD 1500
-#define PRESS_TICKS 2
+#define PRESS_TICKS 1
 
 #define SAMPLING_US 33000 // cap1298 has 35ms sampling cycle
 
@@ -64,7 +64,8 @@ static void detect_swipe(srv_t *state) {
             delta--;
             d0 = -d0;
         } else {
-            delta++;
+            if (d0)
+                delta++;
         }
 
         if (!(SWIPE_DELTA_MIN <= d0 && d0 <= SWIPE_DELTA_MAX))
