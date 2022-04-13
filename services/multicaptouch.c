@@ -14,11 +14,20 @@
 #define CON_LOG 0
 #endif
 
+/* Once you define SAVE_HISTORY, run the module and do the touch gestures.
+ * Then run 'make gdb' and inside gdb run:
+ * (gdb) dump memory history.bin history (history+history_ptr+2)
+ * then from shell run:
+ * $ node jacdac-c/scripts/decode_multitouch_history.js history.bin
+ * This will show the history of touches. Every dash is SAMPLING_US.
+ */
+
+// #define SAVE_HISTORY 1
+
 #define PRESS_THRESHOLD 1500
 #define PRESS_TICKS 2
 
-#define SAMPLING_US 500
-#define SAMPLE_WINDOW 7
+#define SAMPLING_US 33000 // cap1298 has 35ms sampling cycle
 
 #define SWIPE_DELTA_MIN 0
 #define SWIPE_DELTA_MAX 500
@@ -29,7 +38,6 @@ typedef struct pin_desc {
     uint32_t start_debounced;
     uint32_t start_press;
     uint32_t end_press;
-    uint16_t reading;
 } pin_t;
 
 struct srv_state {
@@ -37,7 +45,7 @@ struct srv_state {
     uint8_t numpins;
     uint8_t num_baseline_samples;
     pin_t *pins;
-    int32_t *readings;
+    uint16_t *readings;
     uint32_t nextSample;
     uint32_t next_baseline_sample;
 };
@@ -84,21 +92,29 @@ static void detect_swipe(srv_t *state) {
 #endif
 }
 
+#ifdef SAVE_HISTORY
+uint8_t history[1024];
+uint32_t history_ptr;
+#endif
+
 static void update(srv_t *state) {
     uint32_t now_ms = tim_get_micros() >> 10; // roughly milliseconds
 
-    uint32_t channel_data = ((uint32_t *)state->api->get_reading())[0];
+    uint16_t *channel_data = state->api->get_reading();
+
+    uint32_t mask = 0;
 
     for (int i = 0; i < state->numpins; ++i) {
         pin_t *p = &state->pins[i];
 
-        p->reading = ((channel_data & (1 << i)) > 0) ? 1 : 0;
-        state->readings[i] = p->reading;
+        uint16_t reading = channel_data[i];
+        state->readings[i] = reading;
 
         bool was_pressed = p->ticks_pressed >= PRESS_TICKS;
 
-        if (p->reading) {
+        if (reading > 100) {
             p->ticks_pressed++;
+            mask |= (1 << i);
         } else {
             p->ticks_pressed--;
         }
@@ -127,27 +143,41 @@ static void update(srv_t *state) {
             }
         }
     }
+
+#ifdef SAVE_HISTORY
+    mask &= 0xff;
+    if (history[history_ptr] != mask) {
+        history_ptr += 2;
+        if (history_ptr >= sizeof(history)) {
+            history_ptr = 0;
+        }
+        history[history_ptr] = mask;
+        history[history_ptr + 1] = 1;
+    } else {
+        if ((uint8_t)++history[history_ptr + 1] == 0)
+            history[history_ptr + 1] = 0xff;
+    }
+#endif
 }
 
 void multicaptouch_process(srv_t *state) {
-    if (jd_should_sample(&state->nextSample, SAMPLING_US * 9 / 10)) {
+    if (jd_should_sample_delay(&state->nextSample, SAMPLING_US * 9 / 10)) {
         update(state);
-        sensor_process_simple(state, state->readings, state->numpins * sizeof(int32_t));
+        sensor_process_simple(state, state->readings, state->numpins * sizeof(uint16_t));
     }
 }
 
 void multicaptouch_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    sensor_handle_packet_simple(state, pkt, state->readings, state->numpins * sizeof(int32_t));
+    sensor_handle_packet_simple(state, pkt, state->readings, state->numpins * sizeof(uint16_t));
 }
 
 SRV_DEF(multicaptouch, JD_SERVICE_CLASS_MULTITOUCH);
 
 void multicaptouch_init(const captouch_api_t *cfg, uint32_t channels) {
     SRV_ALLOC(multicaptouch);
-    tim_max_sleep = SAMPLING_US;
     state->api = cfg;
     state->pins = jd_alloc(channels * sizeof(pin_t));
-    state->readings = jd_alloc(channels * sizeof(int32_t));
+    state->readings = jd_alloc(channels * sizeof(uint16_t));
     state->streaming_interval = 50;
     state->numpins = channels;
 
