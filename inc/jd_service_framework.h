@@ -96,6 +96,11 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
 int service_handle_register_final(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]);
 
 /**
+ * If `pkt` is `JD_GET(reg_code)` send `value` as response and return 1.
+ */
+int service_handle_string_register(jd_packet_t *pkt, uint16_t reg_code, const char *value);
+
+/**
  * called by jd_init();
  **/
 void jd_services_init(void);
