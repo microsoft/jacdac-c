@@ -6,17 +6,16 @@
 #include "jacdac/dist/c/dcvoltagemeasurement.h"
 struct srv_state {
     SENSOR_COMMON;
-    uint8_t measurement_type;
-    char measurement_name[20];
     double measurement;
+    uint8_t measurement_type;
+    const char *measurement_name;
 };
 
-REG_DEFINITION(                                                    //
-    dcvoltagemeasurement_regs,                                     //
-    REG_SENSOR_COMMON,                                             //
-    REG_U8(JD_DC_VOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE),        //
-    REG_BYTES(JD_DC_VOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME, 20), //
-    REG_BYTES(JD_DC_VOLTAGE_MEASUREMENT_REG_MEASUREMENT, 8),       //
+REG_DEFINITION(                                              //
+    dcvoltagemeasurement_regs,                               //
+    REG_SENSOR_COMMON,                                       //
+    REG_BYTES(JD_DC_VOLTAGE_MEASUREMENT_REG_MEASUREMENT, 8), //
+    REG_U8(JD_DC_VOLTAGE_MEASUREMENT_REG_MEASUREMENT_TYPE),  //
 )
 
 void dcvoltagemeasurement_process(srv_t *state) {
@@ -26,7 +25,9 @@ void dcvoltagemeasurement_process(srv_t *state) {
 }
 
 void dcvoltagemeasurement_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (service_handle_register(state, pkt, dcvoltagemeasurement_regs))
+    if (service_handle_register(state, pkt, dcvoltagemeasurement_regs) ||
+        service_handle_string_register(pkt, JD_DC_VOLTAGE_MEASUREMENT_REG_MEASUREMENT_NAME,
+                                       state->measurement_name))
         return;
     sensor_handle_packet_simple(state, pkt, &state->measurement, sizeof(state->measurement));
 }
@@ -37,5 +38,5 @@ void dcvoltagemeasurement_init(const dcvoltagemeasurement_params_t params) {
     state->streaming_interval = 100;
     state->api = params.api;
     state->measurement_type = params.measurement_type;
-    memcpy(state->measurement_name, params.measurement_name, strlen(params.measurement_name));
+    state->measurement_name = params.measurement_name;
 }

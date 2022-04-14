@@ -6,15 +6,14 @@
 #include "jacdac/dist/c/dccurrentmeasurement.h"
 struct srv_state {
     SENSOR_COMMON;
-    char measurement_name[20];
     double measurement;
+    const char *measurement_name;
 };
 
-REG_DEFINITION(                                                    //
-    dccurrentmeasurement_regs,                                     //
-    REG_SENSOR_COMMON,                                             //
-    REG_BYTES(JD_DC_CURRENT_MEASUREMENT_REG_MEASUREMENT_NAME, 20), //
-    REG_BYTES(JD_DC_CURRENT_MEASUREMENT_REG_MEASUREMENT, 8),       //
+REG_DEFINITION(                                              //
+    dccurrentmeasurement_regs,                               //
+    REG_SENSOR_COMMON,                                       //
+    REG_BYTES(JD_DC_CURRENT_MEASUREMENT_REG_MEASUREMENT, 8), //
 )
 
 void dccurrentmeasurement_process(srv_t *state) {
@@ -24,7 +23,9 @@ void dccurrentmeasurement_process(srv_t *state) {
 }
 
 void dccurrentmeasurement_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (service_handle_register(state, pkt, dccurrentmeasurement_regs))
+    if (service_handle_register(state, pkt, dccurrentmeasurement_regs) ||
+        service_handle_string_register(pkt, JD_DC_CURRENT_MEASUREMENT_REG_MEASUREMENT_NAME,
+                                       state->measurement_name))
         return;
     sensor_handle_packet_simple(state, pkt, &state->measurement, sizeof(state->measurement));
 }
@@ -34,5 +35,5 @@ void dccurrentmeasurement_init(const dccurrentmeasurement_params_t params) {
     SRV_ALLOC(dccurrentmeasurement);
     state->streaming_interval = 100;
     state->api = params.api;
-    memcpy(state->measurement_name, params.measurement_name, strlen(params.measurement_name));
+    state->measurement_name = params.measurement_name;
 }

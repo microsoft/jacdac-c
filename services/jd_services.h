@@ -283,7 +283,7 @@ extern const adc_api_t ads1115;
 typedef struct {
     const adc_api_t *adc;
     uint8_t measurement_type;
-    char *measurement_name;
+    const char *measurement_name;
     uint32_t channel1;
     uint32_t channel2;
     uint8_t i2c_address;
@@ -295,7 +295,7 @@ void dcvoltagemeasurement_init(const dcvoltagemeasurement_params_t params);
 
 typedef struct {
     const adc_api_t *adc;
-    char *measurement_name;
+    const char *measurement_name;
     uint32_t channel1;
     uint32_t channel2;
     uint8_t i2c_address;
