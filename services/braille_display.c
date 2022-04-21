@@ -14,7 +14,7 @@ struct srv_state {
     const hbridge_api_t *api;
     braille_get_channels_t get_channels;
     uint8_t dots[DOTS_MAX];
-    uint8_t tmpbuf[236];
+    uint8_t tmpbuf[JD_SERIAL_PAYLOAD_SIZE];
 };
 
 REG_DEFINITION(                             //
