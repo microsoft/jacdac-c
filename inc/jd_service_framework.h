@@ -101,6 +101,11 @@ int service_handle_register_final(srv_t *state, jd_packet_t *pkt, const uint16_t
 int service_handle_string_register(jd_packet_t *pkt, uint16_t reg_code, const char *value);
 
 /**
+ * Respond to variant query.
+ */
+int service_handle_variant(jd_packet_t *pkt, uint8_t variant);
+
+/**
  * called by jd_init();
  **/
 void jd_services_init(void);

@@ -305,4 +305,18 @@ typedef struct {
 } dccurrentmeasurement_params_t;
 void dccurrentmeasurement_init(const dccurrentmeasurement_params_t params);
 
+typedef struct {
+    uint8_t pin;
+    uint8_t variant;
+    bool inverted;
+    int16_t offset;
+    // thr_south_on < thr_south_off < thr_north_off < thr_north_on
+    // difference between on and off is hysteresis
+    int16_t thr_south_on;
+    int16_t thr_south_off;
+    int16_t thr_north_off;
+    int16_t thr_north_on;
+} magneticfieldlevel_cfg_t;
+void magneticfieldlevel_init(const magneticfieldlevel_cfg_t *cfg);
+
 #endif

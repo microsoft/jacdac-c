@@ -38,6 +38,8 @@ int sensor_handle_packet(srv_t *state, jd_packet_t *pkt);
 int sensor_should_stream(srv_t *state);
 int sensor_handle_packet_simple(srv_t *state, jd_packet_t *pkt, const void *sample,
                                 uint32_t sample_size);
+int sensor_handle_packet_simple_variant(srv_t *state, jd_packet_t *pkt, const void *sample,
+                                        uint32_t sample_size, uint8_t variant);
 void sensor_process_simple(srv_t *state, const void *sample, uint32_t sample_size);
 
 void sensor_process(srv_t *state);

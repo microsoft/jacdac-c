@@ -36,6 +36,8 @@ void motion_process(srv_t *state) {
 }
 
 void motion_handle_packet(srv_t *state, jd_packet_t *pkt) {
+    if (service_handle_variant(pkt, state->cfg->variant))
+        return;
     sensor_handle_packet_simple(state, pkt, &state->moving, sizeof(state->moving));
 }
 

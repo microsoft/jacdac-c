@@ -36,9 +36,18 @@ static int is_zero(const uint8_t *p, uint32_t sz) {
 int service_handle_string_register(jd_packet_t *pkt, uint16_t reg_code, const char *value) {
     if (pkt->service_command == JD_GET(reg_code)) {
         jd_send(pkt->service_index, pkt->service_command, value, strlen(value));
-        return 1;
+        return -reg_code;
     }
     return 0;
+}
+
+int service_handle_variant(jd_packet_t *pkt, uint8_t variant) {
+    if (pkt->service_command == JD_GET(JD_REG_VARIANT)) {
+        jd_respond_u8(pkt, variant);
+        return -JD_REG_VARIANT;
+    } else {
+        return 0;
+    }
 }
 
 int service_handle_register_final(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc[]) {
