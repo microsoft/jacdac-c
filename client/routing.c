@@ -89,13 +89,13 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     case JD_CLIENT_EV_REPEATED_EVENT_PACKET:
         if (verbose_log) {
             DMESG("serv %s/%d[0x%x] - repeated event cmd=%x", jd_service_parent(serv)->short_id,
-                  serv->service_index, serv->service_class, pkt->service_command);
+                  serv->service_index, (unsigned)serv->service_class, pkt->service_command);
         }
         break;
     case JD_CLIENT_EV_SERVICE_PACKET:
         if (verbose_log) {
             DMESG("serv %s/%d[0x%x] - pkt cmd=%x", jd_service_parent(serv)->short_id,
-                  serv->service_index, serv->service_class, pkt->service_command);
+                  serv->service_index, (unsigned)serv->service_class, pkt->service_command);
         }
         break;
     case JD_CLIENT_EV_NON_SERVICE_PACKET:
