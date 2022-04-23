@@ -3,6 +3,7 @@
 
 #include "jd_services.h"
 #include "interfaces/jd_pins.h"
+#include "interfaces/jd_adc.h"
 #include "jacdac/dist/c/magneticfieldlevel.h"
 
 struct srv_state {
@@ -26,9 +27,6 @@ static void update(srv_t *state) {
     if (val > 0x7fff)
         val = 0x7fff;
     state->value = val;
-
-    int16_t thr_south_on;
-    int16_t thr_south_off;
 
     if (val < (state->prev_detected < 0 ? cfg->thr_south_off : cfg->thr_south_on))
         state->detected = -1;
