@@ -22,7 +22,9 @@ typedef struct jd_opipe_desc {
     jd_frame_t frame;
 } jd_opipe_desc_t;
 
-int jd_opipe_open(jd_opipe_desc_t *str, jd_packet_t *pkt);
+int jd_opipe_open(jd_opipe_desc_t *str, uint64_t device_id, uint16_t port_num);
+int jd_opipe_open_cmd(jd_opipe_desc_t *str, jd_packet_t *cmd_pkt);
+int jd_opipe_open_report(jd_opipe_desc_t *str, jd_packet_t *report_pkt);
 
 // all these functions can return JD_PIPE_TRY_AGAIN
 // can be optionally called before jd_opipe_write*(); if this return JD_PIPE_OK, then write also

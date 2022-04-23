@@ -318,12 +318,12 @@ void jd_services_tick() {
     jd_status_process();
 #endif
 
-#if JD_CLIENT
-    jd_client_process();
-#endif
-
 #if JD_PIPES
     jd_opipe_process();
+#endif
+
+#if JD_CLIENT
+    jd_client_process();
 #endif
 
     jd_tx_flush();

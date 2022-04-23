@@ -233,6 +233,13 @@ jd_device_t *jd_device_lookup(uint64_t device_identifier) {
     return NULL;
 }
 
+jd_device_service_t *jd_device_lookup_service(jd_device_t *dev, uint32_t service_class) {
+    for (unsigned i = 0 ; i < dev->num_services; ++i)
+        if (jd_device_get_service(dev, i)->service_class == service_class)
+            return jd_device_get_service(dev, i);
+        return NULL;
+}
+
 int jd_service_send_cmd(jd_device_service_t *serv, uint16_t service_command, const void *data,
                         size_t datasize) {
     jd_packet_t *pkt = jd_alloc(JD_SERIAL_FULL_HEADER_SIZE + datasize);

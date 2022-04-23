@@ -32,21 +32,17 @@ static void jd_opipe_unlink(jd_opipe_desc_t *str) {
     memset(str, 0, sizeof(*str));
 }
 
-int jd_opipe_open(jd_opipe_desc_t *str, jd_packet_t *pkt) {
-    if (pkt->service_size < sizeof(jd_pipe_cmd_t))
+int jd_opipe_open(jd_opipe_desc_t *str, uint64_t device_id, uint16_t port_num) {
+    if (device_id == 0)
         return JD_PIPE_ERROR;
 
-    jd_pipe_cmd_t *sc = (jd_pipe_cmd_t *)pkt->data;
     jd_frame_t *f = &str->frame;
-
-    if (sc->device_identifier == 0)
-        return JD_PIPE_ERROR;
 
     LOCK();
     jd_opipe_unlink(str);
-    f->device_identifier = sc->device_identifier;
+    f->device_identifier = device_id;
     f->flags = JD_FRAME_FLAG_COMMAND | JD_FRAME_FLAG_ACK_REQUESTED;
-    str->counter = sc->port_num << JD_PIPE_PORT_SHIFT;
+    str->counter = port_num << JD_PIPE_PORT_SHIFT;
     str->status = ST_OPEN;
     str->curr_retry = 0;
     str->next = opipes;
@@ -54,6 +50,19 @@ int jd_opipe_open(jd_opipe_desc_t *str, jd_packet_t *pkt) {
     UNLOCK();
 
     return JD_PIPE_OK;
+}
+
+int jd_opipe_open_cmd(jd_opipe_desc_t *str, jd_packet_t *pkt) {
+    if (pkt->service_size < sizeof(jd_pipe_cmd_t))
+        return JD_PIPE_ERROR;
+    jd_pipe_cmd_t *sc = (jd_pipe_cmd_t *)pkt->data;
+    return jd_opipe_open(str, sc->device_identifier, sc->port_num);
+}
+
+int jd_opipe_open_report(jd_opipe_desc_t *str, jd_packet_t *pkt) {
+    if (pkt->service_size < sizeof(uint16_t))
+        return JD_PIPE_ERROR;
+    return jd_opipe_open(str, pkt->device_identifier, *(uint16_t *)pkt->data);
 }
 
 void jd_opipe_handle_packet(jd_packet_t *pkt) {
@@ -64,6 +73,7 @@ void jd_opipe_handle_packet(jd_packet_t *pkt) {
         if (str->curr_retry && pkt->service_command == str->frame.crc &&
             str->frame.device_identifier == pkt->device_identifier) {
             str->curr_retry = 0;
+            jd_reset_frame(&str->frame);
             if (str->status == ST_CLOSED_WAITING) {
                 jd_opipe_unlink(str);
             }

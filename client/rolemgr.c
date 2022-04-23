@@ -163,7 +163,7 @@ void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     case JD_ROLE_MANAGER_CMD_LIST_ROLES:
-        if (jd_opipe_open(&state->list_pipe, pkt) == 0) {
+        if (jd_opipe_open_cmd(&state->list_pipe, pkt) == 0) {
             if (NULL == (state->list_ptr = state->roles)) {
                 // if nothing to list, close immediately
                 jd_opipe_close(&state->list_pipe);
