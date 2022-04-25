@@ -5,7 +5,7 @@
 #include "interfaces/jd_pins.h"
 #include "interfaces/jd_pwm.h"
 #include "interfaces/jd_hw_pwr.h"
-#include "jacdac/dist/c/led.h"
+#include "jacdac/dist/c/ledsingle.h"
 
 #define RGB_IN_TIM 0x01
 #define FRAME_US 65536
@@ -36,10 +36,10 @@ REG_DEFINITION(                               //
     led_regs,                                 //
     REG_SRV_COMMON,                           //
     REG_OPT8(JD_REG_VARIANT),                 //
-    REG_OPT16(JD_LED_REG_WAVE_LENGTH),        //
-    REG_OPT16(JD_LED_REG_LED_COUNT),          //
-    REG_OPT16(JD_LED_REG_MAX_POWER),          //
-    REG_OPT16(JD_LED_REG_LUMINOUS_INTENSITY), //
+    REG_OPT16(JD_LED_SINGLE_REG_WAVE_LENGTH),        //
+    REG_OPT16(JD_LED_SINGLE_REG_LED_COUNT),          //
+    REG_OPT16(JD_LED_SINGLE_REG_MAX_POWER),          //
+    REG_OPT16(JD_LED_SINGLE_REG_LUMINOUS_INTENSITY), //
 )
 
 static void led_show(srv_t *state) {
@@ -125,7 +125,7 @@ void led_process(srv_t *state) {
 
 void led_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
-    case JD_GET(JD_LED_REG_COLOR): {
+    case JD_GET(JD_LED_SINGLE_REG_COLOR): {
         uint8_t color[3];
         for (int i = 0; i < 3; ++i)
             color[i] = state->channels[i].value >> 8;
@@ -133,7 +133,7 @@ void led_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
     }
 
-    case JD_LED_CMD_ANIMATE:
+    case JD_LED_SINGLE_CMD_ANIMATE:
         if (pkt->service_size >= sizeof(jd_control_set_status_light_t))
             led_animate(state, (jd_control_set_status_light_t *)pkt->data);
         break;
@@ -144,7 +144,7 @@ void led_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(led, JD_SERVICE_CLASS_LED);
+SRV_DEF(led, JD_SERVICE_CLASS_LED_SINGLE);
 void led_service_init(const led_params_t *params) {
     SRV_ALLOC(led);
 

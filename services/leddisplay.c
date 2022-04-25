@@ -4,16 +4,7 @@
 #include "jd_services.h"
 #include "interfaces/jd_pixel.h"
 #include "interfaces/jd_hw_pwr.h"
-#include "jacdac/dist/c/leddisplay.h"
-
-#ifdef STM32X
-#include "tinyhw.h"
-
-STATIC_ASSERT(LIGHT_TYPE_APA102 == JD_LED_DISPLAY_LIGHT_TYPE_APA102);
-STATIC_ASSERT(LIGHT_TYPE_APA_MASK == JD_LED_DISPLAY_LIGHT_TYPE_APA102);
-STATIC_ASSERT(LIGHT_TYPE_WS2812B_GRB == JD_LED_DISPLAY_LIGHT_TYPE_WS2812B_GRB);
-STATIC_ASSERT(LIGHT_TYPE_SK9822 == JD_LED_DISPLAY_LIGHT_TYPE_SK9822);
-#endif
+#include "jacdac/dist/c/led.h"
 
 #define DEFAULT_INTENSITY 15
 
@@ -32,15 +23,14 @@ typedef union {
     uint32_t val;
 } RGB;
 
-REG_DEFINITION(                                   //
-    leddisplay_regs,                              //
-    REG_SRV_COMMON,                               //
-    REG_U8(JD_LED_DISPLAY_REG_BRIGHTNESS),        //
-    REG_U8(JD_LED_DISPLAY_REG_ACTUAL_BRIGHTNESS), //
-    REG_U8(JD_LED_DISPLAY_REG_LIGHT_TYPE),        //
-    REG_U8(JD_LED_DISPLAY_REG_VARIANT),           //
-    REG_U16(JD_LED_DISPLAY_REG_NUM_PIXELS),       //
-    REG_U16(JD_LED_DISPLAY_REG_MAX_POWER),        //
+REG_DEFINITION(                           //
+    leddisplay_regs,                      //
+    REG_SRV_COMMON,                       //
+    REG_U8(JD_LED_REG_BRIGHTNESS),        //
+    REG_U8(JD_LED_REG_ACTUAL_BRIGHTNESS), //
+    REG_U8(JD_LED_REG_VARIANT),           //
+    REG_U16(JD_LED_REG_NUM_PIXELS),       //
+    REG_U16(JD_LED_REG_MAX_POWER),        //
 )
 
 struct srv_state {
@@ -48,12 +38,12 @@ struct srv_state {
 
     uint8_t requested_intensity;
     uint8_t intensity;
-    uint8_t leddisplay_type;
     uint8_t variant;
     uint16_t numpixels;
     uint16_t maxpower;
 
     // end of registers
+    uint8_t leddisplay_type;
     uint32_t auto_refresh;
     uint8_t pxbuffer[JD_SERIAL_PAYLOAD_SIZE];
     volatile uint8_t in_tx;
@@ -102,15 +92,15 @@ void leddisplay_handle_packet(srv_t *state, jd_packet_t *pkt) {
     LOG("cmd: %x", pkt->service_command);
 
     switch (pkt->service_command) {
-    case JD_GET(JD_LED_DISPLAY_REG_PIXELS):
+    case JD_GET(JD_LED_REG_PIXELS):
         jd_send(pkt->service_index, pkt->service_command, state->pxbuffer, state->numpixels * 3);
         break;
-    case JD_SET(JD_LED_DISPLAY_REG_PIXELS):
+    case JD_SET(JD_LED_REG_PIXELS):
         handle_set(state, pkt);
         break;
     default:
         switch (service_handle_register_final(state, pkt, leddisplay_regs)) {
-        case JD_LED_DISPLAY_REG_BRIGHTNESS:
+        case JD_LED_REG_BRIGHTNESS:
             state->intensity = state->requested_intensity;
             break;
         }
@@ -121,7 +111,7 @@ void leddisplay_handle_packet(srv_t *state, jd_packet_t *pkt) {
         state->needs_clear = 1;
 }
 
-SRV_DEF(leddisplay, JD_SERVICE_CLASS_LED_DISPLAY);
+SRV_DEF(leddisplay, JD_SERVICE_CLASS_LED);
 void leddisplay_init(uint8_t leddisplay_type, uint32_t num_pixels, uint32_t default_max_power,
                      uint8_t variant) {
     SRV_ALLOC(leddisplay);

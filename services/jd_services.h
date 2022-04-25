@@ -31,6 +31,11 @@ void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn, ui
 void ledstrip_init(uint8_t default_ledstrip_type, uint32_t default_num_pixels,
                    uint32_t default_max_power, uint8_t variant);
 
+#define LIGHT_TYPE_APA_MASK 0x10
+#define LIGHT_TYPE_WS2812B_GRB 0x00
+#define LIGHT_TYPE_APA102 0x10
+#define LIGHT_TYPE_SK9822 0x11
+
 // This is similar, but for short strips, under 64 pixels.
 // The type and number of pixels are always fixed in this case.
 void leddisplay_init(uint8_t leddisplay_type, uint32_t num_pixels, uint32_t default_max_power,
