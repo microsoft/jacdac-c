@@ -157,7 +157,7 @@ void jd_to_hex(char *dst, const void *src, size_t len) {
         dst[i * 2] = hex[p[i] >> 4];
         dst[i * 2 + 1] = hex[p[i] & 0xf];
     }
-    dst[len * 2 - 1] = 0;
+    dst[len * 2] = 0;
 }
 
 static int hexdig(char c) {
