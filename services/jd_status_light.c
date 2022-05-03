@@ -78,10 +78,6 @@ static void rgbled_show(status_ctx_t *state) {
         int32_t c = ch->value;
         c = (c * ch->mult) >> (7 + 8);
         sum += c;
-        if (c == 0) {
-            pin_set(ch->pin, LED_OFF_STATE);
-            pwm_enable(ch->pwm, 0);
-        } else {
 #ifdef LED_RGB_COMMON_CATHODE
             if (c >= RGB_LED_PERIOD)
                 c = RGB_LED_PERIOD - 1;
@@ -90,7 +86,12 @@ static void rgbled_show(status_ctx_t *state) {
             if (c < 0)
                 c = 0;
 #endif
-            pwm_set_duty(ch->pwm, c);
+        // set duty first, in case pwm_enable() is not impl.
+        pwm_set_duty(ch->pwm, c);
+        if (c == 0) {
+            pin_set(ch->pin, LED_OFF_STATE);
+            pwm_enable(ch->pwm, 0);
+        } else {
             pwm_enable(ch->pwm, 1);
         }
     }
