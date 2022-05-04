@@ -37,6 +37,8 @@ void jd_process_event_queue(void);
 
 // this is needed for pipes and clients, not regular servers
 int jd_send_frame(jd_frame_t *f);
+// this will not forward to USB port
+int jd_send_frame_raw(jd_frame_t *f);
 
 // wrapper around jd_send_frame()
 int jd_send_pkt(jd_packet_t *pkt);

@@ -23,6 +23,11 @@ int jd_rx_frame_received(jd_frame_t *frame) {
     return 0;
 }
 
+int jd_rx_frame_received_loopback(jd_frame_t *frame)
+{
+    return jd_rx_frame_received(frame);
+}
+
 jd_frame_t *jd_rx_get_frame(void) {
     return occupied ? &frameToHandle : NULL;
 }
