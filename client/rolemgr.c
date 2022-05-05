@@ -268,6 +268,8 @@ void jd_role_free_all() {
     stop_list(state);
     while (state->roles) {
         jd_role_t *r = state->roles;
+        if (r->service)
+            r->service->flags &= ~JD_DEVICE_SERVICE_FLAG_ROLE_ASSIGNED;
         state->roles = r->_next;
         r->name = NULL;
         jd_free(r);
