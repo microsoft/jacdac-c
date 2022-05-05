@@ -229,6 +229,10 @@ void jd_services_announce() {
 #endif
 #endif
 
+#if JD_CLIENT
+    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_IS_CLIENT;
+#endif
+
     adflags |= JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_ACK |
                JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_BROADCAST |
                JD_CONTROL_ANNOUNCE_FLAGS_SUPPORTS_FRAMES;
