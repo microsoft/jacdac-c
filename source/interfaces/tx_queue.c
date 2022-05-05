@@ -122,6 +122,7 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
     }
 #endif
 
+    JD_ASSERT(isSending == 2);
     isSending = 0;
     goto done; // avoid warning
 
@@ -133,7 +134,7 @@ done:
 void jd_tx_flush() {
     if (target_in_irq())
         jd_panic();
-    if (isSending == 1) {
+    if (isSending) {
         // jd_packet_ready();
         return;
     }
