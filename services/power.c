@@ -6,7 +6,7 @@
 #include "interfaces/jd_adc.h"
 #include "jacdac/dist/c/power.h"
 
-#define LOG JD_LOG
+#define LOG(msg, ...) DMESG("PWR: " msg, ##__VA_ARGS__)
 // #define LOG JD_NOLOG
 
 #define OVERLOAD_MS 2000 // how long to shut down the power for after overload, in ms
@@ -49,7 +49,7 @@ REG_DEFINITION(                                   //
 )
 
 static void set_limiter(srv_t *state, int onoff) {
-    DMESG("lim: %d", onoff);
+    LOG("lim: %d", onoff);
 
     if (!state->cfg->en_active_high)
         onoff = !onoff;
@@ -139,10 +139,14 @@ void power_process(srv_t *state) {
     }
 
     if (state->prev_power_status != state->power_status) {
+        LOG("status %d -> %d", state->prev_power_status, state->power_status);
         state->prev_power_status = state->power_status;
         jd_send_event_ext(state, JD_POWER_EV_POWER_STATUS_CHANGED, &state->power_status,
                           sizeof(state->power_status));
     }
+
+    if (!state->allowed)
+        return;
 
     if ((state->power_status != JD_POWER_POWER_STATUS_POWERING && in_past(state->re_enable)) ||
         (state->power_status == JD_POWER_POWER_STATUS_OVERPROVISION &&
@@ -179,6 +183,7 @@ void power_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     switch (service_handle_register_final(state, pkt, power_regs)) {
     case JD_POWER_REG_ALLOWED:
+        LOG("allowed=%d", state->allowed);
         state->power_status =
             state->allowed ? JD_POWER_POWER_STATUS_POWERING : JD_POWER_POWER_STATUS_DISALLOWED;
         break;
