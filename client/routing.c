@@ -88,19 +88,21 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
         break;
     case JD_CLIENT_EV_REPEATED_EVENT_PACKET:
         if (verbose_log) {
-            DMESG("serv %s/%d[0x%x] - repeated event cmd=%x", jd_service_parent(serv)->short_id,
+            DMESG("serv %s/%d[%x] - repeated event cmd=%x", jd_service_parent(serv)->short_id,
                   serv->service_index, (unsigned)serv->service_class, pkt->service_command);
         }
         break;
     case JD_CLIENT_EV_SERVICE_PACKET:
         if (verbose_log) {
-            DMESG("serv %s/%d[0x%x] - pkt cmd=%x", jd_service_parent(serv)->short_id,
-                  serv->service_index, (unsigned)serv->service_class, pkt->service_command);
+            DMESG("serv %s/%d[0x%x] - pkt cmd=%x sz=%d", jd_service_parent(serv)->short_id,
+                  serv->service_index, (unsigned)serv->service_class, pkt->service_command,
+                  pkt->service_size);
         }
         break;
     case JD_CLIENT_EV_NON_SERVICE_PACKET:
         if (verbose_log)
-            DMESG("unbound pkt d=%s cmd=%x", d ? d->short_id : "n/a", pkt->service_command);
+            DMESG("unbound pkt d=%s/%d cmd=%x sz=%d", d ? d->short_id : "n/a", pkt->service_index,
+                  pkt->service_command, pkt->service_size);
         break;
     case JD_CLIENT_EV_BROADCAST_PACKET:
         // arg0 == NULL here
@@ -360,6 +362,7 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
             if (dev->announce_flags != new_flags) {
                 if ((dev->announce_flags & JD_CONTROL_ANNOUNCE_FLAGS_RESTART_COUNTER_STEADY) >
                     (new_flags & JD_CONTROL_ANNOUNCE_FLAGS_RESTART_COUNTER_STEADY)) {
+                    // DMESG("rst %x -> %x", dev->announce_flags, new_flags);
                     jd_client_emit_event(JD_CLIENT_EV_DEVICE_RESET, dev, pkt);
                     jd_device_unlink(dev);
                     jd_device_free(dev);
