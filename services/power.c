@@ -112,8 +112,9 @@ void power_process(srv_t *state) {
         } else {
             if (!state->power_on_complete) {
                 set_limiter(state, 1);
-                state->power_on_complete = now + MS(16); // 16ms to ramp up
-                if (!state->power_on_complete)           // unlikely wrap-around
+                int ign = state->cfg->fault_ignore_ms;
+                state->power_on_complete = now + MS(ign ? ign : 16); // some time to ramp up
+                if (!state->power_on_complete)                       // unlikely wrap-around
                     state->power_on_complete = 1;
                 return;
             }

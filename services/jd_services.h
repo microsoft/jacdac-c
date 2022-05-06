@@ -115,6 +115,7 @@ typedef struct {
     uint8_t pin_en;
     uint8_t pin_pulse;
     uint8_t en_active_high;
+    uint16_t fault_ignore_ms; // defaults to 16ms
 } power_config_t;
 void power_init(const power_config_t *cfg);
 
