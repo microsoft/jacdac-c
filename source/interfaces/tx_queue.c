@@ -17,6 +17,8 @@ static uint8_t q_sending;
 int jd_send_frame_raw(jd_frame_t *f) {
     if (target_in_irq())
         jd_panic();
+    if (jd_rx_frame_received_loopback(f))
+        ERROR("loopback rx ovf");
     int r = jd_queue_push(send_queue, f);
     if (r)
         ERROR("send_frm ovf");
@@ -106,14 +108,6 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
     }
 #endif
 
-#if JD_CLIENT
-    // loopback only useful when client enabled
-    // don't do loopback for rawFrame, since that is only used by
-    // power service shutdown packet, which should *NOT* be looped-back
-    if (jd_rx_frame_received_loopback(pkt))
-        ERROR("loopback rx ovf");
-#endif
-
 #if JD_SEND_FRAME
     if (q_sending) {
         jd_queue_shift(send_queue);
@@ -138,13 +132,19 @@ void jd_tx_flush() {
         // jd_packet_ready();
         return;
     }
-    if (sendFrame[bufferPtr].size == 0)
+    jd_frame_t *f = &sendFrame[bufferPtr];
+    if (f->size == 0)
         return;
-    sendFrame[bufferPtr].device_identifier = jd_device_id();
-    jd_compute_crc(&sendFrame[bufferPtr]);
+    f->device_identifier = jd_device_id();
+    jd_compute_crc(f);
+
+    if (jd_rx_frame_received_loopback(f))
+        ERROR("loopback rx ovf");
+
 #ifdef JD_USB_SEND
-    JD_USB_SEND(&sendFrame[bufferPtr]);
+    JD_USB_SEND(f);
 #endif
+
     bufferPtr ^= 1;
     isSending = 1;
     jd_packet_ready();

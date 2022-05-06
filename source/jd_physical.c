@@ -187,6 +187,11 @@ void jd_rx_completed(int dataLeft) {
 
     set_tick_timer(JD_STATUS_RX_ACTIVE);
 
+    if (frame->size == 0) {
+        // TODO we can't report it, since it happens *very often* when line is held down on ESP32
+        return;
+    }
+
     if (dataLeft < 0) {
         ERROR("rx err: %d", dataLeft);
         jd_diagnostics.bus_uart_error++;

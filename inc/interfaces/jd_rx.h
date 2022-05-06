@@ -17,6 +17,10 @@ void jd_rx_release_frame(jd_frame_t *frame);
 
 #if JD_CLIENT
 int jd_rx_frame_received_loopback(jd_frame_t *frame);
+#else
+static inline int jd_rx_frame_received_loopback(jd_frame_t *frame) {
+    return 0;
+}
 #endif
 
 #endif
