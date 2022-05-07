@@ -95,7 +95,6 @@ void jd_client_emit_event(int event_id, void *arg0, void *arg1);
 
 // jd_device_t methods
 jd_device_t *jd_device_lookup(uint64_t device_identifier);
-void jd_device_short_id(char short_id[5], uint64_t long_id);
 static inline jd_device_service_t *jd_device_get_service(jd_device_t *dev, unsigned serv_idx) {
     return dev && serv_idx < dev->num_services ? dev->services + serv_idx : NULL;
 }

@@ -381,3 +381,50 @@ int jd_sprintf(char *dst, unsigned dstsize, const char *format, ...) {
     va_end(arg);
     return r;
 }
+
+// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+// this is not jd_hash_fnv1a()!
+static uint32_t hash_fnv1(const void *data, unsigned len) {
+    const uint8_t *d = (const uint8_t *)data;
+    uint32_t h = 0x811c9dc5;
+    while (len--) {
+        h = (h * 0x1000193) ^ *d++;
+    }
+    return h;
+}
+
+static uint32_t mkcd_hash(const void *buf, size_t length, int bits) {
+    if (bits < 1) {
+        return 0;
+    }
+
+    uint32_t h = hash_fnv1(buf, length);
+
+    if (bits >= 32) {
+        return h;
+    } else {
+        return (h ^ (h >> bits)) & ((1 << bits) - 1);
+    }
+}
+
+void jd_device_short_id(char short_id[5], uint64_t long_id) {
+    uint32_t h = mkcd_hash(&long_id, sizeof(long_id), 30);
+    short_id[0] = 'A' + (h % 26);
+    short_id[1] = 'A' + ((h / 26) % 26);
+    short_id[2] = '0' + ((h / (26 * 26)) % 10);
+    short_id[3] = '0' + ((h / (26 * 26 * 10)) % 10);
+    short_id[4] = 0;
+}
+
+void jd_log_packet(jd_packet_t *pkt) {
+    char shortid[5];
+    char tmpbuf[65];
+    unsigned sz = pkt->service_size;
+    if (sz > (sizeof(tmpbuf) >> 1))
+        sz = (sizeof(tmpbuf) >> 1);
+    jd_to_hex(tmpbuf, pkt->data, sz);
+    jd_device_short_id(shortid, pkt->device_identifier);
+    DMESG("PKT %s %s/%d cmd=%x sz=%d %s%s", pkt->flags & JD_FRAME_FLAG_COMMAND ? "TO" : "FROM",
+          shortid, pkt->service_index, pkt->service_command, pkt->service_size, tmpbuf,
+          sz == pkt->service_size ? "" : "...");
+}
