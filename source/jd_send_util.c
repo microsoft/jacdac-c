@@ -15,6 +15,16 @@ int jd_respond_u32(jd_packet_t *pkt, uint32_t v) {
     return jd_send(pkt->service_index, pkt->service_command, &v, sizeof(v));
 }
 
+int jd_respond_empty(jd_packet_t *pkt) {
+    return jd_send(pkt->service_index, pkt->service_command, "", 0);
+}
+
+int jd_respond_string(jd_packet_t *pkt, const char *str) {
+    if (!str || !*str)
+        return jd_respond_empty(pkt);
+    return jd_send(pkt->service_index, pkt->service_command, str, strlen(str));
+}
+
 int jd_send_not_implemented(jd_packet_t *pkt) {
     // don't complain about broadcast packets
     if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS)

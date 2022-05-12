@@ -21,6 +21,8 @@ int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsign
 int jd_respond_u8(jd_packet_t *pkt, uint8_t v);
 int jd_respond_u16(jd_packet_t *pkt, uint16_t v);
 int jd_respond_u32(jd_packet_t *pkt, uint32_t v);
+int jd_respond_empty(jd_packet_t *pkt);
+int jd_respond_string(jd_packet_t *pkt, const char *str);
 int jd_send_not_implemented(jd_packet_t *pkt);
 
 /**
