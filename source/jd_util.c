@@ -263,19 +263,22 @@ static void writeNum(char *buf, uintptr_t n, bool full) {
     buf[i] = 0;
 }
 
-#define WRITEN(p, sz_)                                                                             \
-    do {                                                                                           \
-        sz = sz_;                                                                                  \
-        ptr += sz;                                                                                 \
-        if (ptr < dstsize) {                                                                       \
-            memcpy(dst + ptr - sz, p, sz);                                                         \
-            dst[ptr] = 0;                                                                          \
-        }                                                                                          \
-    } while (0)
+static int write_n(char *dst, char *dstend, const char *src, int srclen) {
+    int left = dstend - dst;
+    if (left <= 0)
+        return 0;
+    int srctrimmed = srclen >= left ? left - 1 : srclen;
+    memcpy(dst, src, srctrimmed);
+    dst[srctrimmed] = 0;
+    return srclen;
+}
+
+#define WRITEN(p, sz) dst += write_n(dst, dstend, p, sz)
 
 int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
     const char *end = format;
-    unsigned ptr = 0, sz;
+    char *dst0 = dst;
+    char *dstend = dst + dstsize;
     char buf[sizeof(uintptr_t) * 2 + 8];
 
     for (;;) {
@@ -371,7 +374,7 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
 #endif
     }
 
-    return ptr;
+    return dst - dst0 + 1;
 }
 
 int jd_sprintf(char *dst, unsigned dstsize, const char *format, ...) {
