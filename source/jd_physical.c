@@ -126,7 +126,7 @@ static void rx_timeout(void) {
 
 static void setup_rx_timeout(void) {
     // It's possible this only gets executed after the entire reception process has finished.
-    // In that case, we don't want to set any additional timers.
+    // In that case, we don't want to set the rx_timeout().
     if (status & JD_STATUS_RX_ACTIVE) {
         uart_flush_rx();
         uint32_t *p = (uint32_t *)&rxFrame;
@@ -136,6 +136,8 @@ static void setup_rx_timeout(void) {
             // got the size - set timeout for whole packet
             tim_set_timer(JD_FRAME_SIZE(&rxFrame) * 12 + 60, rx_timeout);
         }
+    } else {
+        set_tick_timer(0);
     }
 }
 
@@ -172,7 +174,9 @@ void jd_line_falling() {
     // log_pin_set(1, 0);
 
     // 200us max delay according to spec, +50us to get the first 4 bytes of data
-    tim_set_timer(250, setup_rx_timeout);
+    // status might be missing JD_STATUS_RX_ACTIVE in case it finished real quick
+    if (status & JD_STATUS_RX_ACTIVE)
+        tim_set_timer(250, setup_rx_timeout);
 
     // target_enable_irq();
 }
