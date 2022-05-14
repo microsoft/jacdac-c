@@ -119,6 +119,10 @@
 #define JD_SEND_FRAME JD_CLIENT
 #endif
 
+#ifndef JD_SEND_FRAME_SIZE
+#define JD_SEND_FRAME_SIZE 512
+#endif
+
 #ifndef JD_LORA
 #define JD_LORA 0
 #endif

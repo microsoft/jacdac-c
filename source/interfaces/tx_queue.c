@@ -62,7 +62,7 @@ int jd_tx_is_idle() {
 void jd_tx_init(void) {
 #if JD_SEND_FRAME
     if (!send_queue)
-        send_queue = jd_queue_alloc(sizeof(jd_frame_t) * 2);
+        send_queue = jd_queue_alloc(JD_SEND_FRAME_SIZE);
 #else
     if (!sendFrame)
         sendFrame = (jd_frame_t *)jd_alloc(sizeof(jd_frame_t) * 2);
