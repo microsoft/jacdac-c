@@ -44,6 +44,9 @@ void jd_to_hex(char *dst, const void *src, size_t len);
 // sizeof(dst) >= strlen(dst)/2; returns length of dst
 int jd_from_hex(void *dst, const char *src);
 
+// buf is 64 bytes long
+void jd_print_double(char *buf, double d, int numdigits);
+
 #if JD_VERBOSE_ASSERT
 __attribute__((noreturn)) void jd_assert_fail(const char *expr, const char *file, unsigned line,
                                               const char *funname);
