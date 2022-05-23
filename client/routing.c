@@ -2,6 +2,13 @@
 
 #define EVENT_CHECKING 1
 
+typedef struct listener {
+    struct listener *next;
+    jd_client_event_handler_t handler;
+    void *userdata;
+} listener_t;
+static listener_t *jd_client_listeners;
+
 static uint32_t next_gc;
 static uint8_t verbose_log = 0;
 
@@ -26,12 +33,6 @@ static uint8_t event_scope;
 #define EVENT_LEAVE() ((void)0)
 #define EVENT_CHECK() ((void)0)
 #endif
-
-void rolemgr_role_changed(jd_role_t *role) {
-    EVENT_ENTER();
-    jd_client_emit_event(JD_CLIENT_EV_ROLE_CHANGED, role->service, role);
-    EVENT_LEAVE();
-}
 
 void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     jd_device_t *d = arg0;
@@ -82,14 +83,32 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
     }
 }
 
-__attribute__((weak)) void app_client_event_handler(int event_id, void *arg0, void *arg1) {}
+void app_client_event_handler(int event_id, void *arg0, void *arg1) {
+    // cause linker error if this is defined - use jd_client_subscribe()
+}
+
+void jd_client_subscribe(jd_client_event_handler_t handler, void *userdata) {
+    listener_t *l = jd_alloc(sizeof(*l));
+    l->next = jd_client_listeners;
+    l->userdata = userdata;
+    l->handler = handler;
+    jd_client_listeners = l;
+}
 
 void jd_client_emit_event(int event_id, void *arg0, void *arg1) {
     EVENT_CHECK();
     EVENT_LEAVE();
     jd_client_log_event(event_id, arg0, arg1);
-    app_client_event_handler(event_id, arg0, arg1);
+    for (listener_t *l = jd_client_listeners; l; l = l->next) {
+        l->handler(l->userdata, event_id, arg0, arg1);
+    }
     EVENT_ENTER();
+}
+
+void rolemgr_role_changed(jd_role_t *role) {
+    EVENT_ENTER();
+    jd_client_emit_event(JD_CLIENT_EV_ROLE_CHANGED, role->service, role);
+    EVENT_LEAVE();
 }
 
 static bool fits_at(jd_device_t *existing, jd_device_t *fresh) {

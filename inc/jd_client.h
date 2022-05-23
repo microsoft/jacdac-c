@@ -91,7 +91,9 @@ void jd_client_process(void);
 void jd_client_handle_packet(jd_packet_t *pkt);
 
 void jd_client_log_event(int event_id, void *arg0, void *arg1);
-void jd_client_emit_event(int event_id, void *arg0, void *arg1);
+
+typedef void (*jd_client_event_handler_t)(void *userdata, int event_id, void *arg0, void *arg1);
+void jd_client_subscribe(jd_client_event_handler_t handler, void *userdata);
 
 // jd_device_t methods
 jd_device_t *jd_device_lookup(uint64_t device_identifier);
