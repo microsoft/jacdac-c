@@ -312,6 +312,8 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
                 break;
             case 's': {
                 const char *val = va_arg(ap, const char *);
+                if (!val)
+                    val = "(null)";
                 WRITEN(val, strlen(val));
                 buf[0] = 0;
                 break;
@@ -358,6 +360,8 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
 #endif
                 break;
             case 's':
+                if ((void *)val == NULL)
+                    val = (uint32_t) "(null)";
                 WRITEN((char *)(void *)val, strlen((char *)(void *)val));
                 buf[0] = 0;
                 break;
