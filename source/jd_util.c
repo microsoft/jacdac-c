@@ -483,14 +483,19 @@ void jd_print_double(char *buf, NUMBER d, int numdigits) {
         d = -d;
     }
 
-    if (!d) {
-        *buf++ = '0';
-        *buf++ = 0;
+    if (isnan(d)) {
+        strcpy(buf, "NaN");
         return;
     }
 
-    if (isnan(d)) {
-        strcpy(buf, "NaN");
+    if (isinf(d)) {
+        strcpy(buf, "inf");
+        return;
+    }
+
+    if (d < 2.3e-308) {
+        *buf++ = '0';
+        *buf++ = 0;
         return;
     }
 
