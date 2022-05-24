@@ -128,6 +128,7 @@ void jd_role_free(jd_role_t *role);
 void jd_role_free_all(void);
 // both jd_role_alloc() and jd_role_free*() generate JD_CLIENT_EV_ROLE_CHANGED (now)
 // a freshly created role will typically be bound on next auto-bind
+jd_role_t *jd_role_by_service(jd_device_service_t *serv);
 
 // call from app_init_services()
 void jd_role_manager_init(void);

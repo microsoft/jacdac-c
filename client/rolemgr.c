@@ -296,3 +296,11 @@ void jd_role_free_all() {
         jd_free(r);
     }
 }
+
+jd_role_t *jd_role_by_service(jd_device_service_t *serv) {
+    srv_t *state = _state;
+    for (jd_role_t *r = state->roles; r; r = r->_next)
+        if (r->service == serv)
+            return r;
+    return NULL;
+}
