@@ -279,7 +279,11 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
     const char *end = format;
     char *dst0 = dst;
     char *dstend = dst + dstsize;
+#if JD_ADVANCED_STRING
+    char buf[64];
+#else
     char buf[sizeof(uintptr_t) * 2 + 8];
+#endif
 
     for (;;) {
         char c = *end++;
@@ -289,7 +293,21 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
             if (c == 0)
                 break;
 
-#if JD_64
+#if JD_ADVANCED_STRING
+#if JD_LORA
+            uint8_t fmtc = 0;
+            while ('0' <= *end && *end <= '9')
+                fmtc = *end++;
+#endif
+
+#if JD_FREE_SUPPORTED
+            int do_free = 0;
+            if (end[0] == '-' && end[1] == 's') {
+                do_free = 1;
+                end++;
+            }
+#endif
+
             c = *end++;
             buf[1] = 0;
             switch (c) {
@@ -304,18 +322,34 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
                 buf[0] = '0';
                 buf[1] = 'x';
                 writeNum(buf + 2, va_arg(ap, int), false);
+#if JD_LORA
+                if (c == 'X' && fmtc == '2') {
+                    buf[0] = buf[8];
+                    buf[1] = buf[9];
+                    buf[2] = 0;
+                }
+#endif
                 break;
             case 'p':
                 buf[0] = '0';
                 buf[1] = 'x';
                 writeNum(buf + 2, va_arg(ap, uintptr_t), false);
                 break;
+            case 'f': {
+                double f = va_arg(ap, double);
+                jd_print_double(buf, f, 8);
+                break;
+            }
             case 's': {
                 const char *val = va_arg(ap, const char *);
                 if (!val)
                     val = "(null)";
                 WRITEN(val, strlen(val));
                 buf[0] = 0;
+#if JD_FREE_SUPPORTED
+                if (do_free)
+                    jd_free((void *)val);
+#endif
                 break;
             }
             case '%':
@@ -325,16 +359,8 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
                 buf[0] = '?';
                 break;
             }
-            format = end;
-            WRITEN(buf, strlen(buf));
-        }
 #else
             uint32_t val = va_arg(ap, uint32_t);
-#if JD_LORA
-            uint8_t fmtc = 0;
-            while ('0' <= *end && *end <= '9')
-                fmtc = *end++;
-#endif
 
             c = *end++;
             buf[1] = 0;
@@ -351,13 +377,6 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
                 buf[0] = '0';
                 buf[1] = 'x';
                 writeNum(buf + 2, val, c != 'x');
-#if JD_LORA
-                if (c == 'X' && fmtc == '2') {
-                    buf[0] = buf[8];
-                    buf[1] = buf[9];
-                    buf[2] = 0;
-                }
-#endif
                 break;
             case 's':
                 if ((void *)val == NULL)
@@ -372,10 +391,10 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
                 buf[0] = '?';
                 break;
             }
+#endif
             format = end;
             WRITEN(buf, strlen(buf));
         }
-#endif
     }
 
     return dst - dst0 + 1;
@@ -436,7 +455,7 @@ void jd_log_packet(jd_packet_t *pkt) {
           sz == pkt->service_size ? "" : "...");
 }
 
-#if JD_CLIENT
+#if JD_ADVANCED_STRING
 #include <math.h>
 
 #define NUMBER double
@@ -545,4 +564,39 @@ void jd_print_double(char *buf, NUMBER d, int numdigits) {
         *buf = 0;
     }
 }
+#endif
+
+#if JD_FREE_SUPPORTED
+char *jd_vsprintf_a(const char *format, va_list ap) {
+    char dst[32];
+    int len = jd_vsprintf(dst, sizeof(dst), format, ap);
+    char *r = jd_alloc(len);
+    if (len < sizeof(dst)) {
+        memcpy(r, dst, len);
+    } else {
+        jd_vsprintf(r, len, format, ap);
+    }
+    return r;
+}
+
+char *jd_sprintf_a(const char *format, ...) {
+    va_list arg;
+    va_start(arg, format);
+    char *r = jd_vsprintf_a(format, arg);
+    va_end(arg);
+    return r;
+}
+
+char *jd_to_hex_a(const void *src, size_t len) {
+    char *r = jd_alloc(len * 2 + 1);
+    jd_to_hex(r, src, len);
+    return r;
+}
+
+char *jd_device_short_id_a(uint64_t long_id) {
+    char *r = jd_alloc(5);
+    jd_device_short_id(r, long_id);
+    return r;
+}
+
 #endif

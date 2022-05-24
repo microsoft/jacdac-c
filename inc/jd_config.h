@@ -131,4 +131,8 @@
 #define JD_VERBOSE_ASSERT 0
 #endif
 
+#ifndef JD_ADVANCED_STRING
+#define JD_ADVANCED_STRING (JD_CLIENT || JD_LORA || JD_64)
+#endif
+
 #endif

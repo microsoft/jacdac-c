@@ -44,8 +44,19 @@ void jd_to_hex(char *dst, const void *src, size_t len);
 // sizeof(dst) >= strlen(dst)/2; returns length of dst
 int jd_from_hex(void *dst, const char *src);
 
+#if JD_ADVANCED_STRING
 // buf is 64 bytes long
 void jd_print_double(char *buf, double d, int numdigits);
+#endif
+
+// These allocate the resulting string
+// often used with custom %-s format which will free them
+#if JD_FREE_SUPPORTED
+char *jd_vsprintf_a(const char *format, va_list ap);
+char *jd_sprintf_a(const char *format, ...);
+char *jd_to_hex_a(const void *src, size_t len);
+char *jd_device_short_id_a(uint64_t long_id);
+#endif
 
 #if JD_VERBOSE_ASSERT
 __attribute__((noreturn)) void jd_assert_fail(const char *expr, const char *file, unsigned line,
