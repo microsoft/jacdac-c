@@ -268,7 +268,7 @@ static void writeNum(char *buf, uintptr_t n, bool full) {
 static int write_n(char *dst, char *dstend, const char *src, int srclen) {
     int left = dstend - dst;
     if (left <= 0)
-        return 0;
+        return srclen;
     int srctrimmed = srclen >= left ? left - 1 : srclen;
     memcpy(dst, src, srctrimmed);
     dst[srctrimmed] = 0;
@@ -305,7 +305,8 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
 #if JD_FREE_SUPPORTED
             int do_free = 0;
             if (end[0] == '-' && end[1] == 's') {
-                do_free = 1;
+                if (dst0)
+                    do_free = 1;
                 end++;
             }
 #endif
@@ -573,14 +574,9 @@ void jd_print_double(char *buf, NUMBER d, int numdigits) {
 
 #if JD_FREE_SUPPORTED
 char *jd_vsprintf_a(const char *format, va_list ap) {
-    char dst[32];
-    int len = jd_vsprintf(dst, sizeof(dst), format, ap);
+    int len = jd_vsprintf(NULL, 0, format, ap);
     char *r = jd_alloc(len);
-    if (len < sizeof(dst)) {
-        memcpy(r, dst, len);
-    } else {
-        jd_vsprintf(r, len, format, ap);
-    }
+    jd_vsprintf(r, len, format, ap);
     return r;
 }
 
