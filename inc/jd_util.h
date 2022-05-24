@@ -56,6 +56,14 @@ char *jd_vsprintf_a(const char *format, va_list ap);
 char *jd_sprintf_a(const char *format, ...);
 char *jd_to_hex_a(const void *src, size_t len);
 char *jd_device_short_id_a(uint64_t long_id);
+
+char *jd_strdup(const char *s);
+char *jd_concat_many(const char **parts);
+char *jd_concat2(const char *a, const char *b);
+char *jd_concat3(const char *a, const char *b, const char *c);
+char *jd_urlencode(const char *src);
+char *jd_json_escape(const char *str);
+jd_frame_t *jd_dup_frame(const jd_frame_t *frame);
 #endif
 
 #if JD_VERBOSE_ASSERT
@@ -81,6 +89,7 @@ void jd_queue_shift(jd_queue_t q);
 void jd_queue_test(void);
 int jd_queue_will_fit(jd_queue_t q, unsigned size);
 
+void jd_utoa(unsigned k, char *s);
 void jd_itoa(int n, char *s);
 void jd_string_reverse(char *s);
 int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap);

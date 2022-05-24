@@ -224,30 +224,32 @@ void jd_string_reverse(char *s) {
  * @param s A pointer to the buffer where the resulting string will be stored.
  */
 void jd_itoa(int n, char *s) {
-    int i = 0;
-    int positive = (n >= 0);
+    if (s == NULL)
+        return;
+
+    if (n < 0) {
+        *s++ = '-';
+        n = -n;
+    }
+    jd_utoa(n, s);
+}
+
+void jd_utoa(unsigned k, char *s) {
+    char *s0 = s;
 
     if (s == NULL)
         return;
 
-    // Record the sign of the number,
-    // Ensure our working value is positive.
-    unsigned k = positive ? n : -n;
-
     // Calculate each character, starting with the LSB.
     do {
-        s[i++] = (k % 10) + '0';
+        *s++ = (k % 10) + '0';
     } while ((k /= 10) > 0);
 
-    // Add a negative sign as needed
-    if (!positive)
-        s[i++] = '-';
-
     // Terminate the string.
-    s[i] = '\0';
+    *s = '\0';
 
     // Flip the order.
-    jd_string_reverse(s);
+    jd_string_reverse(s0);
 }
 
 static void writeNum(char *buf, uintptr_t n, bool full) {
@@ -316,6 +318,9 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
                 break;
             case 'd':
                 jd_itoa(va_arg(ap, int), buf);
+                break;
+            case 'u':
+                jd_utoa(va_arg(ap, unsigned), buf);
                 break;
             case 'x':
             case 'X':
@@ -599,4 +604,138 @@ char *jd_device_short_id_a(uint64_t long_id) {
     return r;
 }
 
+static int urlencode_core(char *dst, const char *src) {
+    int len = 0;
+    while (*src) {
+        uint8_t c = *src++;
+        if ((48 <= c && c <= 57) || (97 <= (c | 0x20) && (c | 0x20) <= 122) ||
+            (c == 45 || c == 46 || c == 95 || c == 126)) {
+            if (dst)
+                *dst++ = c;
+            len++;
+        } else {
+            if (dst) {
+                *dst++ = '%';
+                jd_to_hex(dst, &c, 1);
+                dst += 2;
+            }
+            len += 3;
+        }
+    }
+    if (dst)
+        *dst++ = 0;
+    return len + 1;
+}
+
+char *jd_urlencode(const char *src) {
+    int len = urlencode_core(NULL, src);
+    char *r = jd_alloc(len);
+    urlencode_core(r, src);
+    return r;
+}
+
+char *jd_concat_many(const char **parts) {
+    int len = 0;
+    for (int i = 0; parts[i]; ++i)
+        len += strlen(parts[i]);
+    char *r = jd_alloc(len + 1);
+    len = 0;
+
+    for (int i = 0; parts[i]; ++i) {
+        int k = strlen(parts[i]);
+        memcpy(r + len, parts[i], k);
+        len += k;
+    }
+    r[len] = 0;
+    return r;
+}
+
+char *jd_concat3(const char *a, const char *b, const char *c) {
+    const char *arr[] = {a, b, c, NULL};
+    return jd_concat_many(arr);
+}
+
+char *jd_concat2(const char *a, const char *b) {
+    return jd_concat3(a, b, NULL);
+}
+
+char *jd_strdup(const char *a) {
+    return jd_concat3(a, NULL, NULL);
+}
+
+static int jd_json_escape_core(const char *str, char *dst) {
+    int len = 1;
+
+    if (dst)
+        *dst++ = '"';
+
+    while (*str) {
+        char c = *str++;
+        int q = 0;
+        switch (c) {
+        case '"':
+        case '\\':
+            q = 1;
+            break;
+        case '\n':
+            c = 'n';
+            q = 1;
+            break;
+        case '\r':
+            c = 'r';
+            q = 1;
+            break;
+        case '\t':
+            c = 't';
+            q = 1;
+            break;
+        default:
+            if (c >= 32) {
+                len++;
+                if (dst)
+                    *dst++ = c;
+            } else {
+                len += 6;
+                if (dst) {
+                    *dst++ = '\\';
+                    *dst++ = 'u';
+                    *dst++ = '0';
+                    *dst++ = '0';
+                    jd_to_hex(dst, &c, 1);
+                    dst += 2;
+                }
+            }
+            break;
+        }
+        if (q == 1) {
+            len += 2;
+            if (dst) {
+                *dst++ = '\\';
+                *dst++ = c;
+            }
+        }
+    }
+
+    len += 2;
+    if (dst) {
+        *dst++ = '"';
+        *dst++ = '\0';
+    }
+
+    return len;
+}
+
+char *jd_json_escape(const char *str) {
+    int len = jd_json_escape_core(str, NULL);
+    char *r = jd_alloc(len);
+    jd_json_escape_core(str, r);
+    return r;
+}
+
+jd_frame_t *jd_dup_frame(const jd_frame_t *frame) {
+    int sz = JD_FRAME_SIZE(frame);
+    jd_frame_t *r = jd_alloc(sz);
+    memcpy(r, frame, sz);
+    return r;
+}
 #endif
