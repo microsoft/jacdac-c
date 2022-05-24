@@ -30,6 +30,18 @@ REG_DEFINITION(                                      //
 
 static srv_t *_state;
 
+#define LOCK()                                                                                     \
+    do {                                                                                           \
+        JD_ASSERT(!state->locked);                                                                 \
+        state->locked = 1;                                                                         \
+    } while (0)
+
+#define UNLOCK()                                                                                   \
+    do {                                                                                           \
+        JD_ASSERT(state->locked);                                                                  \
+        state->locked = 0;                                                                         \
+    } while (0)
+
 static void rolemgr_update_allocated(srv_t *state) {
     state->all_roles_allocated = 1;
     for (jd_role_t *r = state->roles; r; r = r->_next) {
@@ -63,7 +75,7 @@ static void rolemgr_autobind(srv_t *state) {
         return;
 
     // LOG("autobind");
-    state->locked = 1;
+    LOCK();
     for (jd_role_t *r = state->roles; r; r = r->_next) {
         if (r->service)
             continue;
@@ -81,7 +93,7 @@ static void rolemgr_autobind(srv_t *state) {
 
     next_role:;
     }
-    state->locked = 0;
+    UNLOCK();
 }
 
 static jd_role_t *rolemgr_lookup(srv_t *state, const char *name, int name_len) {
@@ -150,8 +162,8 @@ static void rolemgr_set_role(srv_t *state, jd_packet_t *pkt) {
 }
 
 void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    if (state->locked)
-        jd_panic();
+    JD_ASSERT(!state->locked);
+
     switch (pkt->service_command) {
     case JD_ROLE_MANAGER_CMD_CLEAR_ALL_ROLES:
         for (jd_role_t *r = state->roles; r; r = r->_next)
@@ -191,14 +203,17 @@ void jd_role_manager_init(void) {
 void rolemgr_device_destroyed(jd_device_t *dev) {
     srv_t *state = _state;
 
+    LOCK();
     for (jd_role_t *r = state->roles; r; r = r->_next) {
         if (r->service && jd_service_parent(r->service) == dev) {
             rolemgr_set(state, r, NULL);
         }
     }
+    UNLOCK();
 }
 
 static void stop_list(srv_t *state) {
+    JD_ASSERT(!state->locked);
     if (state->list_ptr) {
         state->list_ptr = NULL;
         jd_opipe_close(&state->list_pipe);
@@ -209,8 +224,7 @@ jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
     srv_t *state = _state;
     if (!state)
         jd_panic();
-    if (state->locked)
-        jd_panic();
+
     if (rolemgr_lookup(state, name, strlen(name)))
         jd_panic();
 
@@ -241,9 +255,12 @@ void jd_role_free(jd_role_t *role) {
     if (!role)
         return;
     srv_t *state = _state;
-    if (state->locked)
-        jd_panic();
+
     stop_list(state);
+    LOCK();
+    rolemgr_set(state, role, NULL);
+    UNLOCK();
+
     if (state->roles == role) {
         state->roles = role->_next;
     } else {
@@ -263,9 +280,13 @@ void jd_role_free(jd_role_t *role) {
 
 void jd_role_free_all() {
     srv_t *state = _state;
-    if (state->locked)
-        jd_panic();
+
     stop_list(state);
+    LOCK();
+    for (jd_role_t *r = state->roles; r; r = r->_next)
+        rolemgr_set(state, r, NULL);
+    UNLOCK();
+
     while (state->roles) {
         jd_role_t *r = state->roles;
         if (r->service)

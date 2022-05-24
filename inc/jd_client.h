@@ -122,11 +122,11 @@ typedef struct jd_role {
     jd_device_service_t *service;
 } jd_role_t;
 
-// name must be alive until jd_role_free()
+// name must be kept alive until jd_role_free()
 jd_role_t *jd_role_alloc(const char *name, uint32_t service_class);
 void jd_role_free(jd_role_t *role);
 void jd_role_free_all(void);
-// neither jd_role_alloc() nor jd_role_free*() generate JD_CLIENT_EV_ROLE_CHANGED
+// both jd_role_alloc() and jd_role_free*() generate JD_CLIENT_EV_ROLE_CHANGED (now)
 // a freshly created role will typically be bound on next auto-bind
 
 // call from app_init_services()
