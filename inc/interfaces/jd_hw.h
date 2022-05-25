@@ -16,6 +16,11 @@ __attribute((noreturn)) void hw_panic(void);
 
 extern uint32_t now;
 
+#if JD_MS_TIMER
+extern uint32_t now_ms;
+extern uint64_t now_ms_long;
+#endif
+
 #ifndef BL
 
 #ifdef JD_DEBUG_MODE

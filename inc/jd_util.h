@@ -39,6 +39,17 @@ static inline bool in_future(uint32_t moment) {
     return ((moment - now) >> 29) == 0;
 }
 
+#if JD_MS_TIMER
+static inline bool in_past_ms(uint32_t moment) {
+    extern uint32_t now_ms;
+    return ((now_ms - moment) >> 29) == 0;
+}
+static inline bool in_future_ms(uint32_t moment) {
+    extern uint32_t now_ms;
+    return ((moment - now_ms) >> 29) == 0;
+}
+#endif
+
 // sizeof(dst) == len*2 + 1
 void jd_to_hex(char *dst, const void *src, size_t len);
 // sizeof(dst) >= strlen(dst)/2; returns length of dst

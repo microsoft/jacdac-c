@@ -196,7 +196,7 @@ void jd_services_init() {
     memcpy(services, tmp, sizeof(void *) * num_services);
 
     // don't flash red initially
-    lastDisconnectBlink = tim_get_micros() + 1000000;
+    lastDisconnectBlink = tim_get_micros() + (1 << 20);
 }
 
 void jd_services_deinit() {
@@ -350,13 +350,35 @@ static void jd_process_everything_core(void) {
     }
 }
 
-static void refresh_now(void) {
+#if JD_MS_TIMER
+static uint32_t prev_us;
+uint64_t now_ms_long;
+uint32_t now_ms;
+#endif
+
+void jd_refresh_now() {
     uint64_t now_long = tim_get_micros();
     now = (uint32_t)now_long;
+
+#if JD_MS_TIMER
+    uint32_t new_delta = now - prev_us;
+    // this may make sense on M0
+    if (new_delta < 16 * 1024) {
+        while (new_delta > 1000) {
+            new_delta -= 1000;
+            now_ms_long++;
+        }
+    } else {
+        now_ms_long += new_delta / 1000;
+        new_delta %= 1000;
+    }
+    prev_us = now - new_delta;
+    now_ms = (uint32_t)now_ms_long;
+#endif
 }
 
 void jd_process_everything() {
-    refresh_now();
+    jd_refresh_now();
     jd_process_everything_core();
 }
 
@@ -377,11 +399,11 @@ void jd_services_sleep_us(uint32_t delta) {
         jd_panic();
     }
     curr_service_process = IN_SERV_SLEEP;
-    refresh_now();
+    jd_refresh_now();
     uint32_t end_time = now + delta;
     while (in_future(end_time)) {
         jd_process_everything_core();
-        refresh_now();
+        jd_refresh_now();
     }
     curr_service_process = curr_serv;
 }

@@ -135,4 +135,8 @@
 #define JD_ADVANCED_STRING (JD_CLIENT || JD_LORA || JD_64)
 #endif
 
+#ifndef JD_MS_TIMER
+#define JD_MS_TIMER JD_CLIENT
+#endif
+
 #endif

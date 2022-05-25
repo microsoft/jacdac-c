@@ -126,6 +126,12 @@ void jd_services_tick(void);
  */
 void jd_process_everything(void);
 
+
+/**
+ * Refresh 'now' (and 'now_ms' if configured).
+ */
+void jd_refresh_now(void);
+
 /**
  * Can be implemented by the user to get a callback on each packet.
  */
