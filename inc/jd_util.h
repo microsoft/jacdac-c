@@ -48,6 +48,7 @@ static inline bool in_future_ms(uint32_t moment) {
     extern uint32_t now_ms;
     return ((moment - now_ms) >> 29) == 0;
 }
+bool jd_should_sample_ms(uint32_t *sample, uint32_t period);
 #endif
 
 // sizeof(dst) == len*2 + 1

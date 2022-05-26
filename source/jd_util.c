@@ -128,6 +128,21 @@ void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service
     return dst;
 }
 
+#if JD_MS_TIMER
+bool jd_should_sample_ms(uint32_t *sample, uint32_t period) {
+    if (in_future_ms(*sample))
+        return false;
+
+    *sample += period;
+
+    if (!in_future_ms(*sample))
+        // we lost some samples
+        *sample = now + period;
+
+    return true;
+}
+#endif
+
 bool jd_should_sample(uint32_t *sample, uint32_t period) {
     if (in_future(*sample))
         return false;
