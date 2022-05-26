@@ -64,7 +64,7 @@ void jd_print_double(char *buf, double d, int numdigits);
 // often used with custom %-s format which will free them
 #if JD_FREE_SUPPORTED
 char *jd_vsprintf_a(const char *format, va_list ap);
-char *jd_sprintf_a(const char *format, ...);
+__attribute__((format(printf, 1, 2))) char *jd_sprintf_a(const char *format, ...);
 char *jd_to_hex_a(const void *src, size_t len);
 char *jd_device_short_id_a(uint64_t long_id);
 
@@ -104,7 +104,8 @@ void jd_utoa(unsigned k, char *s);
 void jd_itoa(int n, char *s);
 void jd_string_reverse(char *s);
 int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap);
-int jd_sprintf(char *dst, unsigned dstsize, const char *format, ...);
+__attribute__((format(printf, 3, 4))) int jd_sprintf(char *dst, unsigned dstsize,
+                                                     const char *format, ...);
 
 void jd_log_packet(jd_packet_t *pkt);
 void jd_device_short_id(char short_id[5], uint64_t long_id);
