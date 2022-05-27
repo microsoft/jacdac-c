@@ -112,8 +112,10 @@ void rolemgr_role_changed(jd_role_t *role) {
 }
 
 static bool fits_at(jd_device_t *existing, jd_device_t *fresh) {
-    return !existing || memcmp(&fresh->device_identifier, &existing->device_identifier,
-                               sizeof(existing->device_identifier)) < 0;
+    // sort self-device as first
+    return !existing || fresh->device_identifier == jd_device_id() ||
+           memcmp(&fresh->device_identifier, &existing->device_identifier,
+                  sizeof(existing->device_identifier)) < 0;
 }
 
 static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
