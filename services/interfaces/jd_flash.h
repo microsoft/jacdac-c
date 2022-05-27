@@ -8,5 +8,6 @@
 
 void flash_program(void *dst, const void *src, uint32_t len);
 void flash_erase(void *page_addr);
+void flash_sync(void);
 
 #endif
