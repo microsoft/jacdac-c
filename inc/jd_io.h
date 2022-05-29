@@ -6,8 +6,6 @@
 
 #include "jd_config.h"
 
-void jd_led_set(int state);
-void jd_led_blink(int us);
 void jd_power_enable(int en);
 
 #if JD_CONFIG_STATUS == 1
@@ -15,6 +13,16 @@ void jd_status_init(void);
 void jd_status_process(void);
 int jd_status_handle_packet(jd_packet_t *pkt);
 #endif
+
+/*
+ * LED is used to indicate status (glow) and events (blink).
+ * 
+ * Events are queued (up to a small limit).
+ * 
+ * Status has several channels. Services are meant to update their status frequently (say every second).
+ * Status can be "off" or some color pattern.
+ * We display the highest-numbered non-off channel.
+ */
 
 #define JD_BLINK_COLOR_OFF 0b000
 #define JD_BLINK_COLOR_RED 0b100
