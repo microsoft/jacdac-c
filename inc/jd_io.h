@@ -14,7 +14,6 @@ void jd_power_enable(int en);
 void jd_status_init(void);
 void jd_status_process(void);
 int jd_status_handle_packet(jd_packet_t *pkt);
-void jd_status_set_ch(int ch, uint8_t v);
 #endif
 
 #define JD_BLINK_COLOR_OFF 0b000
@@ -38,8 +37,14 @@ void jd_status_set_ch(int ch, uint8_t v);
 #define JD_BLINK_REPEAT_6 6
 #define JD_BLINK_REPEAT_7 7
 
+#define _JD_CONCAT(x, y) x##y
+
+#define _JD_BLINK_DURATION(encoded) ((encoded) >> 6)
+#define _JD_BLINK_REPETITIONS(encoded) (((encoded) >> 3) & 7)
+
 #define JD_BLINK(num_rep, duration, color)                                                         \
-    JD_BLINK_COLOR_##color | (JD_BLINK_REPEAT_##num_rep << 3) | (JD_BLINK_DURATION_##duration)
+    _JD_CONCAT(JD_BLINK_COLOR_, color) | (_JD_CONCAT(JD_BLINK_REPEAT_, num_rep) << 3) |            \
+        (_JD_CONCAT(JD_BLINK_DURATION_, duration) << 6)
 
 #define JD_BLINK_CONNECTED JD_BLINK(1, FAINT, GREEN)
 #define JD_BLINK_IDENTIFY JD_BLINK(7, FAST, BLUE)
@@ -59,7 +64,7 @@ void jd_blink(uint8_t encoded);
 #define JD_GLOW_SPEED_SLOW 2
 #define JD_GLOW_SPEED_VERY_SLOW 3
 
-// (duration+1)*500ms
+// (duration+1)*524ms
 #define JD_GLOW_DURATION_HALF_SECOND 0
 #define JD_GLOW_DURATION_ONE_SECOND 1
 #define JD_GLOW_DURATION_ONE_HALF_SECOND 2
@@ -67,19 +72,24 @@ void jd_blink(uint8_t encoded);
 
 #define _JD_GLOW_COLOR(g) (((g) >> 0) & 3)
 #define _JD_GLOW_CHANNEL(g) (((g) >> 4) & 3)
-#define _JD_GLOW_GAP(g) (((g) >> 8) & 3)
-#define _JD_GLOW_DURATION(g) (((g) >> 12) & 3)
+#define _JD_GLOW_GAP(g) (((((g) >> 8) & 3) + 1) * (512 << 10))
+#define _JD_GLOW_DURATION(g) (((((g) >> 12) & 3) + 1) * (512 << 10))
 #define _JD_GLOW_SPEED(g) ((((g) >> 16) & 3) * 64)
 
 #define JD_GLOW(speed, duration, gap, channel, color)                                              \
-    JD_BLINK_COLOR_##color | (JD_GLOW_##channel << 4) | (JD_GLOW_DURATION_##gap << 8) |            \
-        (JD_GLOW_DURATION_##duration << 12) | (JD_GLOW_SPEED_##speed << 16)
+    _JD_CONCAT(JD_BLINK_COLOR_, color) | (_JD_CONCAT(JD_GLOW_, channel) << 4) |                    \
+        (_JD_CONCAT(JD_GLOW_DURATION_, gap) << 8) |                                                \
+        (_JD_CONCAT(JD_GLOW_DURATION_, duration) << 12) |                                          \
+        (_JD_CONCAT(JD_GLOW_SPEED_, speed) << 16)
 
-#define JD_GLOW_OFF(channel) (JD_GLOW_##channel << 12)
+#define JD_GLOW_OFF(channel) (_JD_CONCAT(JD_GLOW_, channel) << 12)
 
-#define JD_GLOW_BRAIN_CONNECTED JD_GLOW_OFF(CH_0)
-#define JD_GLOW_BRAIN_DISCONNECTED JD_GLOW(SLOW, HALF_SECOND, ONE_SECOND, CH_0, RED)
-#define JD_GLOW_UNKNOWN JD_GLOW(SLOW, HALF_SECOND, HALF_SECOND, CH_0, YELLOW)
+#define JD_GLOW_BRAIN_CONNECTION_CH CH_1
+
+#define JD_GLOW_BRAIN_CONNECTED JD_GLOW_OFF(JD_GLOW_BRAIN_CONNECTION_CH)
+#define JD_GLOW_BRAIN_DISCONNECTED                                                                 \
+    JD_GLOW(SLOW, HALF_SECOND, ONE_SECOND, JD_GLOW_BRAIN_CONNECTION_CH, RED)
+#define JD_GLOW_UNKNOWN JD_GLOW(SLOW, HALF_SECOND, HALF_SECOND, JD_GLOW_BRAIN_CONNECTION_CH, YELLOW)
 
 #define JD_GLOW_PROTECT JD_GLOW_OFF(CH_3)
 

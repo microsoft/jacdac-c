@@ -249,6 +249,7 @@ static void handle_ctrl_tick(jd_packet_t *pkt) {
         // client? blink!
         if (pkt->service_size >= 4 && pkt->data[1] & (JD_CONTROL_ANNOUNCE_FLAGS_IS_CLIENT >> 8)) {
             lastMax = now;
+            jd_glow(JD_GLOW_BRAIN_CONNECTED);
             jd_blink(JD_BLINK_CONNECTED);
         }
     }
@@ -300,8 +301,6 @@ void jd_services_tick() {
     if (!lastMax || in_past(lastMax + (2 << 20))) {
         lastMax = 0;
         jd_glow(JD_GLOW_BRAIN_DISCONNECTED);
-    } else {
-        jd_glow(JD_GLOW_BRAIN_CONNECTED);
     }
 
     // do ctrl process regardless of sleep status

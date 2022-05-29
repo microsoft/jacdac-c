@@ -57,24 +57,16 @@ static void set_limiter(srv_t *state, int onoff) {
     pin_set(state->cfg->pin_en, onoff);
 }
 
+#define GLOW_CH CH_0
+static uint32_t glows[] = {
+    [JD_POWER_POWER_STATUS_OVERLOAD] = JD_GLOW(FAST, HALF_SECOND, TWO_SECOND, GLOW_CH, RED),
+    [JD_POWER_POWER_STATUS_OVERPROVISION] = JD_GLOW_OFF(GLOW_CH),
+    [JD_POWER_POWER_STATUS_DISALLOWED] = JD_GLOW_OFF(GLOW_CH),
+    [JD_POWER_POWER_STATUS_POWERING] = JD_GLOW(FAST, HALF_SECOND, TWO_SECOND, GLOW_CH, GREEN),
+};
+
 static void set_leds(srv_t *state) {
-    uint8_t r = 0, g = 0;
-    switch (state->power_status) {
-    case JD_POWER_POWER_STATUS_OVERLOAD:
-        r = 50;
-        break;
-    case JD_POWER_POWER_STATUS_OVERPROVISION:
-        g = 20;
-        r = 20;
-        break;
-    case JD_POWER_POWER_STATUS_DISALLOWED:
-        break;
-    case JD_POWER_POWER_STATUS_POWERING:
-        g = 20;
-        break;
-    }
-    jd_status_set_ch(0, r);
-    jd_status_set_ch(1, g);
+    jd_glow(glows[state->power_status]);
 }
 
 static bool shutdown_pending(void) {
