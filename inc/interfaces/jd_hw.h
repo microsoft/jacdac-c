@@ -23,10 +23,12 @@ extern uint64_t now_ms_long;
 
 #ifndef BL
 
-#ifdef JD_DEBUG_MODE
-void jd_debug_signal_error(int v);
+#if JD_SIGNAL_RDWR
 void jd_debug_signal_write(int v);
 void jd_debug_signal_read(int v);
+#else
+#define jd_debug_signal_write(v) ((void)0)
+#define jd_debug_signal_read(v) ((void)0)
 #endif
 
 // io

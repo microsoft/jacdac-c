@@ -11,24 +11,9 @@
 #include <stdbool.h>
 #include <string.h>
 
-// #define JD_DEBUG_MODE
-
 #define JD_NOLOG(...) ((void)0)
 
 // LOG(...) to be defined in particular .c files as either JD_LOG or JD_NOLOG
-
-#ifdef JD_DEBUG_MODE
-#define ERROR(msg, ...)                                                                            \
-    do {                                                                                           \
-        jd_debug_signal_error();                                                                   \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
-    } while (0)
-#else
-#define ERROR(msg, ...)                                                                            \
-    do {                                                                                           \
-        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
-    } while (0)
-#endif
 
 #if (__SIZEOF_POINTER__ == 8) || (__WORDSIZE == 64)
 #define JD_64 1
@@ -66,6 +51,10 @@
 
 #ifndef JD_RAW_FRAME
 #define JD_RAW_FRAME 0
+#endif
+
+#ifndef JD_SIGNAL_RDWR
+#define JD_SIGNAL_RDWR 0
 #endif
 
 #define CONCAT_1(a, b) a##b
@@ -134,5 +123,38 @@
 #ifndef JD_HAS_PWM_ENABLE
 #define JD_HAS_PWM_ENABLE 1
 #endif
+
+#if JD_CONFIG_STATUS && defined(PIN_LED_R)
+#define JD_COLOR_STATUS 1
+#else
+#define JD_COLOR_STATUS 0
+#endif
+
+#ifndef JD_LED_ERRORS
+#define JD_LED_ERRORS JD_COLOR_STATUS
+#endif
+
+#if JD_LED_ERRORS
+#define JD_ERROR_BLINK(x) jd_blink(x)
+#else
+#define JD_ERROR_BLINK(x) ((void)0)
+#endif
+
+#define ERROR(msg, ...)                                                                            \
+    do {                                                                                           \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
+        JD_ERROR_BLINK(JD_BLINK_ERROR);                                                            \
+    } while (0)
+
+#define LINE_ERROR(msg, ...)                                                                       \
+    do {                                                                                           \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
+        JD_ERROR_BLINK(JD_BLINK_LINE_ERROR);                                                       \
+    } while (0)
+#define OVF_ERROR(msg, ...)                                                                        \
+    do {                                                                                           \
+        JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
+        JD_ERROR_BLINK(JD_BLINK_OVF_ERROR);                                                        \
+    } while (0)
 
 #endif

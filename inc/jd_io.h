@@ -50,6 +50,10 @@ int jd_status_handle_packet(jd_packet_t *pkt);
 #define JD_BLINK_IDENTIFY JD_BLINK(7, FAST, BLUE)
 #define JD_BLINK_STARTUP JD_BLINK(3, FAST, GREEN)
 
+#define JD_BLINK_LINE_ERROR JD_BLINK(1, FAST, RED)
+#define JD_BLINK_ERROR JD_BLINK(2, FAST, RED)
+#define JD_BLINK_OVF_ERROR JD_BLINK(1, FAST, YELLOW)
+
 void jd_blink(uint8_t encoded);
 
 // highest non-off channel wins
@@ -83,6 +87,7 @@ void jd_blink(uint8_t encoded);
         (_JD_CONCAT(JD_GLOW_SPEED_, speed) << 16)
 
 #define JD_GLOW_OFF(channel) (_JD_CONCAT(JD_GLOW_, channel) << 12)
+#define JD_GLOW_PROTECT JD_GLOW_OFF(CH_3)
 
 #define JD_GLOW_BRAIN_CONNECTION_CH CH_1
 
@@ -91,7 +96,18 @@ void jd_blink(uint8_t encoded);
     JD_GLOW(SLOW, HALF_SECOND, ONE_SECOND, JD_GLOW_BRAIN_CONNECTION_CH, RED)
 #define JD_GLOW_UNKNOWN JD_GLOW(SLOW, HALF_SECOND, HALF_SECOND, JD_GLOW_BRAIN_CONNECTION_CH, YELLOW)
 
-#define JD_GLOW_PROTECT JD_GLOW_OFF(CH_3)
+// cloud stuff
+#define JD_GLOW_CLOUD_CONNECTION_CH CH_2
+#define JD_GLOW_CLOUD_CONNECTING_TO_NETWORK                                                        \
+    JD_GLOW(FAST, HALF_SECOND, HALF_SECOND, JD_GLOW_CLOUD_CONNECTION_CH, YELLOW)
+#define JD_GLOW_CLOUD_CONNECTING_TO_CLOUD                                                          \
+    JD_GLOW(FAST, HALF_SECOND, HALF_SECOND, JD_GLOW_CLOUD_CONNECTION_CH, GREEN)
+#define JD_GLOW_CLOUD_CONNECTED_TO_CLOUD                                                           \
+    JD_GLOW(FAST, TWO_SECOND, TWO_SECOND, JD_GLOW_CLOUD_CONNECTION_CH, GREEN)
+#define JD_GLOW_CLOUD_NOT_CONNECTED_TO_CLOUD                                                       \
+    JD_GLOW(FAST, TWO_SECOND, TWO_SECOND, JD_GLOW_CLOUD_CONNECTION_CH, YELLOW)
+#define JD_BLINK_CLOUD_UPLOADED JD_BLINK(1, SLOW, BLUE)
+#define JD_BLINK_CLOUD_ERROR JD_BLINK(3, FAST, RED)
 
 void jd_glow(uint32_t glow);
 

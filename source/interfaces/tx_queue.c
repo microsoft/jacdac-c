@@ -27,10 +27,10 @@ int jd_send_frame_raw(jd_frame_t *f) {
     if (target_in_irq())
         jd_panic();
     if (jd_rx_frame_received_loopback(f))
-        ERROR("loopback rx ovf");
+        OVF_ERROR("loopback rx ovf");
     int r = jd_queue_push(send_queue, f);
     if (r)
-        ERROR("send ovf");
+        OVF_ERROR("send ovf");
     jd_packet_ready();
     return r;
 }
@@ -81,7 +81,7 @@ int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsign
         trg = jd_push_in_frame(&tx_acc_buffer, service_num, service_cmd, service_size);
         JD_ASSERT(trg != NULL);
 #else
-        ERROR("send ovf");
+        OVF_ERROR("send ovf");
         return -1;
 #endif
     }
@@ -173,7 +173,7 @@ void jd_tx_flush() {
     jd_send_frame(f);
 #else
     if (jd_rx_frame_received_loopback(f))
-        ERROR("loopback rx ovf");
+        OVF_ERROR("loopback rx ovf");
 
     JD_USB_SEND(f);
 

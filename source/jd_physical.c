@@ -35,9 +35,7 @@ int jd_is_busy(void) {
 }
 
 static void tx_done(void) {
-#ifdef JD_DEBUG_MODE
     jd_debug_signal_write(0);
-#endif
     set_tick_timer(JD_STATUS_TX_ACTIVE);
 }
 
@@ -71,9 +69,7 @@ static void flush_tx_queue(void) {
         }
     }
 
-#ifdef JD_DEBUG_MODE
     jd_debug_signal_write(1);
-#endif
 
     if (uart_start_tx(txFrame, JD_FRAME_SIZE(txFrame)) < 0) {
         // ERROR("race on TX");
@@ -111,17 +107,11 @@ static void set_tick_timer(uint8_t statusClear) {
 static void rx_timeout(void) {
     target_disable_irq();
     jd_diagnostics.bus_timeout_error++;
-    ERROR("RX t/o");
+    LINE_ERROR("RX t/o");
     uart_disable();
-#ifdef JD_DEBUG_MODE
     jd_debug_signal_read(0);
-#endif
     set_tick_timer(JD_STATUS_RX_ACTIVE);
     target_enable_irq();
-#ifdef JD_DEBUG_MODE
-    jd_debug_signal_error(1);
-    jd_debug_signal_error(0);
-#endif
 }
 
 static void setup_rx_timeout(void) {
@@ -144,9 +134,7 @@ static void setup_rx_timeout(void) {
 void jd_line_falling() {
     LOG("line fall");
 
-#ifdef JD_DEBUG_MODE
     jd_debug_signal_read(1);
-#endif
 
     // target_disable_irq();
     // no need to disable IRQ - we're at the highest IRQ level
@@ -185,9 +173,7 @@ void jd_rx_completed(int dataLeft) {
     LOG("rx cmpl");
     jd_frame_t *frame = &rxFrame;
 
-#ifdef JD_DEBUG_MODE
     jd_debug_signal_read(0);
-#endif
 
     set_tick_timer(JD_STATUS_RX_ACTIVE);
 
@@ -197,7 +183,7 @@ void jd_rx_completed(int dataLeft) {
     }
 
     if (dataLeft < 0) {
-        ERROR("rx err: %d", dataLeft);
+        LINE_ERROR("rx err: %d", dataLeft);
         jd_diagnostics.bus_uart_error++;
         return;
     }
@@ -205,21 +191,21 @@ void jd_rx_completed(int dataLeft) {
     uint32_t txSize = sizeof(*frame) - dataLeft;
     uint32_t declaredSize = JD_FRAME_SIZE(frame);
     if (txSize < declaredSize) {
-        ERROR("short frm");
+        LINE_ERROR("short frm");
         jd_diagnostics.bus_uart_error++;
         return;
     }
 
     uint16_t crc = jd_crc16((uint8_t *)frame + 2, declaredSize - 2);
     if (crc != frame->crc) {
-        ERROR("crc err");
+        LINE_ERROR("crc err");
         jd_diagnostics.bus_uart_error++;
         return;
     }
 
     if (declaredSize > JD_SERIAL_PAYLOAD_SIZE + JD_SERIAL_FULL_HEADER_SIZE ||
         ((jd_packet_t *)frame)->service_size > JD_SERIAL_PAYLOAD_SIZE) {
-        ERROR("bad size");
+        LINE_ERROR("bad size");
         jd_diagnostics.bus_uart_error++;
         return;
     }
@@ -235,7 +221,7 @@ void jd_rx_completed(int dataLeft) {
     int err = jd_rx_frame_received(frame);
 
     if (err) {
-        ERROR("drop RX");
+        LINE_ERROR("drop RX");
         jd_diagnostics.packets_dropped++;
     }
 }
