@@ -14,10 +14,6 @@ struct srv_state {
 #if JD_CONFIG_CONTROL_FLOOD == 1
     uint8_t flood_size;
 #endif
-#if JD_CONFIG_IDENTIFY == 1
-    uint8_t id_counter;
-    uint32_t nextblink;
-#endif
 #if JD_CONFIG_WATCHDOG == 1
     uint32_t watchdog;
 #endif
@@ -26,18 +22,6 @@ struct srv_state {
     uint32_t flood_remaining;
 #endif
 };
-
-#if JD_CONFIG_IDENTIFY == 1
-static void identify(srv_t *state) {
-    if (!state->id_counter)
-        return;
-    if (!jd_should_sample(&state->nextblink, 150000))
-        return;
-
-    state->id_counter--;
-    jd_status(JD_STATUS_IDENTIFY);
-}
-#endif
 
 #if JD_CONFIG_CONTROL_FLOOD == 1
 static void set_flood(srv_t *state, uint32_t num) {
@@ -69,9 +53,6 @@ extern const char app_spec_url[];
 #endif
 
 void jd_ctrl_process(srv_t *state) {
-#if JD_CONFIG_IDENTIFY == 1
-    identify(state);
-#endif
     process_flood(state);
 #if JD_CONFIG_WATCHDOG == 1
     if (state->watchdog && in_past(state->watchdog))
@@ -90,13 +71,9 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
         jd_services_announce();
         break;
 
-#if JD_CONFIG_IDENTIFY == 1
     case JD_CONTROL_CMD_IDENTIFY:
-        state->id_counter = 7;
-        state->nextblink = now;
-        identify(state);
+        jd_blink(JD_BLINK_IDENTIFY);
         break;
-#endif
 
     case JD_CONTROL_CMD_RESET:
         target_reset();

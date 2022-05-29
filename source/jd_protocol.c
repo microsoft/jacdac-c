@@ -18,5 +18,5 @@ void jd_init() {
     // if we don't start it explicitly, it will only start on incoming packet
     _jd_phys_start();
 
-    jd_status(JD_STATUS_STARTUP);
+    jd_blink(JD_BLINK_STARTUP);
 }

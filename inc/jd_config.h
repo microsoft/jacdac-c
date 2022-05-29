@@ -60,14 +60,6 @@
 #define JD_CONFIG_IGNORE_STATUS 0
 #endif
 
-#ifndef JD_CONFIG_IDENTIFY
-#if JD_CONFIG_STATUS == 1
-#define JD_CONFIG_IDENTIFY 0
-#else
-#define JD_CONFIG_IDENTIFY 1
-#endif
-#endif
-
 #ifndef JD_CONFIG_DEV_SPEC_URL
 #define JD_CONFIG_DEV_SPEC_URL 0
 #endif
@@ -137,6 +129,10 @@
 
 #ifndef JD_MS_TIMER
 #define JD_MS_TIMER JD_CLIENT
+#endif
+
+#ifndef JD_HAS_PWM_ENABLE
+#define JD_HAS_PWM_ENABLE 1
 #endif
 
 #endif

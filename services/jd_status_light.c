@@ -34,23 +34,6 @@
 #define LED_ON_STATE 0
 #endif
 
-struct status_anim {
-    jd_control_set_status_light_t color;
-    uint32_t time;
-};
-
-// .color is {R, G, B, speed}
-static const struct status_anim jd_status_animations[] = {
-    {.color = {0, 0, 0, 0}, .time = 0},              // OFF
-    {.color = {0, 255, 0, 150}, .time = 200 * 1000}, // STARTUP
-    // the time on CONNECTED is used in only used with a non-RGB LED; note that there's already a
-    // ~30us overhead
-    {.color = {0, 255, 0, 0}, .time = 100},            // CONNECTED
-    {.color = {255, 0, 0, 100}, .time = 500 * 1000},   // DISCONNECTED
-    {.color = {0, 0, 255, 0}, .time = 50 * 1000},      // IDENTIFY
-    {.color = {255, 255, 0, 100}, .time = 500 * 1000}, // UNKNOWN STATE
-};
-
 typedef struct {
     uint16_t value;
     int16_t speed;
@@ -61,11 +44,18 @@ typedef struct {
 } channel_t;
 
 typedef struct {
-    uint8_t numleds;
-    uint8_t in_tim;
-    uint8_t jd_status; // JD_STATUS_*
     uint32_t step_sample;
-    uint32_t jd_status_stop;
+    uint32_t glow_step;
+    uint32_t blink_step;
+
+    uint32_t glow;
+    uint8_t glow_phase;
+
+    uint8_t in_tim;
+    uint8_t curr_rep;
+    uint8_t color_override;
+    uint8_t queued_blinks[3];
+
     channel_t channels[3];
 } status_ctx_t;
 static status_ctx_t status_ctx;
@@ -77,14 +67,16 @@ static void rgbled_show(status_ctx_t *state) {
         channel_t *ch = &state->channels[i];
         int32_t c = ch->value;
         c = (c * ch->mult) >> (7 + 8);
+        if (state->color_override & (1 << i))
+            c = RGB_LED_PERIOD - 1;
         sum += c;
 #ifdef LED_RGB_COMMON_CATHODE
-            if (c >= RGB_LED_PERIOD)
-                c = RGB_LED_PERIOD - 1;
+        if (c >= RGB_LED_PERIOD)
+            c = RGB_LED_PERIOD - 1;
 #else
-            c = RGB_LED_PERIOD - c;
-            if (c < 0)
-                c = 0;
+        c = RGB_LED_PERIOD - c;
+        if (c < 0)
+            c = 0;
 #endif
         // set duty first, in case pwm_enable() is not impl.
         pwm_set_duty(ch->pwm, c);
@@ -110,7 +102,7 @@ static void rgbled_show(status_ctx_t *state) {
         if (ch->value >> 8)
             fl = 1;
     }
-    if (fl) {
+    if (fl || state->color_override) {
         state->in_tim = 1;
         pin_set(PIN_LED, LED_ON_STATE);
     } else {
@@ -120,6 +112,7 @@ static void rgbled_show(status_ctx_t *state) {
 #endif
 }
 
+// TODO remove this
 void jd_status_set_ch(int ch, uint8_t v) {
     status_ctx_t *state = &status_ctx;
     state->channels[ch].target = v;
@@ -137,17 +130,62 @@ static void jd_status_set(status_ctx_t *state, const jd_control_set_status_light
     }
 }
 
+#define IS_FAINT(encoded) (((encoded) >> 6) == JD_BLINK_DURATION_FAINT)
+
+static void set_blink_color(status_ctx_t *state, uint8_t encoded) {
+    state->color_override = encoded & 7;
+    rgbled_show(state);
+}
+
 void jd_status_process() {
     status_ctx_t *state = &status_ctx;
+
+    uint8_t encoded = state->queued_blinks[0];
+    if (encoded && jd_should_sample(&state->blink_step, 128 << 10)) {
+        if (IS_FAINT(encoded)) {
+            set_blink_color(state, encoded);
+            target_wait_us(100);
+            set_blink_color(state, 0);
+            state->curr_rep += 2;
+        } else {
+            if (state->curr_rep & 1) {
+                set_blink_color(state, 0);
+            } else {
+                set_blink_color(state, encoded);
+                state->blink_step = now + (encoded >> 6) * (64 << 10);
+            }
+            state->curr_rep++;
+        }
+        if ((state->curr_rep >> 1) > ((encoded >> 3) & 7)) {
+            for (int i = 1; i < sizeof(state->queued_blinks); ++i)
+                state->queued_blinks[i - 1] = state->queued_blinks[i];
+            state->blink_step = now + (256 << 10);
+        }
+    }
 
     if (!jd_should_sample(&state->step_sample, FRAME_US))
         return;
 
-    if (state->jd_status && in_past(state->jd_status_stop)) {
-        jd_control_set_status_light_t off_color = {
-            .speed = jd_status_animations[state->jd_status].color.speed};
-        jd_status_set(state, &off_color);
-        state->jd_status = JD_STATUS_OFF;
+    if (state->glow && in_past(state->glow_step)) {
+        if (state->glow == JD_GLOW_PROTECT) {
+            state->glow = 0;
+        } else {
+            jd_control_set_status_light_t color;
+            int c = _JD_GLOW_COLOR(state->glow);
+            if (state->glow_phase) {
+                c = 0;
+                state->glow_step = now + _JD_GLOW_GAP(state->glow);
+                state->glow_phase = 1;
+            } else {
+                state->glow_step = now + _JD_GLOW_DURATION(state->glow);
+                state->glow_phase = 0;
+            }
+            color.to_red = (c & 1) ? 0xff : 0;
+            color.to_green = (c & 2) ? 0xff : 0;
+            color.to_blue = (c & 4) ? 0xff : 0;
+            color.speed = _JD_GLOW_SPEED(state->glow);
+            jd_status_set(state, &color);
+        }
     }
 
     int chg = 0;
@@ -189,6 +227,8 @@ int jd_status_handle_packet(jd_packet_t *pkt) {
 
     case JD_CONTROL_CMD_SET_STATUS_LIGHT:
         if (pkt->service_size >= sizeof(jd_control_set_status_light_t)) {
+            state->glow = JD_GLOW_PROTECT;
+            state->glow_step = now + (2 << 20); // no glow for 2s
             jd_status_set(state, (jd_control_set_status_light_t *)pkt->data);
         }
         return 1;
@@ -223,30 +263,35 @@ void jd_status_init() {
     rgbled_show(state);
 }
 
-// definitions for @status are contained in jd_io.h
-void jd_status(int status) {
+void jd_blink(uint8_t encoded) {
     status_ctx_t *state = &status_ctx;
-
-    if (status == JD_STATUS_CONNECTED) {
-        // if the PWM is on, we ignore this one
-        if (state->in_tim)
+    for (int i = 0; i < sizeof(state->queued_blinks); ++i) {
+        if (state->queued_blinks[i] == encoded)
             return;
-        channel_t *ch = &state->channels[1]; // green
-        pin_set(ch->pin, LED_ON_STATE);
-#ifdef PIN_LED_R
-        pwm_enable(ch->pwm, 0);
-#else
-        target_wait_us(jd_status_animations[status].time);
-#endif
-        pin_set(ch->pin, LED_OFF_STATE);
-        return;
+        if (state->queued_blinks[i] == 0) {
+            state->queued_blinks[i] = encoded;
+            if (i == 0)
+                state->blink_step = now;
+            return;
+        }
     }
+}
 
-#if !JD_CONFIG_IGNORE_STATUS
-    jd_status_set(state, &jd_status_animations[status].color);
-    state->jd_status = status;
-    state->jd_status_stop = now + jd_status_animations[status].time;
-#endif
+void jd_glow(uint32_t glow) {
+    status_ctx_t *state = &status_ctx;
+    if (state->glow == glow || state->glow == JD_GLOW_PROTECT)
+        return;
+    if (_JD_GLOW_CHANNEL(glow) >= _JD_GLOW_CHANNEL(state->glow)) {
+        if (!_JD_GLOW_COLOR(glow)) {
+            state->glow = 0; // if turning off, go down to CH_0
+            jd_control_set_status_light_t color = {0};
+            jd_status_set(state, &color);
+        } else {
+            state->glow = glow;
+            state->glow_phase = 0;
+            state->glow_step = now;
+        }
+    }
 }
 
 #endif

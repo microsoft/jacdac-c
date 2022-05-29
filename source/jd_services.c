@@ -16,7 +16,7 @@
 static srv_t **services;
 static uint8_t num_services, reset_counter, packets_sent;
 static uint8_t curr_service_process;
-static uint32_t lastMax, lastDisconnectBlink, nextAnnounce;
+static uint32_t lastMax, nextAnnounce;
 
 struct srv_state {
     SRV_COMMON;
@@ -195,8 +195,8 @@ void jd_services_init() {
     services = jd_alloc(sizeof(void *) * num_services);
     memcpy(services, tmp, sizeof(void *) * num_services);
 
-    // don't flash red initially
-    lastDisconnectBlink = tim_get_micros() + (1 << 20);
+    // don't flash red initially - pretend we just heard from brain
+    lastMax = tim_get_micros();
 }
 
 void jd_services_deinit() {
@@ -249,7 +249,7 @@ static void handle_ctrl_tick(jd_packet_t *pkt) {
         // client? blink!
         if (pkt->service_size >= 4 && pkt->data[1] & (JD_CONTROL_ANNOUNCE_FLAGS_IS_CLIENT >> 8)) {
             lastMax = now;
-            jd_status(JD_STATUS_CONNECTED);
+            jd_blink(JD_BLINK_CONNECTED);
         }
     }
 }
@@ -297,11 +297,11 @@ void jd_services_tick() {
     if (jd_should_sample(&nextAnnounce, 500000))
         jd_services_announce();
 
-    if (jd_should_sample(&lastDisconnectBlink, 2000000)) {
-        if (!lastMax || in_past(lastMax + 2000000)) {
-            lastMax = 0;
-            jd_status(JD_STATUS_DISCONNECTED);
-        }
+    if (!lastMax || in_past(lastMax + (2 << 20))) {
+        lastMax = 0;
+        jd_glow(JD_GLOW_BRAIN_DISCONNECTED);
+    } else {
+        jd_glow(JD_GLOW_BRAIN_CONNECTED);
     }
 
     // do ctrl process regardless of sleep status
