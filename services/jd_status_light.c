@@ -52,9 +52,9 @@ typedef struct {
     uint8_t glow_phase;
 
     uint8_t in_tim;
-    uint8_t curr_rep;
+    uint8_t blink_rep;
     uint8_t color_override;
-    uint8_t queued_blinks[3];
+    uint16_t queued_blinks[3];
 
     channel_t channels[3];
 } status_ctx_t;
@@ -66,9 +66,9 @@ static void rgbled_show(status_ctx_t *state) {
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
         int32_t c = ch->value;
+        if (state->color_override)
+            c = state->color_override & (1 << i) ? 0xff00 : 0x0000;
         c = (c * ch->mult) >> (7 + 8);
-        if (state->color_override & (1 << i))
-            c = RGB_LED_PERIOD - 1;
         sum += c;
 #ifdef LED_RGB_COMMON_CATHODE
         if (c >= RGB_LED_PERIOD)
@@ -128,27 +128,48 @@ static void set_blink_color(status_ctx_t *state, uint8_t encoded) {
 
 void jd_status_process() {
     status_ctx_t *state = &status_ctx;
+    int chg = 0;
 
-    uint8_t encoded = state->queued_blinks[0];
+#if 0
+    // calibration mode
+    int cc = (now >> 19) & 3;
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        int v = (i == cc) ? 0x2000 : 0x0000;
+        if (ch->value != v) {
+            ch->value = v;
+            chg = 1;
+        }
+    }
+#else
+    uint16_t encoded = state->queued_blinks[0];
     if (encoded && jd_should_sample(&state->blink_step, 128 << 10)) {
         if (_JD_BLINK_DURATION(encoded) == JD_BLINK_DURATION_FAINT) {
             set_blink_color(state, encoded);
-            target_wait_us(100);
+            // target_wait_us(100);
             set_blink_color(state, 0);
-            state->curr_rep += 2;
+            state->blink_rep += 2;
         } else {
-            if (state->curr_rep & 1) {
+            if (state->blink_rep & 1) {
                 set_blink_color(state, 0);
             } else {
                 set_blink_color(state, encoded);
-                state->blink_step = now + _JD_BLINK_DURATION(encoded) * (64 << 10);
+                state->blink_step = now + _JD_BLINK_DURATION(encoded) * (8 << 10);
             }
-            state->curr_rep++;
+            state->blink_rep++;
         }
-        if ((state->curr_rep >> 1) > _JD_BLINK_REPETITIONS(encoded)) {
-            for (int i = 1; i < sizeof(state->queued_blinks); ++i)
-                state->queued_blinks[i - 1] = state->queued_blinks[i];
-            state->blink_step = now + (256 << 10);
+        if ((state->blink_rep >> 1) > _JD_BLINK_REPETITIONS(encoded)) {
+            encoded = _jd_blink_shift(encoded);
+            if (_JD_BLINK_COLOR(encoded) == 0) {
+                // end of this blink pattern
+                for (int i = 1; i < sizeof(state->queued_blinks); ++i)
+                    state->queued_blinks[i - 1] = state->queued_blinks[i];
+                state->blink_step = now + (256 << 10);
+            } else {
+                // shift to next color
+                state->queued_blinks[0] = encoded;
+                state->blink_rep = 0;
+            }
         }
     }
 
@@ -161,7 +182,7 @@ void jd_status_process() {
         } else {
             jd_control_set_status_light_t color;
             int c = _JD_GLOW_COLOR(state->glow);
-            if (state->glow_phase) {
+            if (state->glow_phase == 0) {
                 c = 0;
                 state->glow_step = now + _JD_GLOW_GAP(state->glow);
                 state->glow_phase = 1;
@@ -169,15 +190,14 @@ void jd_status_process() {
                 state->glow_step = now + _JD_GLOW_DURATION(state->glow);
                 state->glow_phase = 0;
             }
-            color.to_red = (c & 1) ? 0xff : 0;
-            color.to_green = (c & 2) ? 0xff : 0;
-            color.to_blue = (c & 4) ? 0xff : 0;
+            int color_on = 0x08;
+            color.to_red = (c & 1) ? color_on : 0;
+            color.to_green = (c & 2) ? color_on : 0;
+            color.to_blue = (c & 4) ? color_on : 0;
             color.speed = _JD_GLOW_SPEED(state->glow);
             jd_status_set(state, &color);
         }
     }
-
-    int chg = 0;
 
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
@@ -195,6 +215,7 @@ void jd_status_process() {
         if (v0 != ch->value)
             chg = 1;
     }
+#endif
 
     if (chg)
         rgbled_show(state);
@@ -252,15 +273,17 @@ void jd_status_init() {
     rgbled_show(state);
 }
 
-void jd_blink(uint8_t encoded) {
+void jd_blink(uint16_t encoded) {
     status_ctx_t *state = &status_ctx;
     for (int i = 0; i < sizeof(state->queued_blinks); ++i) {
         if (state->queued_blinks[i] == encoded)
             return;
         if (state->queued_blinks[i] == 0) {
             state->queued_blinks[i] = encoded;
-            if (i == 0)
+            if (i == 0) {
                 state->blink_step = now;
+                state->blink_rep = 0;
+            }
             return;
         }
     }

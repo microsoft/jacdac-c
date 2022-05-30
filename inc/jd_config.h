@@ -143,18 +143,18 @@
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
-        JD_ERROR_BLINK(JD_BLINK_ERROR);                                                            \
+        JD_ERROR_BLINK(JD_BLINK_ERROR_GENERAL);                                                            \
     } while (0)
 
 #define LINE_ERROR(msg, ...)                                                                       \
     do {                                                                                           \
         JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
-        JD_ERROR_BLINK(JD_BLINK_LINE_ERROR);                                                       \
+        JD_ERROR_BLINK(JD_BLINK_ERROR_LINE);                                                       \
     } while (0)
 #define OVF_ERROR(msg, ...)                                                                        \
     do {                                                                                           \
         JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
-        JD_ERROR_BLINK(JD_BLINK_OVF_ERROR);                                                        \
+        JD_ERROR_BLINK(JD_BLINK_ERROR_OVF);                                                        \
     } while (0)
 
 #endif
