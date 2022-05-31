@@ -48,17 +48,35 @@ typedef struct {
     uint32_t glow_step;
     uint32_t blink_step;
 
-    uint32_t glow;
+    uint8_t glow;
+    uint8_t glow_ch[JD_GLOW_CHANNELS];
     uint8_t glow_phase;
 
     uint8_t in_tim;
     uint8_t blink_rep;
     uint8_t color_override;
-    uint16_t queued_blinks[3];
+    uint8_t queued_blinks[3];
 
     channel_t channels[3];
 } status_ctx_t;
 static status_ctx_t status_ctx;
+
+#define JD_GLOW_PROTECT JD_GLOW(OFF, CH_0, WHITE)
+
+static void re_glow(status_ctx_t *state) {
+    if (state->glow == JD_GLOW_PROTECT)
+        return;
+    for (int i = JD_GLOW_CHANNELS - 1; i >= 0; i--) {
+        if (state->glow_ch[i]) {
+            if (state->glow != state->glow_ch[i]) {
+                state->glow = state->glow_ch[i];
+                state->glow_phase = 0;
+                state->glow_step = now;
+            }
+            break;
+        }
+    }
+}
 
 static void rgbled_show(status_ctx_t *state) {
 #ifdef PIN_LED_R
@@ -126,6 +144,26 @@ static void set_blink_color(status_ctx_t *state, uint8_t encoded) {
     rgbled_show(state);
 }
 
+struct glow_desc {
+    uint8_t speed;
+    uint32_t time_on;
+    uint32_t time_off;
+};
+
+#define GLOW(sp, ms_on, ms_off)                                                                    \
+    { sp, 1000 * (ms_on), 1000 * (ms_off) }
+
+static const struct glow_desc speeds[] = {
+    GLOW(1, 1, 1000),      // constant off
+    GLOW(50, 1000, 1),     // constant on
+    GLOW(100, 1000, 1000), // very_slow
+    GLOW(150, 500, 500),   // slow
+    GLOW(150, 250, 250),   // fast
+    GLOW(150, 250, 1750),  // very_slow_low
+    GLOW(0, 500, 500),     // slow_blink
+    GLOW(0, 250, 250),     // fast_blink
+};
+
 void jd_status_process() {
     status_ctx_t *state = &status_ctx;
     int chg = 0;
@@ -146,15 +184,12 @@ void jd_status_process() {
     if (encoded && jd_should_sample(&state->blink_step, 128 << 10)) {
         if (_JD_BLINK_DURATION(encoded) == JD_BLINK_DURATION_FAINT) {
             set_blink_color(state, encoded);
-            // target_wait_us(100);
+            // target_wait_us(100); - enough delay from just calling these functions
             set_blink_color(state, 0);
             state->blink_rep += 2;
         } else {
             if (state->blink_rep & 1) {
                 set_blink_color(state, 0);
-                state->blink_step =
-                    now + (_JD_BLINK_COLOR(encoded) & (1 << (state->blink_rep >> 1)) ? 50 << 10
-                                                                                     : 150 << 10);
             } else {
                 set_blink_color(state, encoded);
                 state->blink_step = now + _JD_BLINK_DURATION(encoded) * (8 << 10);
@@ -162,17 +197,10 @@ void jd_status_process() {
             state->blink_rep++;
         }
         if ((state->blink_rep >> 1) >= _JD_BLINK_REPETITIONS(encoded)) {
-            encoded = _jd_blink_shift(encoded);
-            if (_JD_BLINK_COLOR(encoded) == 0) {
-                // end of this blink pattern
-                for (int i = 1; i < sizeof(state->queued_blinks); ++i)
-                    state->queued_blinks[i - 1] = state->queued_blinks[i];
-                state->blink_step = now + (256 << 10);
-            } else {
-                // shift to next color
-                state->queued_blinks[0] = encoded;
-                state->blink_rep = 0;
-            }
+            // end of this blink pattern
+            for (int i = 1; i < sizeof(state->queued_blinks); ++i)
+                state->queued_blinks[i - 1] = state->queued_blinks[i];
+            state->blink_step = now + (256 << 10);
         }
     }
 
@@ -182,22 +210,24 @@ void jd_status_process() {
     if (state->glow && in_past(state->glow_step)) {
         if (state->glow == JD_GLOW_PROTECT) {
             state->glow = 0;
+            re_glow(state);
         } else {
             jd_control_set_status_light_t color;
             int c = _JD_GLOW_COLOR(state->glow);
+            int sp = _JD_GLOW_SPEED(state->glow);
             if (state->glow_phase == 0) {
                 c = 0;
-                state->glow_step = now + _JD_GLOW_GAP(state->glow);
+                state->glow_step = now + speeds[sp].time_off;
                 state->glow_phase = 1;
             } else {
-                state->glow_step = now + _JD_GLOW_DURATION(state->glow);
+                state->glow_step = now + speeds[sp].time_on;
                 state->glow_phase = 0;
             }
             int color_on = 0x08;
             color.to_red = (c & 1) ? color_on : 0;
             color.to_green = (c & 2) ? color_on : 0;
             color.to_blue = (c & 4) ? color_on : 0;
-            color.speed = _JD_GLOW_SPEED(state->glow);
+            color.speed = speeds[sp].speed;
             jd_status_set(state, &color);
         }
     }
@@ -276,16 +306,20 @@ void jd_status_init() {
     rgbled_show(state);
 }
 
-void jd_blink(uint16_t encoded) {
+uint8_t jd_connected_blink = JD_BLINK_CONNECTED;
+
+void jd_blink(uint8_t encoded) {
     status_ctx_t *state = &status_ctx;
     for (int i = 0; i < sizeof(state->queued_blinks); ++i) {
         if (state->queued_blinks[i] == encoded)
             return;
         if (state->queued_blinks[i] == 0) {
-            state->queued_blinks[i] = encoded;
-            if (i == 0) {
-                state->blink_step = now;
-                state->blink_rep = 0;
+            if (_JD_BLINK_DURATION(encoded) != JD_BLINK_DURATION_FAINT || i == 0) {
+                if (i == 0) {
+                    state->blink_step = now;
+                    state->blink_rep = 0;
+                }
+                state->queued_blinks[i] = encoded;
             }
             return;
         }
@@ -294,21 +328,12 @@ void jd_blink(uint16_t encoded) {
 
 void jd_glow(uint32_t glow) {
     status_ctx_t *state = &status_ctx;
-    if (state->glow == glow || state->glow == JD_GLOW_PROTECT)
+    int ch = _JD_GLOW_CHANNEL(glow);
+    uint8_t v = glow;
+    if (state->glow_ch[ch] == v)
         return;
-    if (_JD_GLOW_CHANNEL(glow) >= _JD_GLOW_CHANNEL(state->glow)) {
-        if (!_JD_GLOW_COLOR(glow)) {
-            if (_JD_GLOW_CHANNEL(glow) == _JD_GLOW_CHANNEL(state->glow)) {
-                state->glow = 0; // if turning off, go down to CH_0
-                jd_control_set_status_light_t color = {0};
-                jd_status_set(state, &color);
-            }
-        } else {
-            state->glow = glow;
-            state->glow_phase = 0;
-            state->glow_step = now;
-        }
-    }
+    state->glow_ch[ch] = v;
+    re_glow(state);
 }
 
 #endif

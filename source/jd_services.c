@@ -250,7 +250,7 @@ static void handle_ctrl_tick(jd_packet_t *pkt) {
         if (pkt->service_size >= 4 && pkt->data[1] & (JD_CONTROL_ANNOUNCE_FLAGS_IS_CLIENT >> 8)) {
             lastMax = now;
             jd_glow(JD_GLOW_BRAIN_CONNECTED);
-            jd_blink(JD_BLINK_CONNECTED);
+            jd_blink(jd_connected_blink);
         }
     }
 }

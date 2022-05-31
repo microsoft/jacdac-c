@@ -50,29 +50,29 @@ int jd_status_handle_packet(jd_packet_t *pkt);
 
 #define _JD_BLINK_COLOR(encoded) (((encoded) >> 0) & 7)
 #define _JD_BLINK_REPETITIONS(encoded) (((encoded) >> 3) & 7)
-#define _JD_BLINK_DURATION(encoded) (((encoded) >> 12) & 3)
+#define _JD_BLINK_DURATION(encoded) (((encoded) >> 6) & 3)
 
-#define _JD_BLINK_PAIR(r, c)                                                                       \
-    (_JD_CONCAT(JD_BLINK_COLOR_, c) | (_JD_CONCAT(JD_BLINK_REPEAT_, r) << 3))
+#define JD_BLINK(duration, r, c)                                                                   \
+    (_JD_CONCAT(JD_BLINK_COLOR_, c) | (_JD_CONCAT(JD_BLINK_REPEAT_, r) << 3) |                     \
+     (_JD_CONCAT(JD_BLINK_DURATION_, duration) << 6))
 
-static inline uint16_t _jd_blink_shift(uint16_t b) {
-    return ((b >> 6) & 0x3f) | (b & 0xf000);
-}
+#define JD_BLINK_INFO(c) JD_BLINK(SLOW, 1, c)
+#define JD_BLINK_ERROR(c) JD_BLINK(FAST, 3, c)
 
-#define JD_BLINK(duration, r1, c1, r2, c2)                                                         \
-    _JD_BLINK_PAIR(r1, c1) | (_JD_BLINK_PAIR(r2, c2) << 6) |                                       \
-        (_JD_CONCAT(JD_BLINK_DURATION_, duration) << 12)
+#define JD_BLINK_CONNECTED JD_BLINK(FAINT, 1, GREEN)
+#define JD_BLINK_IDENTIFY JD_BLINK(FAST, 7, BLUE)
+#define JD_BLINK_STARTUP 0 // none
 
-#define JD_BLINK_CONNECTED JD_BLINK(FAINT, 1, BLUE, 0, OFF)
-#define JD_BLINK_IDENTIFY JD_BLINK(FAST, 7, BLUE, 0, OFF)
-#define JD_BLINK_STARTUP JD_BLINK(FAST, 1, GREEN, 1, BLUE)
-
-#define JD_BLINK_ERROR(c) JD_BLINK(FAST, 4, c, 0, OFF)
 #define JD_BLINK_ERROR_LINE JD_BLINK_ERROR(YELLOW)
 #define JD_BLINK_ERROR_OVF JD_BLINK_ERROR(MAGENTA)
 #define JD_BLINK_ERROR_GENERAL JD_BLINK_ERROR(RED)
 
-void jd_blink(uint16_t encoded);
+extern uint8_t jd_connected_blink;
+
+void jd_blink(uint8_t encoded);
+
+// has to be 4 or 8
+#define JD_GLOW_CHANNELS 4
 
 // highest non-off channel wins
 #define JD_GLOW_CH_0 0
@@ -80,52 +80,40 @@ void jd_blink(uint16_t encoded);
 #define JD_GLOW_CH_2 2
 #define JD_GLOW_CH_3 3
 
-// speed*64
-#define JD_GLOW_SPEED_INSTANT 0
-#define JD_GLOW_SPEED_FAST 1
-#define JD_GLOW_SPEED_SLOW 2
-#define JD_GLOW_SPEED_VERY_SLOW 3
+#define JD_GLOW_SPEED_OFF 0
+#define JD_GLOW_SPEED_ON 1
+#define JD_GLOW_SPEED_VERY_SLOW 2
+#define JD_GLOW_SPEED_SLOW 3
+#define JD_GLOW_SPEED_FAST 4
+#define JD_GLOW_SPEED_VERY_SLOW_LOW 5
+#define JD_GLOW_SPEED_SLOW_BLINK 6
+#define JD_GLOW_SPEED_FAST_BLINK 7
 
-// (duration+1)*524ms
-#define JD_GLOW_DURATION_HALF_SECOND 0
-#define JD_GLOW_DURATION_ONE_SECOND 1
-#define JD_GLOW_DURATION_ONE_HALF_SECOND 2
-#define JD_GLOW_DURATION_TWO_SECOND 3
+#define _JD_GLOW_COLOR(g) (((g) >> 0) & 7)
+#define _JD_GLOW_SPEED(g) (((g) >> 3) & 7)
+#define _JD_GLOW_CHANNEL(g) (((g) >> 8) & (JD_GLOW_CHANNELS - 1))
 
-#define _JD_GLOW_COLOR(g) (((g) >> 0) & 3)
-#define _JD_GLOW_CHANNEL(g) (((g) >> 4) & 3)
-#define _JD_GLOW_GAP(g) (((((g) >> 8) & 3) + 1) * (512 << 10))
-#define _JD_GLOW_DURATION(g) (((((g) >> 12) & 3) + 1) * (512 << 10))
-#define _JD_GLOW_SPEED(g) ((((g) >> 16) & 3) * 64)
+#define JD_GLOW(speed, channel, color)                                                             \
+    (_JD_CONCAT(JD_BLINK_COLOR_, color) | (_JD_CONCAT(JD_GLOW_SPEED_, speed) << 3) |               \
+     (_JD_CONCAT(JD_GLOW_, channel) << 8))
 
-#define JD_GLOW(speed, duration, gap, channel, color)                                              \
-    _JD_CONCAT(JD_BLINK_COLOR_, color) | (_JD_CONCAT(JD_GLOW_, channel) << 4) |                    \
-        (_JD_CONCAT(JD_GLOW_DURATION_, gap) << 8) |                                                \
-        (_JD_CONCAT(JD_GLOW_DURATION_, duration) << 12) |                                          \
-        (_JD_CONCAT(JD_GLOW_SPEED_, speed) << 16)
-
-#define JD_GLOW_OFF(channel) (_JD_CONCAT(JD_GLOW_, channel) << 12)
-#define JD_GLOW_PROTECT JD_GLOW_OFF(CH_3)
+#define JD_GLOW_OFF(channel) (_JD_CONCAT(JD_GLOW_, channel) << 8)
 
 #define JD_GLOW_BRAIN_CONNECTION_CH CH_1
 
 #define JD_GLOW_BRAIN_CONNECTED JD_GLOW_OFF(JD_GLOW_BRAIN_CONNECTION_CH)
-#define JD_GLOW_BRAIN_DISCONNECTED                                                                 \
-    JD_GLOW(SLOW, HALF_SECOND, ONE_SECOND, JD_GLOW_BRAIN_CONNECTION_CH, RED)
-#define JD_GLOW_UNKNOWN JD_GLOW(SLOW, HALF_SECOND, HALF_SECOND, JD_GLOW_BRAIN_CONNECTION_CH, YELLOW)
+#define JD_GLOW_BRAIN_DISCONNECTED JD_GLOW(VERY_SLOW, JD_GLOW_BRAIN_CONNECTION_CH, RED)
+#define JD_GLOW_UNKNOWN JD_GLOW(SLOW, JD_GLOW_BRAIN_CONNECTION_CH, YELLOW)
 
 // cloud stuff
 #define JD_GLOW_CLOUD_CONNECTION_CH CH_2
-#define JD_GLOW_CLOUD_CONNECTING_TO_NETWORK                                                        \
-    JD_GLOW(FAST, HALF_SECOND, HALF_SECOND, JD_GLOW_CLOUD_CONNECTION_CH, YELLOW)
-#define JD_GLOW_CLOUD_CONNECTING_TO_CLOUD                                                          \
-    JD_GLOW(FAST, HALF_SECOND, HALF_SECOND, JD_GLOW_CLOUD_CONNECTION_CH, GREEN)
-#define JD_GLOW_CLOUD_CONNECTED_TO_CLOUD                                                           \
-    JD_GLOW(FAST, TWO_SECOND, TWO_SECOND, JD_GLOW_CLOUD_CONNECTION_CH, GREEN)
+#define JD_GLOW_CLOUD_CONNECTING_TO_NETWORK JD_GLOW(SLOW, JD_GLOW_CLOUD_CONNECTION_CH, YELLOW)
+#define JD_GLOW_CLOUD_CONNECTING_TO_CLOUD JD_GLOW(FAST, JD_GLOW_CLOUD_CONNECTION_CH, YELLOW)
+#define JD_GLOW_CLOUD_CONNECTED_TO_CLOUD JD_GLOW(VERY_SLOW_LOW, JD_GLOW_CLOUD_CONNECTION_CH, BLUE)
 #define JD_GLOW_CLOUD_NOT_CONNECTED_TO_CLOUD                                                       \
-    JD_GLOW(FAST, TWO_SECOND, TWO_SECOND, JD_GLOW_CLOUD_CONNECTION_CH, YELLOW)
+    JD_GLOW(VERY_SLOW_LOW, JD_GLOW_CLOUD_CONNECTION_CH, RED)
 
-#define JD_BLINK_CLOUD_UPLOADED JD_BLINK(FAST, 1, BLUE, 0, OFF)
+#define JD_BLINK_CLOUD_UPLOADED JD_BLINK_INFO(BLUE)
 #define JD_BLINK_CLOUD_ERROR JD_BLINK_ERROR(BLUE)
 
 void jd_glow(uint32_t glow);
