@@ -152,13 +152,16 @@ void jd_status_process() {
         } else {
             if (state->blink_rep & 1) {
                 set_blink_color(state, 0);
+                state->blink_step =
+                    now + (_JD_BLINK_COLOR(encoded) & (1 << (state->blink_rep >> 1)) ? 50 << 10
+                                                                                     : 150 << 10);
             } else {
                 set_blink_color(state, encoded);
                 state->blink_step = now + _JD_BLINK_DURATION(encoded) * (8 << 10);
             }
             state->blink_rep++;
         }
-        if ((state->blink_rep >> 1) > _JD_BLINK_REPETITIONS(encoded)) {
+        if ((state->blink_rep >> 1) >= _JD_BLINK_REPETITIONS(encoded)) {
             encoded = _jd_blink_shift(encoded);
             if (_JD_BLINK_COLOR(encoded) == 0) {
                 // end of this blink pattern
