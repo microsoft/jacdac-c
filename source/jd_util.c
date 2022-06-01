@@ -137,7 +137,7 @@ bool jd_should_sample_ms(uint32_t *sample, uint32_t period) {
 
     if (!in_future_ms(*sample))
         // we lost some samples
-        *sample = now + period;
+        *sample = now_ms + period;
 
     return true;
 }
