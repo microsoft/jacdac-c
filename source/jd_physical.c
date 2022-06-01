@@ -140,7 +140,7 @@ void jd_line_falling() {
 
     // target_disable_irq();
     // no need to disable IRQ - we're at the highest IRQ level
-    if (status & (JD_STATUS_RX_ACTIVE | JD_STATUS_TX_ACTIVE))
+    if (status & JD_STATUS_RX_ACTIVE)
         jd_panic();
     status |= JD_STATUS_RX_ACTIVE;
 
