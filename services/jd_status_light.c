@@ -198,7 +198,7 @@ void jd_status_process() {
         }
         if ((state->blink_rep >> 1) >= _JD_BLINK_REPETITIONS(encoded)) {
             // end of this blink pattern
-            for (int i = 1; i < sizeof(state->queued_blinks); ++i)
+            for (unsigned i = 1; i < sizeof(state->queued_blinks); ++i)
                 state->queued_blinks[i - 1] = state->queued_blinks[i];
             state->blink_step = now + (256 << 10);
         }
@@ -310,7 +310,7 @@ uint8_t jd_connected_blink = JD_BLINK_CONNECTED;
 
 void jd_blink(uint8_t encoded) {
     status_ctx_t *state = &status_ctx;
-    for (int i = 0; i < sizeof(state->queued_blinks); ++i) {
+    for (unsigned i = 0; i < sizeof(state->queued_blinks); ++i) {
         if (state->queued_blinks[i] == encoded)
             return;
         if (state->queued_blinks[i] == 0) {
