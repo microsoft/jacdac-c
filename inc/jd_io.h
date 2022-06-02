@@ -36,6 +36,7 @@ int jd_status_handle_packet(jd_packet_t *pkt);
 #define JD_BLINK_DURATION_FAINT 0
 #define JD_BLINK_DURATION_FAST 1
 #define JD_BLINK_DURATION_SLOW 2
+#define JD_BLINK_DURATION_VERY_SLOW 3
 
 #define JD_BLINK_REPEAT_0 0
 #define JD_BLINK_REPEAT_1 1
@@ -61,7 +62,7 @@ int jd_status_handle_packet(jd_packet_t *pkt);
 
 #define JD_BLINK_CONNECTED JD_BLINK(FAINT, 1, GREEN)
 #define JD_BLINK_IDENTIFY JD_BLINK(FAST, 7, BLUE)
-#define JD_BLINK_STARTUP 0 // none
+#define JD_BLINK_STARTUP JD_BLINK(VERY_SLOW, 1, GREEN)
 
 #define JD_BLINK_ERROR_LINE JD_BLINK_ERROR(YELLOW)
 #define JD_BLINK_ERROR_OVF JD_BLINK_ERROR(MAGENTA)

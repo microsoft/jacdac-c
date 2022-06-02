@@ -316,6 +316,11 @@ void jd_status_init() {
 uint8_t jd_connected_blink = JD_BLINK_CONNECTED;
 
 void jd_blink(uint8_t encoded) {
+#if 0
+    pin_setup_output(PIN_AN);
+    pin_pulse(PIN_AN, _JD_BLINK_REPETITIONS(encoded));
+#endif
+
     status_ctx_t *state = &status_ctx;
     for (unsigned i = 0; i < sizeof(state->queued_blinks); ++i) {
         if (state->queued_blinks[i] == encoded)
