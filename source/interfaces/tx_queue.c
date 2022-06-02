@@ -38,6 +38,11 @@ int jd_send_frame(jd_frame_t *f) {
     JD_USB_SEND(f);
     return jd_send_frame_raw(f);
 }
+static int jd_send_frame_with_crc(jd_frame_t *f) {
+    f->device_identifier = jd_device_id();
+    jd_compute_crc(f);
+    return jd_send_frame(f);
+}
 #endif
 
 int jd_tx_is_idle() {
@@ -76,7 +81,7 @@ int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsign
     void *trg = jd_push_in_frame(&tx_acc_buffer, service_num, service_cmd, service_size);
     if (!trg) {
 #if JD_SEND_FRAME
-        jd_send_frame(&tx_acc_buffer);
+        jd_send_frame_with_crc(&tx_acc_buffer);
         jd_reset_frame(&tx_acc_buffer);
         trg = jd_push_in_frame(&tx_acc_buffer, service_num, service_cmd, service_size);
         JD_ASSERT(trg != NULL);
@@ -166,12 +171,12 @@ void jd_tx_flush() {
     if (isSending)
         return;
 #endif
+#if JD_SEND_FRAME
+    jd_send_frame_with_crc(f);
+#else
     f->device_identifier = jd_device_id();
     jd_compute_crc(f);
 
-#if JD_SEND_FRAME
-    jd_send_frame(f);
-#else
     if (jd_rx_frame_received_loopback(f))
         OVF_ERROR("loopback rx ovf");
 
