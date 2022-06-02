@@ -63,11 +63,21 @@ static status_ctx_t status_ctx;
 
 #define JD_GLOW_PROTECT JD_GLOW(OFF, CH_0, WHITE)
 
+static void jd_status_set(status_ctx_t *state, const jd_control_set_status_light_t *anim) {
+    const uint8_t *to = &anim->to_red;
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        ch->target = to[i];
+        ch->speed = ((to[i] - (ch->value >> 8)) * anim->speed) >> 1;
+    }
+}
+
 static void re_glow(status_ctx_t *state) {
     if (state->glow == JD_GLOW_PROTECT)
         return;
+
     for (int i = JD_GLOW_CHANNELS - 1; i >= 0; i--) {
-        if (state->glow_ch[i]) {
+        if (state->glow_ch[i] || i == 0) {
             if (state->glow != state->glow_ch[i]) {
                 state->glow = state->glow_ch[i];
                 state->glow_phase = 0;
@@ -75,6 +85,12 @@ static void re_glow(status_ctx_t *state) {
             }
             break;
         }
+    }
+
+    if (state->glow == 0) {
+        // fade to black if no glow
+        jd_control_set_status_light_t c = {.speed = 100};
+        jd_status_set(state, &c);
     }
 }
 
@@ -128,15 +144,6 @@ static void rgbled_show(status_ctx_t *state) {
         pin_set(PIN_LED, LED_OFF_STATE);
     }
 #endif
-}
-
-static void jd_status_set(status_ctx_t *state, const jd_control_set_status_light_t *anim) {
-    const uint8_t *to = &anim->to_red;
-    for (int i = 0; i < 3; ++i) {
-        channel_t *ch = &state->channels[i];
-        ch->target = to[i];
-        ch->speed = ((to[i] - (ch->value >> 8)) * anim->speed) >> 1;
-    }
 }
 
 static void set_blink_color(status_ctx_t *state, uint8_t encoded) {
