@@ -2,7 +2,6 @@
 
 // doesn't seem to be working - I keep getting 0/0xffff reading from it
 #define SAMPLING_MS 2000
-#define PRECISION 10
 
 #ifndef SGPC3_ADDR
 #define SGPC3_ADDR 0x58
@@ -28,19 +27,6 @@ typedef struct state {
     uint32_t nextsample;
 } ctx_t;
 static ctx_t state;
-
-uint8_t jd_sgp_crc8(const uint8_t *data, int len) {
-    uint8_t res = 0xff;
-    while (len--) {
-        res ^= *data++;
-        for (int i = 0; i < 8; ++i)
-            if (res & 0x80)
-                res = (res << 1) ^ 0x31;
-            else
-                res = (res << 1);
-    }
-    return res;
-}
 
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg16_buf(SGPC3_ADDR, cmd, NULL, 0))
@@ -128,26 +114,17 @@ static void sgpc3_process(void) {
     }
 }
 
-static void *sgpc3_tvoc(void) {
-    ctx_t *ctx = &state;
-    if (ctx->inited >= 3)
-        return &ctx->tvoc;
-    return NULL;
-}
-
-static void *sgpc3_ethanol(void) {
-    ctx_t *ctx = &state;
-    if (ctx->inited >= 3)
-        return &ctx->ethanol;
-    return NULL;
-}
-
 static uint32_t sgpc3_conditioning_period(void) {
     // none when sensor off for less than 5 min
     // 16s when sensor off for 5 min - 1h
     // 64s when sensor off for 1-24h
     // 184s when longer
     return 184 + 20;
+}
+
+static void sgpc3_sleep(void) {
+    // this is "general call" to register 0x06
+    i2c_write_reg_buf(0x00, 0x06, NULL, 0);
 }
 
 static void sgpc3_set_temp_humidity(int32_t temp, int32_t humidity) {
@@ -160,18 +137,14 @@ static void sgpc3_set_temp_humidity(int32_t temp, int32_t humidity) {
         ctx->state = ST_HUM_NEEDED;
 }
 
-const env_sensor_api_t tvoc_sgpc3 = {
-    .init = sgpc3_init,
-    .process = sgpc3_process,
-    .get_reading = sgpc3_tvoc,
-    .conditioning_period = sgpc3_conditioning_period,
-    .set_temp_humidity = sgpc3_set_temp_humidity,
-};
+ENV_INIT_DUAL(sgpc3_init, sgpc3_sleep);
 
-const env_sensor_api_t ethanol_sgpc3 = {
-    .init = sgpc3_init,
-    .process = sgpc3_process,
-    .get_reading = sgpc3_ethanol,
-    .conditioning_period = sgpc3_conditioning_period,
-    .set_temp_humidity = sgpc3_set_temp_humidity,
-};
+ENV_DEFINE_GETTER(sgpc3, ethanol)
+ENV_DEFINE_GETTER(sgpc3, tvoc)
+
+#define FUNS(val, idx)                                                                             \
+    ENV_GETTER(sgpc3, val, idx), .conditioning_period = sgpc3_conditioning_period,                 \
+                                 .set_temp_humidity = sgpc3_set_temp_humidity,
+
+const env_sensor_api_t tvoc_sgpc3 = {FUNS(tvoc, 0)};
+const env_sensor_api_t ethanol_sgpc3 = {FUNS(ethanol, 1)};

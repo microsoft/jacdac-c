@@ -39,8 +39,11 @@ extern const env_sensor_api_t temperature_max31855;
 extern const env_sensor_api_t temperature_max6675;
 
 // SGP30 sensor on airquality4 click
-extern const env_sensor_api_t eco2_airquality4;
-extern const env_sensor_api_t tvoc_airquality4;
+extern const env_sensor_api_t eco2_sgp30;
+extern const env_sensor_api_t tvoc_sgp30;
+
+extern const env_sensor_api_t tvoc_sgp30;
+extern const env_sensor_api_t eco2_sgp30;
 
 extern const env_sensor_api_t illuminance_ltr390uv;
 extern const env_sensor_api_t uvindex_ltr390uv;
