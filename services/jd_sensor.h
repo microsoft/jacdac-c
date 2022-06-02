@@ -18,6 +18,7 @@ typedef struct {
     int32_t (*get_range)(void);
     int32_t (*set_range)(int32_t range); // returns the range after setting
     const struct sensor_range *ranges;
+    bool (*is_present)(void);
 } sensor_api_t;
 
 // make sure 'api' is at 8 byte boundary to avoid alignment issues on 64 bit arch
@@ -62,6 +63,7 @@ void env_sensor_process(srv_t *state);
 #define SCALE_HUM(x) (int)((x)*1024.0 + 0.5)
 #define SCALE_PRESSURE(x) (int)((x)*1024.0 + 0.5)
 #define SCALE_TVOC(x) (int)((x)*1024.0 + 0.5)
+#define SCALE_CO2(x) (int)((x)*1024.0 + 0.5)
 
 #define SCALE_LUX(x) (int)((x)*1024.0 + 0.5)
 #define SCALE_UVI(x) (int)((x)*16 * 1024.0 + 0.5)
