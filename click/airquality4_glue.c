@@ -8,18 +8,6 @@ static env_reading_t eco2;
 static env_reading_t tvoc;
 static uint8_t hum_comp[3];
 
-static uint8_t crc8(const uint8_t *data, int len) {
-    uint8_t res = 0xff;
-    while (len--) {
-        res ^= *data++;
-        for (int i = 0; i < 8; ++i)
-            if (res & 0x80)
-                res = (res << 1) ^ 0x31;
-            else
-                res = (res << 1);
-    }
-    return res;
-}
 
 static void aq4_init(void) {
     airquality4_cfg_t cfg;
@@ -38,7 +26,7 @@ static void aq4_init(void) {
 
     // "Test vector" from datasheet
     uint8_t tmp[2] = {0xbe, 0xef};
-    if (crc8(tmp, 2) != 0x92)
+    if (jd_sgp_crc8(tmp, 2) != 0x92)
         hw_panic();
 }
 
@@ -46,7 +34,7 @@ static void aq4_set_temp_humidity(int32_t temp, int32_t humidity) {
     uint16_t scaled = env_absolute_humidity(temp, humidity) >> 2;
     hum_comp[0] = scaled >> 8;
     hum_comp[1] = scaled & 0xff;
-    hum_comp[2] = crc8(hum_comp, 2);
+    hum_comp[2] = jd_sgp_crc8(hum_comp, 2);
 }
 
 static void aq4_process(void) {

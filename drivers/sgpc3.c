@@ -29,7 +29,7 @@ typedef struct state {
 } ctx_t;
 static ctx_t state;
 
-static uint8_t crc8(const uint8_t *data, int len) {
+uint8_t jd_sgp_crc8(const uint8_t *data, int len) {
     uint8_t res = 0xff;
     while (len--) {
         res ^= *data++;
@@ -155,7 +155,7 @@ static void sgpc3_set_temp_humidity(int32_t temp, int32_t humidity) {
     uint16_t scaled = env_absolute_humidity(temp, humidity) >> 2;
     ctx->hum_comp[0] = scaled >> 8;
     ctx->hum_comp[1] = scaled & 0xff;
-    ctx->hum_comp[2] = crc8(ctx->hum_comp, 2);
+    ctx->hum_comp[2] = jd_sgp_crc8(ctx->hum_comp, 2);
     if (ctx->state == ST_IDLE)
         ctx->state = ST_HUM_NEEDED;
 }

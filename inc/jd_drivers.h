@@ -31,6 +31,26 @@
     ENV_INIT_N(init, sleep, 0);                                                                    \
     ENV_INIT_N(init, sleep, 1);
 
+#define ENV_INIT_TRIPLE(init, sleep)                                                               \
+    static uint8_t init_status;                                                                    \
+    ENV_INIT_N(init, sleep, 0);                                                                    \
+    ENV_INIT_N(init, sleep, 1);                                                                    \
+    ENV_INIT_N(init, sleep, 2);
+
 #define ENV_INIT_PTRS(n) .init = init##n, .sleep = sleep##n
+
+#define ENV_DEFINE_GETTER(scd, val)                                                                \
+    static void *scd##_##val(void) {                                                               \
+        ctx_t *ctx = &state;                                                                       \
+        if (ctx->inited >= 3)                                                                      \
+            return &ctx->val;                                                                      \
+        return NULL;                                                                               \
+    }
+
+#define ENV_GETTER(scd, val, idx)                                                                  \
+    .process = scd##_process, .get_reading = scd##_##val, ENV_INIT_PTRS(idx)
+
+// Used by various Sensirion sensors
+uint8_t jd_sgp_crc8(const uint8_t *data, int len);
 
 #endif
