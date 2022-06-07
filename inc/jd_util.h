@@ -85,10 +85,22 @@ __attribute__((noreturn)) void jd_assert_fail(const char *expr, const char *file
 #define jd_assert_fail(...) jd_panic()
 #endif
 
+#if 1
 #define JD_ASSERT(cond)                                                                            \
     do {                                                                                           \
         if (!(cond)) {                                                                             \
             jd_assert_fail(#cond, __FILE__, __LINE__, __func__);                                   \
+        }                                                                                          \
+    } while (0)
+#else
+#define JD_ASSERT(cond) ((void)0)
+#endif
+
+// never compiled out
+#define JD_CHK(call)                                                                               \
+    do {                                                                                           \
+        if ((call) != 0) {                                                                         \
+            jd_assert_fail(#call, __FILE__, __LINE__, __func__);                                   \
         }                                                                                          \
     } while (0)
 
