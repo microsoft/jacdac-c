@@ -38,7 +38,7 @@
 /* This option switches fast seek function. (0:Disable or 1:Enable) */
 
 
-#define FF_USE_EXPAND	0
+#define FF_USE_EXPAND	1
 /* This option switches f_expand function. (0:Disable or 1:Enable) */
 
 
@@ -84,7 +84,7 @@
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
 
-#define FF_CODE_PAGE	932
+#define FF_CODE_PAGE	850
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect code page setting can cause a file open failure.
 /
@@ -166,7 +166,7 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
-#define FF_VOLUMES		1
+#define FF_VOLUMES		2
 /* Number of volumes (logical drives) to be used. (1-10) */
 
 
@@ -184,7 +184,7 @@
 */
 
 
-#define FF_MULTI_PARTITION	0
+#define FF_MULTI_PARTITION	1
 /* This option switches support for multiple volumes on the physical drive.
 /  By default (0), each logical drive number is bound to the same physical drive
 /  number and only an FAT volume found on the physical drive will be mounted.
@@ -240,7 +240,7 @@
 #define FF_FS_NORTC		0
 #define FF_NORTC_MON	1
 #define FF_NORTC_MDAY	1
-#define FF_NORTC_YEAR	2020
+#define FF_NORTC_YEAR	2022
 /* The option FF_FS_NORTC switches timestamp functiton. If the system does not have
 /  any RTC function or valid timestamp is not needed, set FF_FS_NORTC = 1 to disable
 /  the timestamp function. Every object modified by FatFs will have a fixed timestamp
@@ -299,3 +299,13 @@
 
 
 /*--- End of configuration options ---*/
+
+
+/* Redefine names of disk IO functions to prevent name collisions */
+#define disk_initialize     ff_disk_initialize
+#define disk_status         ff_disk_status
+#define disk_read           ff_disk_read
+#define disk_write          ff_disk_write
+#define disk_ioctl          ff_disk_ioctl
+
+#define DIR FF_DIR
