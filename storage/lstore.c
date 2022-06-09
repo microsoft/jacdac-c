@@ -1,65 +1,45 @@
-#include "jd_protocol.h"
+#include "jd_storage.h"
 
 #include "ff/ff.h"
 #include "ff/diskio.h"
 
-#define LOG_SIZE (16 * 1024 * 1024)
-#define NUM_LOGS 1
+#define NOT_IRQ()                                                                                  \
+    if (target_in_irq())                                                                           \
+    jd_panic()
+
 #define SECTOR_SHIFT 9
 #define SECTOR_SIZE (1 << SECTOR_SHIFT)
 
 #define LOG(msg, ...) DMESG("sd: " msg, ##__VA_ARGS__)
 #define CHK JD_CHK
 
-#define JD_LSTORE_MAGIC0 0x0a4c444a
-#define JD_LSTORE_MAGIC1 0xb5d1841e
-#define JD_LSTORE_VERSION 2
-
-typedef struct {
-    uint32_t magic0;
-    uint32_t magic1;
-    uint32_t version;
-    uint32_t sector_size;       // currently always 512
-    uint32_t sectors_per_block; // typically 8
-    uint32_t header_blocks;     // typically 1
-    uint32_t num_blocks;        // including header block
-    uint32_t num_rewrites;      // how many times the whole log was rewritten (wrapped-around)
-    uint32_t block_magic0;      // used in all blocks in this file
-    uint32_t block_magic1;      // used in all blocks in this file
-    uint32_t reserved[6];
-
-    // meta-data about device
-    uint64_t device_id;
-    char firmware_name[64];
-    char firmware_version[32];
-    uint8_t reserved_dev[32];
-
-    // meta-data about the log file
-    char purpose[32];
-    char comment[64];
-    uint8_t reserved_log[32];
-} jd_lstore_main_header_t;
-
-typedef struct {
-    uint32_t block_magic0;
-    uint32_t block_magic1;
-    uint32_t crc32;
-} jd_lstore_block_header_t;
-
 STATIC_ASSERT(sizeof(jd_lstore_main_header_t) <= SECTOR_SIZE);
+STATIC_ASSERT(JD_LSTORE_ENTRY_HEADER_SIZE == offsetof(jd_lstore_entry_t, data));
 
 typedef struct {
     struct jd_lstore_ctx *parent;
+    jd_lstore_block_header_t *block;
+    jd_lstore_block_header_t *block_alt;
+    // file properties
     uint32_t sector_off;
     uint32_t size;
-    uint32_t num_blocks;
+    uint32_t header_blocks;
+    uint32_t data_blocks;
     uint8_t block_shift; // block_size == 1 << block_shift
+    volatile uint8_t needs_flushing;
+    // block-common information
+    uint32_t block_magic0;
+    uint32_t block_magic1;
+    uint32_t block_generation;
+    // information about current block
+    uint32_t block_ptr;
+    uint32_t data_ptr;
 } jd_lstore_file_t;
 
 typedef struct jd_lstore_ctx {
     FATFS fs;
-    uint8_t tmpbuf[SECTOR_SIZE];
-    jd_lstore_file_t logs[NUM_LOGS];
+    uint32_t flush_timer;
+    jd_lstore_file_t logs[JD_LSTORE_NUM_FILES];
 } jd_lstore_ctx_t;
 
 static jd_lstore_ctx_t *ls_ctx;
@@ -99,6 +79,7 @@ static FRESULT check_contiguous_file(FIL *fp) {
     return cont ? FR_OK : FR_INVALID_OBJECT;
 }
 
+#if 0
 static void list_files(jd_lstore_ctx_t *ctx) {
     FF_DIR dir;
     FILINFO finfo;
@@ -112,14 +93,16 @@ static void list_files(jd_lstore_ctx_t *ctx) {
     }
     CHK(f_closedir(&dir));
 }
+#endif
 
-static void read_log(jd_lstore_file_t *f, uint32_t sector_addr, void *dst, uint32_t num_sectors) {
+static void read_sectors(jd_lstore_file_t *f, uint32_t sector_addr, void *dst,
+                         uint32_t num_sectors) {
     jd_lstore_ctx_t *ctx = f->parent;
     CHK(ff_disk_read(ctx->fs.pdrv, dst, f->sector_off + sector_addr, num_sectors));
 }
 
-static void write_log(jd_lstore_file_t *f, uint32_t sector_addr, const void *src,
-                      uint32_t num_sectors) {
+static void write_sectors(jd_lstore_file_t *f, uint32_t sector_addr, const void *src,
+                          uint32_t num_sectors) {
     jd_lstore_ctx_t *ctx = f->parent;
     CHK(ff_disk_write(ctx->fs.pdrv, src, f->sector_off + sector_addr, num_sectors));
 }
@@ -149,7 +132,6 @@ static bool validate_header(jd_lstore_file_t *f, jd_lstore_main_header_t *hd) {
         }
 
         f->block_shift = sh + SECTOR_SHIFT;
-        f->num_blocks = hd->num_blocks;
 
         return 1;
     } else {
@@ -167,12 +149,106 @@ static void strcpy_n(char *dst, size_t sz, const char *src) {
 
 #define STRCPY(buf, src) strcpy_n(buf, sizeof(buf), src)
 
+static inline uint32_t block_size(jd_lstore_file_t *f) {
+    return 1 << f->block_shift;
+}
+
+static inline jd_lstore_block_footer_t *block_footer(jd_lstore_file_t *f) {
+    return (void *)((uint8_t *)f->block + block_size(f) - sizeof(jd_lstore_block_footer_t));
+}
+
+static inline jd_lstore_block_footer_t *block_alt_footer(jd_lstore_file_t *f) {
+    return (void *)((uint8_t *)f->block_alt + block_size(f) - sizeof(jd_lstore_block_footer_t));
+}
+
+static bool block_valid(jd_lstore_file_t *f) {
+    if (f->block->block_magic0 == f->block_magic0 &&
+        block_footer(f)->block_magic1 == f->block_magic1) {
+        if (jd_crc32(f->block, block_size(f) - 4) == block_footer(f)->crc32)
+            return 1;
+        return 0;
+    } else {
+        return 0;
+    }
+}
+
+static int read_block(jd_lstore_file_t *f, uint32_t idx) {
+    int sh = f->block_shift - SECTOR_SHIFT;
+    JD_ASSERT(idx < f->data_blocks);
+    read_sectors(f, (f->header_blocks + idx) << sh, f->block, 1 << sh);
+    if (!block_valid(f)) {
+        f->block->block_magic0 = 0;
+        f->block->generation = 0;
+        f->block->timestamp = 0;
+        return -1;
+    }
+    return 0;
+}
+
+static void write_block(jd_lstore_file_t *f, uint32_t idx) {
+    int sh = f->block_shift - SECTOR_SHIFT;
+    JD_ASSERT(idx < f->data_blocks);
+    write_sectors(f, (f->header_blocks + idx) << sh, f->block_alt, 1 << sh);
+}
+
+static bool block_lt(jd_lstore_block_header_t *a, jd_lstore_block_header_t *b) {
+    return a->generation < b->generation ||
+           (a->generation == b->generation && a->timestamp < b->timestamp);
+}
+
+static void find_boundry(jd_lstore_file_t *f) {
+    int l = 0;
+    int r = f->data_blocks - 1;
+    read_block(f, l);
+    jd_lstore_block_header_t start_hd = *f->block;
+    if (!start_hd.block_magic0) {
+        f->block_generation = 1;
+        f->block_ptr = 0;
+        return;
+    }
+
+    // inv: bl[0] <= bl[l]
+    // inv: bl[r+1] <= bl[0]
+    while (l < r) {
+        int m = (l + r) / 2 + 1;
+        // inv: l < m <= r
+        read_block(f, m);
+        if (block_lt(&start_hd, f->block)) {
+            l = m;
+        } else {
+            r = m - 1;
+        }
+    }
+
+    read_block(f, l);
+    f->block_generation = f->block->generation + 1;
+    JD_ASSERT(f->block_generation < 0xffffffff);
+    if (l + 1 == f->block_ptr)
+        f->block_ptr = 0;
+    else
+        f->block_ptr = l + 1;
+}
+
+static uint32_t random_magic(void) {
+    for (;;) {
+        uint32_t r = jd_random();
+        if (r != 0 && (r + 1) != 0)
+            return r;
+    }
+}
+
+static void fill_devinfo(jd_lstore_device_info_t *hd) {
+    memset(hd, 0, sizeof(*hd));
+    hd->device_id = jd_device_id();
+    STRCPY(hd->firmware_name, app_dev_class_name);
+    STRCPY(hd->firmware_version, app_fw_version);
+}
+
 static void mount_log(jd_lstore_file_t *f, const char *name) {
-    jd_lstore_ctx_t *ctx = f->parent;
-    read_log(f, 0, ctx->tmpbuf, 1);
-    jd_lstore_main_header_t *hd = (void *)ctx->tmpbuf;
+    jd_lstore_main_header_t *hd = jd_alloc(SECTOR_SIZE);
+    read_sectors(f, 0, hd, 1);
     if (!validate_header(f, hd)) {
-        memset(ctx->tmpbuf, 0, SECTOR_SIZE);
+        memset(hd, 0, SECTOR_SIZE);
         hd->magic0 = JD_LSTORE_MAGIC0;
         hd->magic1 = JD_LSTORE_MAGIC1;
         hd->version = JD_LSTORE_VERSION;
@@ -180,23 +256,155 @@ static void mount_log(jd_lstore_file_t *f, const char *name) {
         hd->sectors_per_block = (1 << 3);
         f->block_shift = 3 + SECTOR_SHIFT;
         hd->num_blocks = f->size >> f->block_shift;
-        f->num_blocks = hd->num_blocks;
-        hd->block_magic0 = jd_random();
-        hd->block_magic1 = jd_random();
-        hd->device_id = jd_device_id();
-        STRCPY(hd->firmware_name, app_dev_class_name);
-        STRCPY(hd->firmware_version, app_fw_version);
+        hd->block_magic0 = random_magic();
+        hd->block_magic1 = random_magic();
+        fill_devinfo(&hd->devinfo);
         STRCPY(hd->purpose, name);
         LOG("writing new header for '%s'", name);
-        write_log(f, 0, hd, 1);
+        write_sectors(f, 0, hd, 1);
+        if (!validate_header(f, hd))
+            jd_panic();
     }
 
+    f->header_blocks = hd->header_blocks;
+    f->data_blocks = hd->num_blocks - f->header_blocks;
+    f->block_magic0 = hd->block_magic0;
+    f->block_magic1 = hd->block_magic1;
+
     hd->purpose[sizeof(hd->purpose) - 1] = 0;
-    LOG("mounted '%s' (%dkB) sh=%d", hd->purpose, f->num_blocks << f->block_shift >> 10,
+    LOG("mounted '%s' (%dkB) shift=%d", hd->purpose, f->data_blocks << f->block_shift >> 10,
         f->block_shift);
+
+    jd_free(hd);
+    f->block = jd_alloc(block_size(f));
+
+    find_boundry(f);
+
+    // prep block for writing
+    f->block->block_magic0 = f->block_magic0;
+    block_footer(f)->block_magic1 = f->block_magic1;
+
+    f->block_alt = jd_alloc(block_size(f));
+    memcpy(f->block_alt, f->block, block_size(f));
+
+    LOG("generation %d (ptr=%d)", f->block_generation, f->block_ptr);
 }
 
-void jd_init_lstore(void) {
+static int request_flush(jd_lstore_file_t *f) {
+    JD_ASSERT(f->data_ptr != 0);
+    if (f->needs_flushing)
+        return -1;
+    jd_lstore_block_header_t *tmp = f->block;
+    f->block = f->block_alt;
+    f->block = tmp;
+    f->needs_flushing = 1;
+    LOG("flushing %d/%d @%d", f->data_ptr, block_size(f) - JD_LSTORE_BLOCK_OVERHEAD,
+        f - f->parent->logs);
+    f->data_ptr = 0;
+    return 0;
+}
+
+static void flush_to_disk(jd_lstore_file_t *f) {
+    NOT_IRQ();
+
+    int needs_flushing = 0;
+
+    target_disable_irq();
+    if (f->data_ptr != 0 && !f->needs_flushing)
+        request_flush(f);
+    if (f->needs_flushing) {
+        JD_ASSERT(f->needs_flushing == 1);
+        f->needs_flushing = 2;
+        needs_flushing = 1;
+    }
+    target_enable_irq();
+
+    if (!needs_flushing)
+        return;
+
+    block_alt_footer(f)->crc32 = jd_crc32(f->block_alt, block_size(f) - 4);
+    write_block(f, f->block_ptr++);
+    // clear it for future use
+    memset(f->block_alt->data, 0, block_size(f) - JD_LSTORE_BLOCK_OVERHEAD);
+
+    if (f->block_ptr >= f->data_blocks) {
+        jd_lstore_main_header_t *hd = jd_alloc(SECTOR_SIZE);
+        read_sectors(f, 0, hd, 1);
+        hd->num_rewrites++;
+        LOG("bumping rewrites to %d", hd->num_rewrites);
+        write_sectors(f, 0, hd, 1);
+        f->block_ptr = 0;
+        jd_free(hd);
+    }
+
+    f->needs_flushing = 0;
+}
+
+void jd_lstore_process(void) {
+    jd_lstore_ctx_t *ctx = ls_ctx;
+
+    int force = jd_should_sample_ms(&ctx->flush_timer, JD_LSTORE_FLUSH_SECONDS * 1000);
+
+    for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i) {
+        jd_lstore_file_t *lf = &ctx->logs[i];
+        if (lf->needs_flushing || force)
+            flush_to_disk(lf);
+    }
+}
+
+int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned datasize) {
+    jd_lstore_ctx_t *ctx = ls_ctx;
+    JD_ASSERT(logidx < JD_LSTORE_NUM_FILES);
+    jd_lstore_file_t *f = &ctx->logs[logidx];
+
+    jd_lstore_entry_t ent = {.type = type, .size = datasize};
+    JD_ASSERT(ent.type == type);
+    JD_ASSERT(ent.size == datasize);
+
+    int res = 0;
+
+    target_disable_irq();
+
+    for (;;) {
+        if (f->data_ptr == 0) {
+            // starting new block
+            f->block->timestamp = now_ms_long;
+            f->block->generation = f->block_generation;
+        }
+
+        int64_t delta = now_ms_long - f->block->timestamp;
+
+        if (delta < 0) {
+            LOG("time went back!");
+            f->block_generation++;
+            // need flush
+        } else {
+            uint32_t new_data_ptr = f->data_ptr + JD_LSTORE_ENTRY_HEADER_SIZE + datasize;
+            if (delta > 0xffff || new_data_ptr > block_size(f) - JD_LSTORE_BLOCK_OVERHEAD) {
+                // need flush
+            } else {
+                // normal path
+                ent.tdelta = delta;
+                uint8_t *dst = &f->block->data[f->data_ptr];
+                memcpy(dst, &ent, sizeof(ent));
+                if (datasize)
+                    memcpy(dst + JD_LSTORE_ENTRY_HEADER_SIZE, data, datasize);
+                f->data_ptr = new_data_ptr;
+                break;
+            }
+        }
+
+        res = request_flush(f);
+        if (res)
+            break;
+    }
+
+    target_enable_irq();
+
+    return res;
+}
+
+void jd_lstore_init(void) {
     jd_lstore_ctx_t *ctx = jd_alloc(sizeof(*ctx));
     ls_ctx = ctx;
 
@@ -211,11 +419,11 @@ void jd_init_lstore(void) {
         LOG("mounted! %dMB", kb >> 10);
     }
 
-    list_files(ctx); // TODO remove me
+    // list_files(ctx);
 
     FIL *fil = jd_alloc(sizeof(FIL));
 
-    for (int i = 0; i < NUM_LOGS; ++i) {
+    for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i) {
         jd_lstore_file_t *lf = &ctx->logs[i];
         lf->parent = ctx;
         char *fn = jd_sprintf_a("0:/LOG_%d.JDL", i);
@@ -224,7 +432,7 @@ void jd_init_lstore(void) {
 
         int contchk = FR_NO_FILE;
 
-        if (fil->obj.objsize >= LOG_SIZE) {
+        if (fil->obj.objsize >= JD_LSTORE_FILE_SIZE) {
             contchk = check_contiguous_file(fil);
         }
 
@@ -234,7 +442,7 @@ void jd_init_lstore(void) {
             LOG("will create r=%d st=%d sz=%d", contchk, fil->obj.sclust, fil->obj.objsize);
             CHK(f_close(fil));
             CHK(f_open(fil, fn, FA_CREATE_ALWAYS | FA_READ | FA_WRITE));
-            CHK(f_expand(fil, LOG_SIZE, 1));
+            CHK(f_expand(fil, JD_LSTORE_FILE_SIZE, 1));
             st = "created";
         }
 
@@ -250,4 +458,8 @@ void jd_init_lstore(void) {
     jd_free(fil);
 
     mount_log(&ctx->logs[0], "packets and serial");
+
+    jd_lstore_device_info_t info;
+    fill_devinfo(&info);
+    jd_lstore_append(0, JD_LSTORE_TYPE_DEVINFO, &info, sizeof(info));
 }

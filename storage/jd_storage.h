@@ -1,0 +1,76 @@
+#pragma once
+
+#include "jd_protocol.h"
+
+// config
+#define JD_LSTORE_FLUSH_SECONDS 5
+#define JD_LSTORE_FILE_SIZE (16 * 1024 * 1024)
+#define JD_LSTORE_NUM_FILES 1
+
+// user-facing functions
+void jd_lstore_init(void);
+void jd_lstore_process(void);
+int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned datasize);
+
+#define JD_LSTORE_TYPE_DEVINFO 0x01
+#define JD_LSTORE_TYPE_DMESG 0x02
+#define JD_LSTORE_TYPE_LOG 0x03
+#define JD_LSTORE_TYPE_JD_FRAME 0x04
+
+// file format
+#define JD_LSTORE_MAGIC0 0x0a4c444a
+#define JD_LSTORE_MAGIC1 0xb5d1841e
+#define JD_LSTORE_VERSION 2
+
+#define JD_LSTORE_BLOCK_OVERHEAD                                                                   \
+    (sizeof(jd_lstore_block_header_t) + sizeof(jd_lstore_block_footer_t))
+
+#define JD_LSTORE_ENTRY_HEADER_SIZE 4
+
+typedef struct {
+    uint64_t device_id;
+    char firmware_name[64];
+    char firmware_version[32];
+    uint8_t reserved[32];
+} jd_lstore_device_info_t;
+
+typedef struct {
+    uint32_t magic0;
+    uint32_t magic1;
+    uint32_t version;
+    uint32_t sector_size;       // currently always 512
+    uint32_t sectors_per_block; // typically 8
+    uint32_t header_blocks;     // typically 1
+    uint32_t num_blocks;        // including header block(s)
+    uint32_t num_rewrites;      // how many times the whole log was rewritten (wrapped-around)
+    uint32_t block_magic0;      // used in all blocks in this file
+    uint32_t block_magic1;      // used in all blocks in this file
+    uint32_t reserved[6];
+
+    // meta-data about device
+    jd_lstore_device_info_t devinfo;
+
+    // meta-data about the log file
+    char purpose[32];
+    char comment[64];
+    uint8_t reserved_log[32];
+} jd_lstore_main_header_t;
+
+typedef struct {
+    uint32_t block_magic0;
+    uint32_t generation;
+    uint64_t timestamp; // in ms
+    uint8_t data[0];
+} jd_lstore_block_header_t;
+
+typedef struct {
+    uint32_t block_magic1;
+    uint32_t crc32;
+} jd_lstore_block_footer_t;
+
+typedef struct {
+    uint8_t type;
+    uint8_t size;    // of 'data'
+    uint16_t tdelta; // wrt to block timestamp
+    uint8_t data[0];
+} jd_lstore_entry_t;
