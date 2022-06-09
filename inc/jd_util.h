@@ -14,7 +14,10 @@ uint32_t jd_random_around(uint32_t v);
 uint32_t jd_random(void);
 void jd_seed_random(uint32_t s);
 uint32_t jd_hash_fnv1a(const void *data, unsigned len);
+// CRC-16-CCITT polynomial 0x1021
 uint16_t jd_crc16(const void *data, uint32_t size);
+// CRC-32 ISO 3309 polynomial 0x04C11DB7
+uint32_t jd_crc32(const void *data, uint32_t size);
 int jd_shift_frame(jd_frame_t *frame);
 void jd_reset_frame(jd_frame_t *frame);
 void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service_cmd,
