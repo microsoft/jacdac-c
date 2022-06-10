@@ -11,6 +11,7 @@
 void jd_lstore_init(void);
 void jd_lstore_process(void);
 int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned datasize);
+int jd_lstore_append_frag(unsigned logidx, unsigned type, const void *data, unsigned datasize);
 
 #define JD_LSTORE_TYPE_DEVINFO 0x01
 #define JD_LSTORE_TYPE_DMESG 0x02
@@ -20,7 +21,7 @@ int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned 
 // file format
 #define JD_LSTORE_MAGIC0 0x0a4c444a
 #define JD_LSTORE_MAGIC1 0xb5d1841e
-#define JD_LSTORE_VERSION 2
+#define JD_LSTORE_VERSION 5
 
 #define JD_LSTORE_BLOCK_OVERHEAD                                                                   \
     (sizeof(jd_lstore_block_header_t) + sizeof(jd_lstore_block_footer_t))

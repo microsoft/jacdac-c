@@ -11,6 +11,8 @@
 #define SECTOR_SIZE (1 << SECTOR_SHIFT)
 
 #define LOG(msg, ...) DMESG("sd: " msg, ##__VA_ARGS__)
+// #define LOGV(msg, ...) DMESG("sd: " msg, ##__VA_ARGS__)
+#define LOGV JD_NOLOG
 #define CHK JD_CHK
 
 STATIC_ASSERT(sizeof(jd_lstore_main_header_t) <= SECTOR_SIZE);
@@ -162,6 +164,7 @@ static inline jd_lstore_block_footer_t *block_alt_footer(jd_lstore_file_t *f) {
 }
 
 static bool block_valid(jd_lstore_file_t *f) {
+    LOGV("bl %x %x", f->block->block_magic0, f->block_magic0);
     if (f->block->block_magic0 == f->block_magic0 &&
         block_footer(f)->block_magic1 == f->block_magic1) {
         if (jd_crc32(f->block, block_size(f) - 4) == block_footer(f)->crc32)
@@ -177,10 +180,13 @@ static int read_block(jd_lstore_file_t *f, uint32_t idx) {
     JD_ASSERT(idx < f->data_blocks);
     read_sectors(f, (f->header_blocks + idx) << sh, f->block, 1 << sh);
     if (!block_valid(f)) {
+        LOGV("invalid %d", idx);
         f->block->block_magic0 = 0;
         f->block->generation = 0;
         f->block->timestamp = 0;
         return -1;
+    } else {
+        LOGV("valid %d", idx);
     }
     return 0;
 }
@@ -202,6 +208,7 @@ static void find_boundry(jd_lstore_file_t *f) {
     read_block(f, l);
     jd_lstore_block_header_t start_hd = *f->block;
     if (!start_hd.block_magic0) {
+        LOG("new file");
         f->block_generation = 1;
         f->block_ptr = 0;
         return;
@@ -213,6 +220,7 @@ static void find_boundry(jd_lstore_file_t *f) {
         int m = (l + r) / 2 + 1;
         // inv: l < m <= r
         read_block(f, m);
+        LOGV("%x < %x ? ", start_hd.generation, f->block->generation);
         if (block_lt(&start_hd, f->block)) {
             l = m;
         } else {
@@ -254,6 +262,7 @@ static void mount_log(jd_lstore_file_t *f, const char *name) {
         hd->version = JD_LSTORE_VERSION;
         hd->sector_size = SECTOR_SIZE;
         hd->sectors_per_block = (1 << 3);
+        hd->header_blocks = 1;
         f->block_shift = 3 + SECTOR_SHIFT;
         hd->num_blocks = f->size >> f->block_shift;
         hd->block_magic0 = random_magic();
@@ -281,6 +290,7 @@ static void mount_log(jd_lstore_file_t *f, const char *name) {
     find_boundry(f);
 
     // prep block for writing
+    memset(f->block, 0, block_size(f));
     f->block->block_magic0 = f->block_magic0;
     block_footer(f)->block_magic1 = f->block_magic1;
 
@@ -296,7 +306,7 @@ static int request_flush(jd_lstore_file_t *f) {
         return -1;
     jd_lstore_block_header_t *tmp = f->block;
     f->block = f->block_alt;
-    f->block = tmp;
+    f->block_alt = tmp;
     f->needs_flushing = 1;
     LOG("flushing %d/%d @%d", f->data_ptr, block_size(f) - JD_LSTORE_BLOCK_OVERHEAD,
         f - f->parent->logs);
@@ -323,6 +333,7 @@ static void flush_to_disk(jd_lstore_file_t *f) {
         return;
 
     block_alt_footer(f)->crc32 = jd_crc32(f->block_alt, block_size(f) - 4);
+    LOGV("writing block %d g=%d", f->block_ptr, f->block_alt->generation);
     write_block(f, f->block_ptr++);
     // clear it for future use
     memset(f->block_alt->data, 0, block_size(f) - JD_LSTORE_BLOCK_OVERHEAD);
@@ -350,6 +361,18 @@ void jd_lstore_process(void) {
         if (lf->needs_flushing || force)
             flush_to_disk(lf);
     }
+}
+
+int jd_lstore_append_frag(unsigned logidx, unsigned type, const void *data, unsigned datasize) {
+    while (datasize > 0xff) {
+        int r = jd_lstore_append(logidx, type, data, 0xff);
+        if (r)
+            return r;
+        datasize -= 0xff;
+        data = (const uint8_t *)data + 0xff;
+    }
+
+    return jd_lstore_append(logidx, type, data, datasize);
 }
 
 int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned datasize) {
@@ -395,8 +418,10 @@ int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned 
         }
 
         res = request_flush(f);
-        if (res)
+        if (res) {
+            // TODO store that there was overflow
             break;
+        }
     }
 
     target_enable_irq();
