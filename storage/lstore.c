@@ -379,6 +379,8 @@ int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned 
     jd_lstore_ctx_t *ctx = ls_ctx;
     JD_ASSERT(logidx < JD_LSTORE_NUM_FILES);
     jd_lstore_file_t *f = &ctx->logs[logidx];
+    if (!ctx || !f->block)
+        return -10;
 
     jd_lstore_entry_t ent = {.type = type, .size = datasize};
     JD_ASSERT(ent.type == type);
@@ -427,6 +429,10 @@ int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned 
     target_enable_irq();
 
     return res;
+}
+
+bool jd_lstore_is_enabled(void) {
+    return ls_ctx && ls_ctx->logs[0].block;
 }
 
 void jd_lstore_init(void) {

@@ -12,6 +12,7 @@ void jd_lstore_init(void);
 void jd_lstore_process(void);
 int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned datasize);
 int jd_lstore_append_frag(unsigned logidx, unsigned type, const void *data, unsigned datasize);
+bool jd_lstore_is_enabled(void);
 
 #define JD_LSTORE_TYPE_DEVINFO 0x01
 #define JD_LSTORE_TYPE_DMESG 0x02
