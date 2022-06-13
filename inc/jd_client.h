@@ -5,6 +5,7 @@
 
 #include "jd_protocol.h"
 #include "jd_pipes.h"
+#include "jacdac/dist/c/rolemanager.h"
 
 // An announce packet was first spotted and a device was created (jd_device_t, jd_packet_t)
 #define JD_CLIENT_EV_DEVICE_CREATED 0x0001
@@ -129,6 +130,9 @@ void jd_role_free_all(void);
 // both jd_role_alloc() and jd_role_free*() generate JD_CLIENT_EV_ROLE_CHANGED (now)
 // a freshly created role will typically be bound on next auto-bind
 jd_role_t *jd_role_by_service(jd_device_service_t *serv);
+
+unsigned rolemgr_serialized_role_size(jd_role_t *r);
+jd_role_manager_roles_t *rolemgr_serialize_role(jd_role_t *r);
 
 // call from app_init_services()
 void jd_role_manager_init(void);

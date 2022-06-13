@@ -104,11 +104,26 @@ static jd_role_t *rolemgr_lookup(srv_t *state, const char *name, int name_len) {
     return NULL;
 }
 
+unsigned rolemgr_serialized_role_size(jd_role_t *r) {
+    return offsetof(jd_role_manager_roles_t, role) + strlen(r->name);
+}
+
+jd_role_manager_roles_t *rolemgr_serialize_role(jd_role_t *r) {
+    jd_role_manager_roles_t *tmp = jd_alloc(rolemgr_serialized_role_size(r));
+    if (r->service) {
+        tmp->device_id = jd_service_parent(r->service)->device_identifier;
+        tmp->service_idx = r->service->service_index;
+    }
+    tmp->service_class = r->service_class;
+    memcpy(tmp->role, r->name, strlen(r->name));
+    return tmp;
+}
+
 void rolemgr_process(srv_t *state) {
     while (state->list_ptr) {
         jd_role_t *r = state->list_ptr;
 
-        unsigned sz = offsetof(jd_role_manager_roles_t, role) + strlen(r->name);
+        unsigned sz = rolemgr_serialized_role_size(r);
         int err = jd_opipe_check_space(&state->list_pipe, sz);
         if (err == JD_PIPE_TRY_AGAIN)
             break;
@@ -117,12 +132,7 @@ void rolemgr_process(srv_t *state) {
             jd_opipe_close(&state->list_pipe);
             break;
         }
-
-        jd_role_manager_roles_t *tmp = jd_alloc(sz);
-        tmp->device_id = r->service ? jd_service_parent(r->service)->device_identifier : 0;
-        tmp->service_idx = r->service ? r->service->service_index : 0;
-        tmp->service_class = r->service_class;
-        memcpy(tmp->role, r->name, strlen(r->name));
+        jd_role_manager_roles_t *tmp = rolemgr_serialize_role(r);
         err = jd_opipe_write(&state->list_pipe, tmp, sz);
         JD_ASSERT(err == 0);
         jd_free(tmp);
