@@ -112,24 +112,25 @@ static void write_sectors(jd_lstore_file_t *f, uint32_t sector_addr, const void 
 static bool validate_header(jd_lstore_file_t *f, jd_lstore_main_header_t *hd) {
     if (hd->magic0 == JD_LSTORE_MAGIC0 && hd->magic1 == JD_LSTORE_MAGIC1) {
         if (hd->version != JD_LSTORE_VERSION) {
-            LOG("wrong version %x", hd->version);
+            LOG("wrong version %x", (unsigned)hd->version);
             return 0;
         }
         if (hd->sector_size != SECTOR_SIZE) {
-            LOG("invalid sector size %d", hd->sector_size);
+            LOG("invalid sector size %u", (unsigned)hd->sector_size);
             return 0;
         }
 
         if (hd->sectors_per_block * hd->num_blocks > f->size / SECTOR_SIZE) {
-            LOG("file too small for %d*%d sectors", hd->sectors_per_block, hd->num_blocks);
+            LOG("file too small for %u*%u sectors", (unsigned)hd->sectors_per_block,
+                (unsigned)hd->num_blocks);
             return 0;
         }
 
         int sh = 0;
-        while ((1 << sh) < hd->sectors_per_block)
+        while ((1U << sh) < hd->sectors_per_block)
             sh++;
-        if (hd->sectors_per_block > 8 || (1 << sh) != hd->sectors_per_block) {
-            LOG("invalid sector/block %d", hd->sectors_per_block);
+        if (hd->sectors_per_block > 8 || (1U << sh) != hd->sectors_per_block) {
+            LOG("invalid sector/block %u", (unsigned)hd->sectors_per_block);
             return 0;
         }
 
@@ -231,7 +232,7 @@ static void find_boundry(jd_lstore_file_t *f) {
     read_block(f, l);
     f->block_generation = f->block->generation + 1;
     JD_ASSERT(f->block_generation < 0xffffffff);
-    if (l + 1 == f->block_ptr)
+    if (l + 1 == (int)f->block_ptr)
         f->block_ptr = 0;
     else
         f->block_ptr = l + 1;
@@ -281,8 +282,8 @@ static void mount_log(jd_lstore_file_t *f, const char *name) {
     f->block_magic1 = hd->block_magic1;
 
     hd->purpose[sizeof(hd->purpose) - 1] = 0;
-    LOG("mounted '%s' (%dkB) shift=%d", hd->purpose, f->data_blocks << f->block_shift >> 10,
-        f->block_shift);
+    LOG("mounted '%s' (%ukB) shift=%u", hd->purpose,
+        (unsigned)(f->data_blocks << f->block_shift >> 10), (unsigned)f->block_shift);
 
     jd_free(hd);
     f->block = jd_alloc(block_size(f));
@@ -297,7 +298,7 @@ static void mount_log(jd_lstore_file_t *f, const char *name) {
     f->block_alt = jd_alloc(block_size(f));
     memcpy(f->block_alt, f->block, block_size(f));
 
-    LOG("generation %d (ptr=%d)", f->block_generation, f->block_ptr);
+    LOG("generation %u (ptr=%u)", (unsigned)f->block_generation, (unsigned)f->block_ptr);
 }
 
 static int request_flush(jd_lstore_file_t *f) {
@@ -308,8 +309,8 @@ static int request_flush(jd_lstore_file_t *f) {
     f->block = f->block_alt;
     f->block_alt = tmp;
     f->needs_flushing = 1;
-    LOG("flushing %d/%d @%d", f->data_ptr, block_size(f) - JD_LSTORE_BLOCK_OVERHEAD,
-        f - f->parent->logs);
+    LOG("flushing %u/%u @%d", (unsigned)f->data_ptr,
+        (unsigned)(block_size(f) - JD_LSTORE_BLOCK_OVERHEAD), f - f->parent->logs);
     f->data_ptr = 0;
     return 0;
 }
@@ -342,7 +343,7 @@ static void flush_to_disk(jd_lstore_file_t *f) {
         jd_lstore_main_header_t *hd = jd_alloc(SECTOR_SIZE);
         read_sectors(f, 0, hd, 1);
         hd->num_rewrites++;
-        LOG("bumping rewrites to %d", hd->num_rewrites);
+        LOG("bumping rewrites to %u", (unsigned)hd->num_rewrites);
         write_sectors(f, 0, hd, 1);
         f->block_ptr = 0;
         jd_free(hd);
@@ -446,8 +447,8 @@ void jd_lstore_init(void) {
         DMESG("failed to mount card (%d)", res);
         jd_panic();
     } else {
-        uint32_t kb = (ctx->fs.n_fatent >> 1) * ctx->fs.csize;
-        LOG("mounted! %dMB", kb >> 10);
+        unsigned kb = (ctx->fs.n_fatent >> 1) * ctx->fs.csize;
+        LOG("mounted! %uMB", kb >> 10);
     }
 
     // list_files(ctx);
@@ -470,14 +471,15 @@ void jd_lstore_init(void) {
         const char *st = "OK";
 
         if (contchk != 0) {
-            LOG("will create r=%d st=%d sz=%d", contchk, fil->obj.sclust, fil->obj.objsize);
+            LOG("will create r=%d st=%u sz=%u", contchk, (unsigned)fil->obj.sclust,
+                (unsigned)fil->obj.objsize);
             CHK(f_close(fil));
             CHK(f_open(fil, fn, FA_CREATE_ALWAYS | FA_READ | FA_WRITE));
             CHK(f_expand(fil, JD_LSTORE_FILE_SIZE, 1));
             st = "created";
         }
 
-        LOG("%s st=%d sz=%d %s", fn, fil->obj.sclust, fil->obj.objsize, st);
+        LOG("%s st=%u sz=%u %s", fn, (unsigned)fil->obj.sclust, (unsigned)fil->obj.objsize, st);
 
         lf->size = fil->obj.objsize;
         lf->sector_off = ctx->fs.database + ctx->fs.csize * (fil->obj.sclust - 2);
