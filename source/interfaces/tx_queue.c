@@ -30,7 +30,7 @@ int jd_send_frame_raw(jd_frame_t *f) {
         OVF_ERROR("loopback rx ovf");
     int r = jd_queue_push(send_queue, f);
     if (r)
-        OVF_ERROR("send ovf");
+        OVF_ERROR("frm send ovf");
     jd_packet_ready();
     return r;
 }

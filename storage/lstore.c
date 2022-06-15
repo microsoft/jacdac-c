@@ -355,6 +355,9 @@ static void flush_to_disk(jd_lstore_file_t *f) {
 void jd_lstore_process(void) {
     jd_lstore_ctx_t *ctx = ls_ctx;
 
+    if (!ctx || !ctx->logs[0].block)
+        return;
+
     int force = jd_should_sample_ms(&ctx->flush_timer, JD_LSTORE_FLUSH_SECONDS * 1000);
 
     for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i) {
