@@ -3,9 +3,9 @@
 #include "jd_protocol.h"
 
 // config
-#define JD_LSTORE_FLUSH_SECONDS 5
-#define JD_LSTORE_FILE_SIZE (16 * 1024 * 1024)
-#define JD_LSTORE_NUM_FILES 1
+#define JD_LSTORE_FLUSH_SECONDS 10
+#define JD_LSTORE_FILE_SIZE (65 * 1024 * 1024)
+#define JD_LSTORE_NUM_FILES 2
 
 // user-facing functions
 void jd_lstore_init(void);

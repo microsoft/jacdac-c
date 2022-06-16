@@ -106,6 +106,7 @@ static void read_sectors(jd_lstore_file_t *f, uint32_t sector_addr, void *dst,
 static void write_sectors(jd_lstore_file_t *f, uint32_t sector_addr, const void *src,
                           uint32_t num_sectors) {
     jd_lstore_ctx_t *ctx = f->parent;
+    // LOG("wr sect %x %d", (unsigned)(f->sector_off + sector_addr), (int)num_sectors);
     CHK(ff_disk_write(ctx->fs.pdrv, src, f->sector_off + sector_addr, num_sectors));
 }
 
@@ -253,7 +254,7 @@ static void fill_devinfo(jd_lstore_device_info_t *hd) {
     STRCPY(hd->firmware_version, app_fw_version);
 }
 
-static void mount_log(jd_lstore_file_t *f, const char *name) {
+static void mount_log(jd_lstore_file_t *f, const char *name, int bl_shift) {
     jd_lstore_main_header_t *hd = jd_alloc(SECTOR_SIZE);
     read_sectors(f, 0, hd, 1);
     if (!validate_header(f, hd)) {
@@ -262,9 +263,9 @@ static void mount_log(jd_lstore_file_t *f, const char *name) {
         hd->magic1 = JD_LSTORE_MAGIC1;
         hd->version = JD_LSTORE_VERSION;
         hd->sector_size = SECTOR_SIZE;
-        hd->sectors_per_block = (1 << 3);
+        hd->sectors_per_block = 1 << bl_shift;
         hd->header_blocks = 1;
-        f->block_shift = 3 + SECTOR_SHIFT;
+        f->block_shift = bl_shift + SECTOR_SHIFT;
         hd->num_blocks = f->size >> f->block_shift;
         hd->block_magic0 = random_magic();
         hd->block_magic1 = random_magic();
@@ -462,6 +463,7 @@ void jd_lstore_init(void) {
         jd_lstore_file_t *lf = &ctx->logs[i];
         lf->parent = ctx;
         char *fn = jd_sprintf_a("0:/LOG_%d.JDL", i);
+        int is_created = 0;
 
         CHK(f_open(fil, fn, FA_OPEN_ALWAYS | FA_READ | FA_WRITE));
 
@@ -480,6 +482,7 @@ void jd_lstore_init(void) {
             CHK(f_open(fil, fn, FA_CREATE_ALWAYS | FA_READ | FA_WRITE));
             CHK(f_expand(fil, JD_LSTORE_FILE_SIZE, 1));
             st = "created";
+            is_created = 1;
         }
 
         LOG("%s st=%u sz=%u %s", fn, (unsigned)fil->obj.sclust, (unsigned)fil->obj.objsize, st);
@@ -489,13 +492,22 @@ void jd_lstore_init(void) {
 
         CHK(f_close(fil));
         jd_free(fn);
-    }
 
+        if (is_created) {
+            void *hd = jd_alloc(SECTOR_SIZE);
+            write_sectors(lf, 0, hd, 1); // clear header just in case
+            jd_free(hd);
+        }
+    }
+ 
     jd_free(fil);
 
-    mount_log(&ctx->logs[0], "packets and serial");
+    mount_log(&ctx->logs[0], "packets and serial", 3); // 4K
+    mount_log(&ctx->logs[1], "data log", 0);           // 0.5K
 
     jd_lstore_device_info_t info;
     fill_devinfo(&info);
-    jd_lstore_append(0, JD_LSTORE_TYPE_DEVINFO, &info, sizeof(info));
+
+    for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i)
+        jd_lstore_append(i, JD_LSTORE_TYPE_DEVINFO, &info, sizeof(info));
 }
