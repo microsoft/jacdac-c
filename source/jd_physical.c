@@ -117,6 +117,7 @@ static void rx_timeout(void) {
 }
 
 static void setup_rx_timeout(void) {
+    target_disable_irq();
     // It's possible this only gets executed after the entire reception process has finished.
     // In that case, we don't want to set the rx_timeout().
     if (status & JD_STATUS_RX_ACTIVE) {
@@ -131,6 +132,7 @@ static void setup_rx_timeout(void) {
     } else {
         set_tick_timer(0);
     }
+    target_enable_irq();
 }
 
 void jd_line_falling() {
