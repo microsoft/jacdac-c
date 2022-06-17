@@ -58,7 +58,7 @@ int jd_status_handle_packet(jd_packet_t *pkt);
      (_JD_CONCAT(JD_BLINK_DURATION_, duration) << 6))
 
 #define JD_BLINK_INFO(c) JD_BLINK(SLOW, 1, c)
-#define JD_BLINK_ERROR(c) JD_BLINK(FAST, 3, c)
+#define JD_BLINK_ERROR(c) JD_BLINK(FAST, 1, c)
 
 #define JD_BLINK_CONNECTED JD_BLINK(FAINT, 1, GREEN)
 #define JD_BLINK_IDENTIFY JD_BLINK(FAST, 7, BLUE)

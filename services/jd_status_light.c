@@ -315,6 +315,13 @@ void jd_status_init() {
 
 uint8_t jd_connected_blink = JD_BLINK_CONNECTED;
 
+#if 0
+static void do_pulse(int pin) {
+    pin_setup_output(pin);
+    pin_pulse(pin, 2);
+}
+#endif
+
 void jd_blink(uint8_t encoded) {
 #if 0
     pin_setup_output(PIN_AN);
@@ -322,6 +329,18 @@ void jd_blink(uint8_t encoded) {
 #endif
 
     status_ctx_t *state = &status_ctx;
+
+#if 0
+    if (_JD_BLINK_DURATION(encoded) != JD_BLINK_DURATION_FAINT) {
+        if (_JD_BLINK_COLOR(encoded) & 1)
+            do_pulse(PIN_LED_R);
+        if (_JD_BLINK_COLOR(encoded) & 2)
+            do_pulse(PIN_LED_G);
+        if (_JD_BLINK_COLOR(encoded) & 4)
+            do_pulse(PIN_LED_B);
+    }
+#endif
+
     for (unsigned i = 0; i < sizeof(state->queued_blinks); ++i) {
         if (state->queued_blinks[i] == encoded)
             return;
