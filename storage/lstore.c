@@ -728,8 +728,12 @@ void jd_lstore_panic_print_char(char ch) {
             f->data_ptr += JD_LSTORE_ENTRY_HEADER_SIZE + ctx->panic_char_ptr;
         }
 
-        int left = block_data_size(f) - f->data_ptr - JD_LSTORE_ENTRY_HEADER_SIZE - 16;
-        if (left < 0) {
+        // -8 is conservative
+        int left = block_data_size(f) - f->data_ptr - JD_LSTORE_ENTRY_HEADER_SIZE - 8;
+
+        // limit line breaking
+        int min_data_len = block_size(f) >> 5;
+        if (left < min_data_len) {
             flush_to_disk_in_panic(f);
             left = 0xff;
         }
