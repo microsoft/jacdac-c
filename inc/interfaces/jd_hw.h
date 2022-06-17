@@ -116,6 +116,16 @@ void spiflash_erase_32k(uint32_t addr);
 void spiflash_erase_64k(uint32_t addr);
 void spiflash_erase_chip(void);
 
+// SPI bit-bang driver
+void spi_bb_init(void);
+void spi_bb_rx(void *data, unsigned len);
+void spi_bb_tx(const void *data, unsigned len);
+static inline uint8_t spi_bb_byte(void) {
+    uint8_t b;
+    spi_bb_rx(&b, 1);
+    return b;
+}
+
 #endif
 
 #endif

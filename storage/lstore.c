@@ -2,6 +2,7 @@
 
 #include "ff/ff.h"
 #include "ff/diskio.h"
+#include "services/interfaces/jd_pins.h"
 
 #define NOT_IRQ()                                                                                  \
     if (target_in_irq())                                                                           \
@@ -41,6 +42,9 @@ typedef struct {
 typedef struct jd_lstore_ctx {
     FATFS fs;
     uint32_t flush_timer;
+    uint8_t panic_mode;
+    uint8_t panic_char_ptr;
+    uint8_t panic_max_char_ptr;
     jd_lstore_file_t logs[JD_LSTORE_NUM_FILES];
 } jd_lstore_ctx_t;
 
@@ -100,13 +104,31 @@ static void list_files(jd_lstore_ctx_t *ctx) {
 static void read_sectors(jd_lstore_file_t *f, uint32_t sector_addr, void *dst,
                          uint32_t num_sectors) {
     jd_lstore_ctx_t *ctx = f->parent;
+    JD_ASSERT(!ctx->panic_mode);
     CHK(ff_disk_read(ctx->fs.pdrv, dst, f->sector_off + sector_addr, num_sectors));
 }
+
+static int sd_write_sector(uint32_t addr, const void *blk);
 
 static void write_sectors(jd_lstore_file_t *f, uint32_t sector_addr, const void *src,
                           uint32_t num_sectors) {
     jd_lstore_ctx_t *ctx = f->parent;
     // LOG("wr sect %x %d", (unsigned)(f->sector_off + sector_addr), (int)num_sectors);
+    if (ctx->panic_mode == 1) {
+        while (num_sectors > 0) {
+            if (sd_write_sector(f->sector_off + sector_addr, src) != 0) {
+                ctx->panic_mode = 3;
+                return;
+            }
+            sector_addr++;
+            src = (const uint8_t *)src + 512;
+            num_sectors--;
+        }
+        return;
+    } else if (ctx->panic_mode) {
+        return;
+    }
+
     CHK(ff_disk_write(ctx->fs.pdrv, src, f->sector_off + sector_addr, num_sectors));
 }
 
@@ -153,8 +175,12 @@ static void strcpy_n(char *dst, size_t sz, const char *src) {
 
 #define STRCPY(buf, src) strcpy_n(buf, sizeof(buf), src)
 
-static inline uint32_t block_size(jd_lstore_file_t *f) {
+static inline unsigned block_size(jd_lstore_file_t *f) {
     return 1 << f->block_shift;
+}
+
+static inline unsigned block_data_size(jd_lstore_file_t *f) {
+    return block_size(f) - JD_LSTORE_BLOCK_OVERHEAD;
 }
 
 static inline jd_lstore_block_footer_t *block_footer(jd_lstore_file_t *f) {
@@ -310,10 +336,44 @@ static int request_flush(jd_lstore_file_t *f) {
     f->block = f->block_alt;
     f->block_alt = tmp;
     f->needs_flushing = 1;
-    LOG("flushing %u/%u @%d", (unsigned)f->data_ptr,
-        (unsigned)(block_size(f) - JD_LSTORE_BLOCK_OVERHEAD), f - f->parent->logs);
+    LOG("flushing %u/%u @%d", (unsigned)f->data_ptr, block_data_size(f), f - f->parent->logs);
     f->data_ptr = 0;
     return 0;
+}
+
+static void flush_to_disk_core(jd_lstore_file_t *f) {
+    block_alt_footer(f)->crc32 = jd_crc32(f->block_alt, block_size(f) - 4);
+    LOGV("writing block %d g=%d", f->block_ptr, f->block_alt->generation);
+    write_block(f, f->block_ptr++);
+    // clear it for future use
+    memset(f->block_alt->data, 0, block_data_size(f));
+
+    if (f->block_ptr >= f->data_blocks) {
+        if (!f->parent->panic_mode) {
+            jd_lstore_main_header_t *hd = jd_alloc(SECTOR_SIZE);
+            read_sectors(f, 0, hd, 1);
+            hd->num_rewrites++;
+            LOG("bumping rewrites to %u", (unsigned)hd->num_rewrites);
+            write_sectors(f, 0, hd, 1);
+            jd_free(hd);
+        }
+        f->block_ptr = 0;
+    }
+
+    f->needs_flushing = 0;
+}
+
+static void flush_to_disk_in_panic(jd_lstore_file_t *f) {
+    if (f->needs_flushing)
+        flush_to_disk_core(f);
+    if (f->data_ptr != 0 && !f->needs_flushing)
+        request_flush(f);
+    if (f->needs_flushing)
+        flush_to_disk_core(f);
+    f->parent->panic_char_ptr = 0;
+    f->parent->panic_max_char_ptr = 0;
+    f->block->timestamp = now_ms_long;
+    f->block->generation = f->block_generation;
 }
 
 static void flush_to_disk(jd_lstore_file_t *f) {
@@ -334,23 +394,7 @@ static void flush_to_disk(jd_lstore_file_t *f) {
     if (!needs_flushing)
         return;
 
-    block_alt_footer(f)->crc32 = jd_crc32(f->block_alt, block_size(f) - 4);
-    LOGV("writing block %d g=%d", f->block_ptr, f->block_alt->generation);
-    write_block(f, f->block_ptr++);
-    // clear it for future use
-    memset(f->block_alt->data, 0, block_size(f) - JD_LSTORE_BLOCK_OVERHEAD);
-
-    if (f->block_ptr >= f->data_blocks) {
-        jd_lstore_main_header_t *hd = jd_alloc(SECTOR_SIZE);
-        read_sectors(f, 0, hd, 1);
-        hd->num_rewrites++;
-        LOG("bumping rewrites to %u", (unsigned)hd->num_rewrites);
-        write_sectors(f, 0, hd, 1);
-        f->block_ptr = 0;
-        jd_free(hd);
-    }
-
-    f->needs_flushing = 0;
+    flush_to_disk_core(f);
 }
 
 void jd_lstore_process(void) {
@@ -378,6 +422,10 @@ int jd_lstore_append_frag(unsigned logidx, unsigned type, const void *data, unsi
     }
 
     return jd_lstore_append(logidx, type, data, datasize);
+}
+
+static jd_lstore_entry_t *block_curr_ptr(jd_lstore_file_t *f) {
+    return (void *)&f->block->data[f->data_ptr];
 }
 
 int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned datasize) {
@@ -410,15 +458,14 @@ int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned 
             // need flush
         } else {
             uint32_t new_data_ptr = f->data_ptr + JD_LSTORE_ENTRY_HEADER_SIZE + datasize;
-            if (delta > 0xffff || new_data_ptr > block_size(f) - JD_LSTORE_BLOCK_OVERHEAD) {
+            if (delta > 0xffff || new_data_ptr > block_data_size(f)) {
                 // need flush
             } else {
                 // normal path
                 ent.tdelta = delta;
-                uint8_t *dst = &f->block->data[f->data_ptr];
-                memcpy(dst, &ent, sizeof(ent));
+                memcpy(block_curr_ptr(f), &ent, sizeof(ent));
                 if (datasize)
-                    memcpy(dst + JD_LSTORE_ENTRY_HEADER_SIZE, data, datasize);
+                    memcpy(block_curr_ptr(f)->data, data, datasize);
                 f->data_ptr = new_data_ptr;
                 break;
             }
@@ -485,10 +532,11 @@ void jd_lstore_init(void) {
             is_created = 1;
         }
 
-        LOG("%s st=%u sz=%u %s", fn, (unsigned)fil->obj.sclust, (unsigned)fil->obj.objsize, st);
-
         lf->size = fil->obj.objsize;
         lf->sector_off = ctx->fs.database + ctx->fs.csize * (fil->obj.sclust - 2);
+
+        LOG("%s st=%u [%x] sz=%u %s", fn, (unsigned)fil->obj.sclust, (unsigned)lf->sector_off,
+            (unsigned)fil->obj.objsize, st);
 
         CHK(f_close(fil));
         jd_free(fn);
@@ -499,7 +547,7 @@ void jd_lstore_init(void) {
             jd_free(hd);
         }
     }
- 
+
     jd_free(fil);
 
     mount_log(&ctx->logs[0], "packets and serial", 3); // 4K
@@ -510,4 +558,190 @@ void jd_lstore_init(void) {
 
     for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i)
         jd_lstore_append(i, JD_LSTORE_TYPE_DEVINFO, &info, sizeof(info));
+}
+
+/*
+ * Dump to SD card in panic handler.
+ */
+
+// http://elm-chan.org/docs/mmc/mmc_e.html
+// http://chlazza.nfshost.com/sdcardinfo.html
+
+#define PANIC_LOG(msg, ...) DMESG("sdpanic: " msg, ##__VA_ARGS__)
+
+static int sd_get_resp(void) {
+    int max = 32;
+    while (max--) {
+        uint8_t r = spi_bb_byte();
+        if (r != 0xff)
+            return r;
+    }
+    return -1;
+}
+
+static int sd_send_cmd(uint8_t cmdid, uint32_t arg) {
+    uint8_t cmd[6];
+    cmd[0] = 0x40 + cmdid;
+    cmd[1] = arg >> 24;
+    cmd[2] = arg >> 16;
+    cmd[3] = arg >> 8;
+    cmd[4] = arg >> 0;
+    cmd[5] = jd_sd_crc7(cmd, 5);
+    spi_bb_tx(cmd, sizeof(cmd));
+    return sd_get_resp();
+}
+
+static int sd_read_data(void *dst, unsigned size) {
+    int max = 128;
+    while (max--) {
+        if (spi_bb_byte() == 0xfe) {
+            spi_bb_rx(dst, size);
+            uint16_t crc;
+            spi_bb_rx(&crc, 2);
+            if (crc == jd_sd_crc16(dst, size))
+                return 0;
+            return -2;
+        }
+    }
+    return -1;
+}
+
+static int sd_write_data(const void *data, unsigned size) {
+    // add some padding and send start token
+    spi_bb_tx("\xff\xff\xff\xff\xfe", 5);
+    spi_bb_tx(data, size);
+    uint16_t crc = jd_sd_crc16(data, size);
+    spi_bb_tx(&crc, 2);
+    return sd_get_resp();
+}
+
+static int sd_check(void) {
+    int err = -1;
+    pin_set(PIN_SD_CS, 0);
+    if (sd_send_cmd(9, 0) == 0) {
+        uint8_t csd[16];
+        if (sd_read_data(csd, sizeof(csd)) == 0)
+            err = 0;
+    }
+    pin_set(PIN_SD_CS, 1);
+    return err;
+}
+
+static int sd_wait_busy(void) {
+    int max = 10000;
+    while (max--) {
+        uint8_t b = spi_bb_byte();
+        if (b == 0xff)
+            return 0;
+        target_wait_us(20);
+    }
+    return -1001;
+}
+
+static int sd_write_sector(uint32_t addr, const void *blk) {
+    int err = -1000;
+    pin_set(PIN_SD_CS, 0);
+    if (sd_send_cmd(24, addr) == 0) {
+        int r = sd_write_data(blk, 512);
+        if (r != 0xe5) {
+            err = -r;
+        } else {
+            err = sd_wait_busy();
+        }
+    }
+    pin_set(PIN_SD_CS, 1);
+    return err;
+}
+
+void jd_lstore_panic_flush(void) {
+    jd_lstore_ctx_t *ctx = ls_ctx;
+    if (!ctx || ctx->panic_mode != 1)
+        return;
+    for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i) {
+        jd_lstore_file_t *lf = &ctx->logs[i];
+        if (i == 0 && ctx->panic_max_char_ptr > 0) {
+            // force entry close
+            jd_lstore_panic_print_char('\n');
+        }
+        flush_to_disk_in_panic(lf);
+    }
+}
+
+void jd_lstore_panic_print_char(char ch) {
+    jd_lstore_ctx_t *ctx = ls_ctx;
+    if (!ctx || ctx->panic_mode > 1 || ch == '\r')
+        return;
+
+    if (!ctx->panic_mode) {
+        ctx->panic_mode = 2;
+        PANIC_LOG("init start");
+        if (!ctx->logs[0].block) {
+            PANIC_LOG("lstore invalid");
+            return;
+        }
+        // wait a little for any SPI DMA activity to finish
+        target_wait_us(8 << 10);
+        // switch SPI to bit-bang mode
+        spi_bb_init();
+
+        pin_set(PIN_SD_CS, 1);
+        target_wait_us(1 << 10);
+
+        pin_set(PIN_SD_CS, 0);
+        int busy_cycles = 100;
+        while (busy_cycles-- > 0 && pin_get(PIN_SD_MISO) == 0) {
+            spi_bb_byte();
+            target_wait_us(1 << 10);
+        }
+        pin_set(PIN_SD_CS, 1);
+
+        if (busy_cycles < 0) {
+            PANIC_LOG("timeout busy");
+            return;
+        }
+
+        if (sd_check() != 0) {
+            PANIC_LOG("check failed");
+            return;
+        }
+
+        ctx->panic_mode = 1; // OK!
+
+        jd_lstore_panic_flush();
+
+        PANIC_LOG("init OK");
+    }
+
+    if (ctx->panic_mode != 1)
+        return;
+
+    jd_lstore_file_t *f = &ctx->logs[0];
+
+    bool is_endline = ch == '\n' && ctx->panic_char_ptr > 0;
+    bool needs_flush = ctx->panic_char_ptr >= ctx->panic_max_char_ptr;
+
+    if (needs_flush || is_endline) {
+        if (ctx->panic_max_char_ptr > 0) {
+            jd_lstore_entry_t ent = {
+                .type = JD_LSTORE_TYPE_PANIC_LOG, .size = ctx->panic_char_ptr, .tdelta = 0};
+            memcpy(block_curr_ptr(f), &ent, sizeof(ent));
+            f->data_ptr += JD_LSTORE_ENTRY_HEADER_SIZE + ctx->panic_char_ptr;
+        }
+
+        int left = block_data_size(f) - f->data_ptr - JD_LSTORE_ENTRY_HEADER_SIZE - 16;
+        if (left < 0) {
+            flush_to_disk_in_panic(f);
+            left = 0xff;
+        }
+        ctx->panic_char_ptr = 0;
+        ctx->panic_max_char_ptr = left > 0xf0 ? 0xf0 : left;
+    }
+
+    if (!is_endline)
+        block_curr_ptr(f)->data[ctx->panic_char_ptr++] = ch;
+}
+
+void jd_lstore_panic_print_str(const char *s) {
+    while (*s)
+        jd_lstore_panic_print_char(*s++);
 }

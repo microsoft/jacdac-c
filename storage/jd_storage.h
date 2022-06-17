@@ -14,10 +14,15 @@ int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned 
 int jd_lstore_append_frag(unsigned logidx, unsigned type, const void *data, unsigned datasize);
 bool jd_lstore_is_enabled(void);
 
+void jd_lstore_panic_print_char(char c);
+void jd_lstore_panic_print_str(const char *s);
+void jd_lstore_panic_flush(void);
+
 #define JD_LSTORE_TYPE_DEVINFO 0x01
 #define JD_LSTORE_TYPE_DMESG 0x02
 #define JD_LSTORE_TYPE_LOG 0x03
 #define JD_LSTORE_TYPE_JD_FRAME 0x04
+#define JD_LSTORE_TYPE_PANIC_LOG 0x05
 
 // file format
 #define JD_LSTORE_MAGIC0 0x0a4c444a
