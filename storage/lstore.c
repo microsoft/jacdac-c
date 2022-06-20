@@ -4,6 +4,12 @@
 #include "ff/diskio.h"
 #include "services/interfaces/jd_pins.h"
 
+#ifdef PIN_SD_CS
+#define JD_SD_PANIC 1
+#else
+#define JD_SD_PANIC 0
+#endif
+
 #define NOT_IRQ()                                                                                  \
     if (target_in_irq())                                                                           \
     jd_panic()
@@ -108,13 +114,16 @@ static void read_sectors(jd_lstore_file_t *f, uint32_t sector_addr, void *dst,
     CHK(ff_disk_read(ctx->fs.pdrv, dst, f->sector_off + sector_addr, num_sectors));
 }
 
+#if JD_SD_PANIC
 static int sd_write_sector(uint32_t addr, const void *blk);
+#endif
 
 static void write_sectors(jd_lstore_file_t *f, uint32_t sector_addr, const void *src,
                           uint32_t num_sectors) {
     jd_lstore_ctx_t *ctx = f->parent;
     // LOG("wr sect %x %d", (unsigned)(f->sector_off + sector_addr), (int)num_sectors);
     if (ctx->panic_mode == 1) {
+#if JD_SD_PANIC
         while (num_sectors > 0) {
             if (sd_write_sector(f->sector_off + sector_addr, src) != 0) {
                 ctx->panic_mode = 3;
@@ -124,6 +133,7 @@ static void write_sectors(jd_lstore_file_t *f, uint32_t sector_addr, const void 
             src = (const uint8_t *)src + 512;
             num_sectors--;
         }
+#endif
         return;
     } else if (ctx->panic_mode) {
         return;
@@ -363,19 +373,6 @@ static void flush_to_disk_core(jd_lstore_file_t *f) {
     f->needs_flushing = 0;
 }
 
-static void flush_to_disk_in_panic(jd_lstore_file_t *f) {
-    if (f->needs_flushing)
-        flush_to_disk_core(f);
-    if (f->data_ptr != 0 && !f->needs_flushing)
-        request_flush(f);
-    if (f->needs_flushing)
-        flush_to_disk_core(f);
-    f->parent->panic_char_ptr = 0;
-    f->parent->panic_max_char_ptr = 0;
-    f->block->timestamp = now_ms_long;
-    f->block->generation = f->block_generation;
-}
-
 static void flush_to_disk(jd_lstore_file_t *f) {
     NOT_IRQ();
 
@@ -567,7 +564,22 @@ void jd_lstore_init(void) {
 // http://elm-chan.org/docs/mmc/mmc_e.html
 // http://chlazza.nfshost.com/sdcardinfo.html
 
+#if JD_SD_PANIC
+
 #define PANIC_LOG(msg, ...) DMESG("sdpanic: " msg, ##__VA_ARGS__)
+
+static void flush_to_disk_in_panic(jd_lstore_file_t *f) {
+    if (f->needs_flushing)
+        flush_to_disk_core(f);
+    if (f->data_ptr != 0 && !f->needs_flushing)
+        request_flush(f);
+    if (f->needs_flushing)
+        flush_to_disk_core(f);
+    f->parent->panic_char_ptr = 0;
+    f->parent->panic_max_char_ptr = 0;
+    f->block->timestamp = now_ms_long;
+    f->block->generation = f->block_generation;
+}
 
 static int sd_get_resp(void) {
     int max = 32;
@@ -749,3 +761,5 @@ void jd_lstore_panic_print_str(const char *s) {
     while (*s)
         jd_lstore_panic_print_char(*s++);
 }
+
+#endif

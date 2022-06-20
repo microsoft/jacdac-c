@@ -39,11 +39,11 @@ static int jd_send_frame_with_crc(jd_frame_t *f) {
     jd_compute_crc(f);
     return jd_send_frame(f);
 }
-#endif
 
 bool jd_tx_will_fit(unsigned size) {
     return jd_queue_will_fit(send_queue, size);
 }
+#endif
 
 int jd_tx_is_idle() {
 #if JD_RAW_FRAME
