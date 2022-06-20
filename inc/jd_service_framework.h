@@ -158,6 +158,11 @@ void jd_services_process_frame(jd_frame_t *frame);
 void jd_services_handle_packet(jd_packet_t *pkt);
 
 /**
+ * Do a quick check whether jd_services_process_frame() would possibly do anything.
+ */
+bool jd_services_needs_frame(jd_frame_t *frame);
+
+/**
  * Invoked at various points in jacdac-c.
  *
  * Announces services on the bus.

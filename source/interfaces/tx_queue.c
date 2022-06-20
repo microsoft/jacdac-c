@@ -3,10 +3,6 @@
 
 #include "jd_protocol.h"
 
-#ifndef JD_USB_SEND
-#define JD_USB_SEND(...) ((void)0)
-#endif
-
 #if JD_SEND_FRAME
 static jd_frame_t tx_acc_buffer;
 #else
@@ -35,7 +31,7 @@ int jd_send_frame_raw(jd_frame_t *f) {
     return r;
 }
 int jd_send_frame(jd_frame_t *f) {
-    JD_USB_SEND(f);
+    JD_BRIDGE_SEND(f);
     return jd_send_frame_raw(f);
 }
 static int jd_send_frame_with_crc(jd_frame_t *f) {
@@ -44,6 +40,10 @@ static int jd_send_frame_with_crc(jd_frame_t *f) {
     return jd_send_frame(f);
 }
 #endif
+
+bool jd_tx_will_fit(unsigned size) {
+    return jd_queue_will_fit(send_queue, size);
+}
 
 int jd_tx_is_idle() {
 #if JD_RAW_FRAME
@@ -176,11 +176,6 @@ void jd_tx_flush() {
 #else
     f->device_identifier = jd_device_id();
     jd_compute_crc(f);
-
-    if (jd_rx_frame_received_loopback(f))
-        OVF_ERROR("loopback rx ovf");
-
-    JD_USB_SEND(f);
 
     bufferPtr ^= 1;
     isSending = 1;

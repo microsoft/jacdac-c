@@ -96,12 +96,28 @@
 #define JD_FREE_SUPPORTED JD_CLIENT
 #endif
 
+#ifndef JD_BRIDGE
+#define JD_BRIDGE 0
+#endif
+
+#ifndef JD_BRIDGE_SEND
+#define JD_BRIDGE_SEND(...) ((void)0)
+#endif
+
 #ifndef JD_SEND_FRAME
-#define JD_SEND_FRAME JD_CLIENT
+#define JD_SEND_FRAME (JD_CLIENT || JD_BRIDGE)
 #endif
 
 #ifndef JD_SEND_FRAME_SIZE
 #define JD_SEND_FRAME_SIZE 512
+#endif
+
+#ifndef JD_RX_QUEUE
+#define JD_RX_QUEUE JD_SEND_FRAME
+#endif
+
+#ifndef JD_RX_QUEUE_SIZE
+#define JD_RX_QUEUE_SIZE 512
 #endif
 
 #ifndef JD_LORA

@@ -15,7 +15,7 @@ int jd_rx_frame_received(jd_frame_t *frame);
 jd_frame_t *jd_rx_get_frame(void);
 void jd_rx_release_frame(jd_frame_t *frame);
 
-#if JD_CLIENT
+#if JD_CLIENT || JD_BRIDGE
 int jd_rx_frame_received_loopback(jd_frame_t *frame);
 #else
 static inline int jd_rx_frame_received_loopback(jd_frame_t *frame) {

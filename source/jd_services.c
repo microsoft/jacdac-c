@@ -244,15 +244,31 @@ void jd_services_announce() {
     }
 }
 
+static bool is_client_announce(jd_packet_t *pkt) {
+    return pkt->service_index == 0 && pkt->service_command == JD_CONTROL_CMD_SERVICES &&
+           pkt->service_size >= 4 && (pkt->data[1] & (JD_CONTROL_ANNOUNCE_FLAGS_IS_CLIENT >> 8));
+}
+
 static void handle_ctrl_tick(jd_packet_t *pkt) {
-    if (pkt->service_command == JD_CONTROL_CMD_SERVICES) {
+    if (is_client_announce(pkt)) {
         // client? blink!
-        if (pkt->service_size >= 4 && pkt->data[1] & (JD_CONTROL_ANNOUNCE_FLAGS_IS_CLIENT >> 8)) {
-            lastMax = now;
-            jd_glow(JD_GLOW_BRAIN_CONNECTED);
-            jd_blink(jd_connected_blink);
-        }
+        lastMax = now;
+        jd_glow(JD_GLOW_BRAIN_CONNECTED);
+        jd_blink(jd_connected_blink);
     }
+}
+
+bool jd_services_needs_frame(jd_frame_t *frame) {
+#if JD_CLIENT || JD_PIPES
+    return 1;
+#else
+    jd_packet_t *pkt = (jd_packet_t *)frame;
+    if (pkt->flags & JD_FRAME_FLAG_COMMAND) {
+        return (pkt->flags & JD_FRAME_FLAG_BROADCAST) || pkt->device_identifier == jd_device_id();
+    } else {
+        return is_client_announce(pkt);
+    }
+#endif
 }
 
 __attribute__((weak)) void jd_app_handle_packet(jd_packet_t *pkt) {}
@@ -271,8 +287,7 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
 #endif
 
     if (!(pkt->flags & JD_FRAME_FLAG_COMMAND)) {
-        if (pkt->service_index == 0)
-            handle_ctrl_tick(pkt);
+        handle_ctrl_tick(pkt);
         return;
     }
 
