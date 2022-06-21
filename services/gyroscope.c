@@ -13,6 +13,11 @@ struct srv_state {
 
 extern uint8_t gyroscope_pending;
 
+__attribute__((weak)) void gyroscope_data_transform(int32_t sample[3]) {
+    // default to same as accel
+    accelerometer_data_transform(sample);
+}
+
 void gyroscope_process(srv_t *state) {
 #ifdef PIN_ACC_INT
     if (!gyroscope_pending && state->jd_inited)
