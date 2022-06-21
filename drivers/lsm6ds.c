@@ -5,6 +5,9 @@
 #endif
 
 #define LSM6DS_WHOAMI 0x0F
+#define ID_LSM6DSOX 0x6C
+#define ID_LSM6DS3TR_C 0x6A
+
 #define LSM6DS_CTRL1_XL 0x10
 #define LSM6DS_CTRL2_G 0x11
 #define LSM6DS_CTRL3_C 0x12
@@ -132,7 +135,7 @@ static void lsm6ds_init(void) {
     int v = readReg(LSM6DS_WHOAMI);
     DMESG("LSM acc id: %x", v);
 
-    if (v == 0x6C) {
+    if (v == ID_LSM6DSOX || v == ID_LSM6DS3TR_C) {
         // OK
     } else {
         DMESG("invalid chip");
