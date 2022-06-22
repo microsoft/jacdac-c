@@ -23,7 +23,7 @@ struct srv_state {
 };
 
 #define REG_IS_SIGNED(r) ((r) <= 4 && !((r)&1))
-#define REG_IS_OPT(r) ((r) >= _REG_OPT8)
+#define REG_IS_OPT(r) ((r) >= _JD_REG_OPT8)
 static const uint8_t regSize[16] = {1, 1, 2, 2, 4, 4, 4, 8, 1, 0, 1, 2, 4, JD_PTRSIZE};
 
 static int is_zero(const uint8_t *p, uint32_t sz) {
@@ -85,13 +85,13 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
         int tp = sd >> 12;
         int regsz = regSize[tp];
 
-        if (tp == _REG_BYTES)
+        if (tp == _JD_REG_BYTES)
             regsz = sdesc[++i];
 
         if (!regsz)
             jd_panic();
 
-        if (tp != _REG_BIT && tp != _REG_BYTES) {
+        if (tp != _JD_REG_BIT && tp != _JD_REG_BYTES) {
             if (bitoffset) {
                 bitoffset = 0;
                 offset++;
@@ -105,7 +105,7 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
         if ((sd & 0xfff) == reg) {
             uint8_t *sptr = (uint8_t *)state + offset;
             if (is_get) {
-                if (tp == _REG_BIT) {
+                if (tp == _JD_REG_BIT) {
                     uint8_t v = *sptr & (1 << bitoffset) ? 1 : 0;
                     jd_send(pkt->service_index, pkt->service_command, &v, 1);
                 } else {
@@ -115,7 +115,7 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
                 }
                 return -reg;
             } else {
-                if (tp == _REG_BIT) {
+                if (tp == _JD_REG_BIT) {
                     LOG("bit @%d - %x", offset, reg);
                     if (pkt->data[0])
                         *sptr |= 1 << bitoffset;
@@ -136,7 +136,7 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
             }
         }
 
-        if (tp == _REG_BIT) {
+        if (tp == _JD_REG_BIT) {
             bitoffset++;
             if (bitoffset == 8) {
                 offset++;

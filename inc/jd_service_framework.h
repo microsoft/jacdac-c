@@ -15,36 +15,36 @@
 #define JD_REG_PADDING 0xff0
 #define JD_REG_END 0xff1
 #define JD_REG_SERVICE_DISABLED 0xff2
-#define _REG_(tp, v) (((tp) << 12) | (v))
-#define _REG_I8 0
-#define _REG_U8 1
-#define _REG_I16 2
-#define _REG_U16 3
-#define _REG_I32 4
-#define _REG_U32 5
-#define _REG_BYTE4 6
-#define _REG_BYTE8 7
-#define _REG_BIT 8
-#define _REG_BYTES 9
-#define _REG_OPT8 10
-#define _REG_OPT16 11
-#define _REG_OPT32 12
-#define _REG_PTR 13
-#define REG_I8(v) _REG_(_REG_I8, (v))
-#define REG_U8(v) _REG_(_REG_U8, (v))
-#define REG_I16(v) _REG_(_REG_I16, (v))
-#define REG_U16(v) _REG_(_REG_U16, (v))
-#define REG_I32(v) _REG_(_REG_I32, (v))
-#define REG_U32(v) _REG_(_REG_U32, (v))
-#define REG_OPT8(v) _REG_(_REG_OPT8, (v))
-#define REG_OPT16(v) _REG_(_REG_OPT16, (v))
-#define REG_OPT32(v) _REG_(_REG_OPT32, (v))
-#define REG_BYTE4(v) _REG_(_REG_BYTE4, (v))
-#define REG_BYTE8(v) _REG_(_REG_BYTE8, (v))
-#define REG_BIT(v) _REG_(_REG_BIT, (v))
-#define REG_BYTES(v, n) _REG_(_REG_BYTES, (v)), n
+#define _JD_REG_(tp, v) (((tp) << 12) | (v))
+#define _JD_REG_I8 0
+#define _JD_REG_U8 1
+#define _JD_REG_I16 2
+#define _JD_REG_U16 3
+#define _JD_REG_I32 4
+#define _JD_REG_U32 5
+#define _JD_REG_BYTE4 6
+#define _JD_REG_BYTE8 7
+#define _JD_REG_BIT 8
+#define _JD_REG_BYTES 9
+#define _JD_REG_OPT8 10
+#define _JD_REG_OPT16 11
+#define _JD_REG_OPT32 12
+#define _JD_REG_PTR 13
+#define REG_I8(v) _JD_REG_(_JD_REG_I8, (v))
+#define REG_U8(v) _JD_REG_(_JD_REG_U8, (v))
+#define REG_I16(v) _JD_REG_(_JD_REG_I16, (v))
+#define REG_U16(v) _JD_REG_(_JD_REG_U16, (v))
+#define REG_I32(v) _JD_REG_(_JD_REG_I32, (v))
+#define REG_U32(v) _JD_REG_(_JD_REG_U32, (v))
+#define REG_OPT8(v) _JD_REG_(_JD_REG_OPT8, (v))
+#define REG_OPT16(v) _JD_REG_(_JD_REG_OPT16, (v))
+#define REG_OPT32(v) _JD_REG_(_JD_REG_OPT32, (v))
+#define REG_BYTE4(v) _JD_REG_(_JD_REG_BYTE4, (v))
+#define REG_BYTE8(v) _JD_REG_(_JD_REG_BYTE8, (v))
+#define REG_BIT(v) _JD_REG_(_JD_REG_BIT, (v))
+#define REG_BYTES(v, n) _JD_REG_(_JD_REG_BYTES, (v)), n
 #if JD_64
-#define REG_PTR_PADDING() _REG_(_REG_PTR, JD_REG_PADDING)
+#define REG_PTR_PADDING() _JD_REG_(_JD_REG_PTR, JD_REG_PADDING)
 #else
 #define REG_PTR_PADDING() REG_U32(JD_REG_PADDING)
 #endif
