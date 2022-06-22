@@ -43,8 +43,8 @@ REG_DEFINITION(                   //
 static void disable_ch(channel_t *ch) {
     pin_set(ch->pin, 0);
     if (ch->pwm_pin) {
-        pwm_set_duty(ch->pwm_pin, 0);
-        pwm_enable(ch->pwm_pin, 0);
+        jd_pwm_set_duty(ch->pwm_pin, 0);
+        jd_pwm_enable(ch->pwm_pin, 0);
     }
     ch->current_duty = 0;
     ch->target_duty = 0;
@@ -52,8 +52,8 @@ static void disable_ch(channel_t *ch) {
 
 static void enable_ch(channel_t *ch) {
     if (!ch->pwm_pin)
-        ch->pwm_pin = pwm_init(ch->pin, SERVO_PERIOD, 0, cpu_mhz / 16);
-    pwm_enable(ch->pwm_pin, 1);
+        ch->pwm_pin = jd_pwm_init(ch->pin, SERVO_PERIOD, 0, cpu_mhz / 16);
+    jd_pwm_enable(ch->pwm_pin, 1);
 }
 
 static void set_pwr(srv_t *state, int on) {
@@ -90,7 +90,7 @@ static void duty_step(channel_t *ch) {
     if (ch->target_duty < ch->current_duty)
         ch->current_duty = ch->target_duty;
 
-    pwm_set_duty(ch->pwm_pin, ch->current_duty);
+    jd_pwm_set_duty(ch->pwm_pin, ch->current_duty);
 }
 
 void motor_process(srv_t *state) {

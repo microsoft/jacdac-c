@@ -49,12 +49,12 @@ static void set_pwr(srv_t *state, int on) {
         pwr_enter_pll();
         // configure at 1MHz
         if (!state->pwm_pin)
-            state->pwm_pin = pwm_init(state->params.pin, SERVO_PERIOD, 0, cpu_mhz);
-        pwm_enable(state->pwm_pin, 1);
+            state->pwm_pin = jd_pwm_init(state->params.pin, SERVO_PERIOD, 0, cpu_mhz);
+        jd_pwm_enable(state->pwm_pin, 1);
     } else {
         pin_setup_input(state->params.power_pin, PIN_PULL_NONE);
         pin_set(state->params.pin, 0);
-        pwm_enable(state->pwm_pin, 0);
+        jd_pwm_enable(state->pwm_pin, 0);
         pwr_leave_pll();
     }
     jd_power_enable(on);
@@ -107,7 +107,7 @@ void servo_handle_packet(srv_t *state, jd_packet_t *pkt) {
         state->pulse += p->min_pulse;
 
         if (state->is_on)
-            pwm_set_duty(state->pwm_pin, state->pulse);
+            jd_pwm_set_duty(state->pwm_pin, state->pulse);
     }
 }
 

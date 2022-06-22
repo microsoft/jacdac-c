@@ -112,13 +112,13 @@ static void rgbled_show(status_ctx_t *state) {
         if (c < 0)
             c = 0;
 #endif
-        // set duty first, in case pwm_enable() is not impl.
-        pwm_set_duty(ch->pwm, c);
+        // set duty first, in case jd_pwm_enable() is not impl.
+        jd_pwm_set_duty(ch->pwm, c);
         if (c == 0) {
             pin_set(ch->pin, LED_OFF_STATE);
-            pwm_enable(ch->pwm, 0);
+            jd_pwm_enable(ch->pwm, 0);
         } else {
-            pwm_enable(ch->pwm, 1);
+            jd_pwm_enable(ch->pwm, 1);
         }
     }
 
@@ -300,7 +300,7 @@ void jd_status_init() {
         channel_t *ch = &state->channels[i];
         ch->pin = pins[i];
         ch->mult = mults[i];
-        ch->pwm = pwm_init(ch->pin, RGB_LED_PERIOD, 0, 1);
+        ch->pwm = jd_pwm_init(ch->pin, RGB_LED_PERIOD, 0, 1);
     }
 #else
     for (int i = 0; i < 3; ++i) {

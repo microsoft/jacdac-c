@@ -61,7 +61,7 @@ static void led_show(srv_t *state) {
         sum += c;
         if (c == 0) {
             pin_set(ch->pin, state->params.active_high ? 0 : 1);
-            pwm_enable(ch->pwm, 0);
+            jd_pwm_enable(ch->pwm, 0);
         } else {
             if (state->params.active_high) {
                 if (c >= state->params.pwm_period)
@@ -71,8 +71,8 @@ static void led_show(srv_t *state) {
                 if (c < 0)
                     c = 0;
             }
-            pwm_set_duty(ch->pwm, c);
-            pwm_enable(ch->pwm, 1);
+            jd_pwm_set_duty(ch->pwm, c);
+            jd_pwm_enable(ch->pwm, 1);
         }
     }
 
@@ -167,7 +167,7 @@ void led_service_init(const led_params_t *params) {
             ch->mult = 0xff;
         // assuming 64MHz clock and 512 period, we get 125kHz (which is slow enough for motor
         // drivers like DRV8837C) with 8MHz, we get 15kHz (which is plenty fast not to flicker)
-        ch->pwm = pwm_init(ch->pin, state->params.pwm_period, 0, 1);
+        ch->pwm = jd_pwm_init(ch->pin, state->params.pwm_period, 0, 1);
     }
 
     led_show(state);

@@ -34,7 +34,7 @@ static void set_pwr(srv_t *state, int on) {
         pwr_enter_tim();
     } else {
         pin_set(state->pin, BUZZER_OFF);
-        pwm_enable(state->pwm_pin, 0);
+        jd_pwm_enable(state->pwm_pin, 0);
         pwr_leave_tim();
     }
     state->is_on = on;
@@ -46,7 +46,7 @@ static void play_tone(srv_t *state, uint32_t period, uint32_t duty) {
     duty = period - duty;
 #endif
     set_pwr(state, 1);
-    state->pwm_pin = pwm_init(state->pin, period, duty, cpu_mhz);
+    state->pwm_pin = jd_pwm_init(state->pin, period, duty, cpu_mhz);
 }
 
 void buzzer_process(srv_t *state) {
