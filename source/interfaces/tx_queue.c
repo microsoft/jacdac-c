@@ -20,14 +20,17 @@ jd_frame_t *rawFrame;
 static jd_queue_t send_queue;
 static uint8_t q_sending;
 int jd_send_frame_raw(jd_frame_t *f) {
-    if (target_in_irq())
-        jd_panic();
-    if (jd_rx_frame_received_loopback(f))
-        OVF_ERROR("loopback rx ovf");
+    // put in sendQ first
     int r = jd_queue_push(send_queue, f);
     if (r)
         OVF_ERROR("frm send ovf");
+
+    // this may modify flags
+    if (jd_rx_frame_received_loopback(f))
+        OVF_ERROR("loopback rx ovf");
+
     jd_packet_ready();
+
     return r;
 }
 int jd_send_frame(jd_frame_t *f) {
