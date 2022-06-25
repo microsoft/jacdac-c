@@ -235,7 +235,8 @@ void flex_init(uint8_t pinL, uint8_t pinM, uint8_t pinH);
 
 typedef struct {
     void (*init)(void);
-    void (*write_amplitude)(uint8_t amplitude, uint32_t duration_ms);
+    int (*write_amplitude)(uint8_t amplitude, uint32_t duration_ms);
+    int max_duration;
 } vibration_motor_api_t;
 void vibration_motor_init(const vibration_motor_api_t *api);
 extern const vibration_motor_api_t aw86224fcr;
