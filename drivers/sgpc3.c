@@ -12,6 +12,8 @@
 #define sgpc3_set_absolute_humidity 0x2061
 #define sgpc3_get_feature_set_version 0x202f
 #define sgpc3_measure_tvoc_and_raw 0x2046
+#define sgpc3_measure_tvoc 0x2008
+#define sgpc3_set_power_mode 0x209f
 
 #define ST_IDLE 0
 #define ST_HUM_NEEDED 1
@@ -33,6 +35,14 @@ static void send_cmd(uint16_t cmd) {
         hw_panic();
 }
 
+static void sgpc3_send_cmd_buf(uint16_t cmd, const uint8_t *buf, unsigned len) {
+    uint8_t tmp[len + 1];
+    memcpy(tmp, buf, len);
+    tmp[len] = jd_sgp_crc8(tmp, len);
+    if (i2c_write_reg16_buf(SGPC3_ADDR, cmd, tmp, len + 1))
+        hw_panic();
+}
+
 static void sgpc3_init(void) {
     ctx_t *ctx = &state;
     if (ctx->inited)
@@ -48,11 +58,14 @@ static void sgpc3_init(void) {
 
     send_cmd(sgpc3_get_feature_set_version);
     target_wait_us(10000);
-
     uint8_t data[2];
     if (i2c_read_ex(SGPC3_ADDR, data, sizeof(data)))
         hw_panic();
     DMESG("SGPC3 id=%x %x", data[0], data[1]);
+
+    uint8_t arg[2] = {0, 1}; // low-power
+    sgpc3_send_cmd_buf(sgpc3_set_power_mode, arg, 2);
+    target_wait_us(10000);
 
     // ctx->nextsample = now + 16 * 1000 * 1000;
     ctx->nextsample = now + 184 * 1000 * 1000;
@@ -75,11 +88,13 @@ static void sgpc3_process(void) {
 
         case ST_IDLE:
         case ST_HUM_ISSUED:
-            send_cmd(sgpc3_measure_tvoc_and_raw);
+            // send_cmd(sgpc3_measure_tvoc_and_raw);
+            send_cmd(sgpc3_measure_tvoc);
             ctx->state = ST_READ_ISSUED;
             break;
 
         case ST_READ_ISSUED: {
+#if 0
             uint8_t data[6];
             if (i2c_read_ex(SGPC3_ADDR, data, sizeof(data)))
                 hw_panic();
@@ -104,6 +119,24 @@ static void sgpc3_process(void) {
             ctx->ethanol.error = ethanol * 153;
             ctx->tvoc.value = tvoc << 10;
             ctx->tvoc.error = tvoc * 153;
+#else
+            uint8_t data[3];
+            if (i2c_read_ex(SGPC3_ADDR, data, sizeof(data)))
+                hw_panic();
+            DMESG("rd: %x %x %x", data[0], data[1], data[2]);
+            ctx->state = ST_IDLE;
+
+            ctx->nextsample = now + SAMPLING_MS * 1000;
+            ctx->inited = 3;
+
+            int tvoc = (data[0] << 8) | data[1];
+
+            // assume 15% error
+            ctx->ethanol.value = 1 << 10;
+            ctx->ethanol.error = 153;
+            ctx->tvoc.value = tvoc << 10;
+            ctx->tvoc.error = tvoc * 153;
+#endif
 
             break;
         }
