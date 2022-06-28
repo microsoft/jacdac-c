@@ -71,3 +71,11 @@ void jd_rx_release_frame(jd_frame_t *frame) {
     occupied = 0;
 #endif
 }
+
+bool jd_rx_has_frame(void) {
+#if JD_RX_QUEUE
+    return jd_queue_front(rx_queue) != NULL;
+#else
+    return occupied;
+#endif
+}
