@@ -51,10 +51,20 @@ REG_DEFINITION(                                   //
 static void set_limiter(srv_t *state, int onoff) {
     LOG("lim: %d", onoff);
 
-    if (!state->cfg->en_active_high)
-        onoff = !onoff;
-
-    pin_set(state->cfg->pin_en, onoff);
+    if (state->cfg->en_active_high == 2) {
+        if (onoff) {
+            pin_set(state->cfg->pin_en, 0);
+            pin_set(state->cfg->pin_fault, 1);
+            pin_setup_output(state->cfg->pin_fault);
+            target_wait_us(1000);
+            pin_setup_input(state->cfg->pin_fault, PIN_PULL_UP);
+        } else {
+            pin_set(state->cfg->pin_en, 1);
+        }
+    } else {
+        int val = state->cfg->en_active_high ? onoff : !onoff;
+        pin_set(state->cfg->pin_en, val);
+    }
 }
 
 #define GLOW_CH CH_0

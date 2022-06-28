@@ -37,7 +37,7 @@ void power_pin_enable(int en);
 void target_enable_irq(void);
 void target_disable_irq(void);
 void target_wait_us(uint32_t n);
-void target_reset(void);
+__attribute__((noreturn)) void target_reset(void);
 int target_in_irq(void);
 
 extern uint16_t tim_max_sleep;
