@@ -10,6 +10,7 @@ extern const accelerometer_api_t accelerometer_kxtj3;
 extern const accelerometer_api_t accelerometer_kx023;
 extern const accelerometer_api_t accelerometer_qma7981;
 extern const accelerometer_api_t accelerometer_lsm6ds;
+extern const accelerometer_api_t accelerometer_da213b;
 
 typedef sensor_api_t captouch_api_t;
 extern const captouch_api_t captouch_cap1298;
