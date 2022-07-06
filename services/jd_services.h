@@ -326,4 +326,9 @@ typedef struct {
 } magneticfieldlevel_cfg_t;
 void magneticfieldlevel_init(const magneticfieldlevel_cfg_t *cfg);
 
+// HID services
+void hidjoystick_init(void);
+void hidmouse_init(void);
+void hidkeyboard_init(void);
+
 #endif

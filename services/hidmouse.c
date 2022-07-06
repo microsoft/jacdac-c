@@ -163,6 +163,6 @@ void hidmouse_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(hidmouse, JD_SERVICE_CLASS_HID_MOUSE);
-void hidmouse_init(uint8_t pin) {
+void hidmouse_init() {
     SRV_ALLOC(hidmouse);
 }

@@ -19,8 +19,8 @@ typedef struct {
 } jd_hid_mouse_report_t;
 
 typedef struct {
-    int8_t x, y, z;
-    int8_t rx, ry, rz;
+    int8_t x, y, rx, ry;
+    int8_t z, rz;
     uint8_t hat;
     uint32_t buttons;
 } jd_hid_gamepad_report_t;
