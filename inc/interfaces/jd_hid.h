@@ -7,9 +7,11 @@
 #include "jd_config.h"
 #include "jd_physical.h"
 
+#define JD_HID_MAX_KEYCODES 6
+
 typedef struct {
     uint8_t modifier;
-    uint8_t keycode[6];
+    uint8_t keycode[JD_HID_MAX_KEYCODES];
 } jd_hid_keyboard_report_t;
 
 typedef struct {
