@@ -23,9 +23,20 @@ REG_DEFINITION(       //
     REG_SRV_COMMON,   //
 )
 
+static bool is_empty(srv_t *state) {
+    for (int i = 0; i < JD_HID_MAX_KEYCODES; ++i) {
+        if (state->r.keycode[i])
+            return 0;
+    }
+    return 1;
+}
+
 void hidkeyboard_process(srv_t *state) {
     if (!jd_should_sample_delay(&state->next_tick, STEP_MS * 1000))
         return;
+
+    if (is_empty(state))
+        state->r.modifier = 0;
 
     if (state->num_skips > (2000 / STEP_MS) ||
         memcmp(&state->r, &state->prev_r, sizeof(state->r)) != 0) {
