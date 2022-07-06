@@ -88,7 +88,7 @@ static int8_t current_step(axis_t *ax) {
     int step = ax->step;
     if (myabs(ax->target) < myabs(step))
         step = ax->target;
-    ax->target += step;
+    ax->target -= step;
     return step;
 }
 
@@ -144,7 +144,7 @@ void hidmouse_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     case JD_HID_MOUSE_CMD_SET_BUTTON:
-        if (pkt->service_size >= sizeof(jd_hid_mouse_set_button_t)) {
+        if (pkt->service_size >= sizeof(jd_hid_mouse_set_button_t) - 1) {
             jd_hid_mouse_set_button_t *d = (void *)pkt->data;
             for (int i = 0; i < NUM_BUTTONS; ++i) {
                 button_t *b = &state->buttons[i];
