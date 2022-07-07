@@ -51,7 +51,7 @@ static void tick(void) {
     if (phys_status & JD_STATUS_TX_ACTIVE) {
         uint32_t d = tim_get_micros() - start_tx;
         if (d > 3000) {
-            DMESG("TX fail; %u us", d);
+            DMESG("TX fail; %u us", (unsigned)d);
             jd_panic();
         }
     }
