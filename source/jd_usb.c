@@ -113,6 +113,7 @@ static int jd_usb_respond_to_processing_packet(uint16_t service_command) {
     pkt.service_command = service_command;
     jd_frame_t *frame = (jd_frame_t *)&pkt;
     jd_compute_crc(frame);
+    JD_WAKE_MAIN();
     return jd_queue_push(usb_queue, frame);
 }
 
@@ -278,6 +279,7 @@ void jd_usb_process_tx(void) {
 int jd_usb_send_frame(void *frame) {
     if (!usb_fwd_en)
         return 0;
+    JD_WAKE_MAIN();
     // this is called from an ISR
     return jd_queue_push(usb_queue, frame);
 }

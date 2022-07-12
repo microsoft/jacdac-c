@@ -34,6 +34,8 @@ static int jd_rx_frame_received_core(jd_frame_t *frame, bool is_loop) {
     else
         frame->flags &= ~JD_FRAME_FLAG_LOOPBACK;
 
+    JD_WAKE_MAIN();
+
 #if JD_RX_QUEUE
     return jd_queue_push(rx_queue, frame);
 #else

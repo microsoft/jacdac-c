@@ -169,6 +169,10 @@ int jd_usb_send_frame(void *frame);
 #define JD_ERROR_BLINK(x) ((void)0)
 #endif
 
+#ifndef JD_WAKE_MAIN
+#define JD_WAKE_MAIN() ((void)0)
+#endif
+
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
