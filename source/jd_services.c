@@ -4,6 +4,7 @@
 #include "jd_protocol.h"
 #include "jd_client.h"
 #include "jd_pipes.h"
+#include "interfaces/jd_usb.h"
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
@@ -357,6 +358,10 @@ static void jd_process_everything_core(void) {
 
         jd_services_tick();
         app_process();
+
+#if JD_USB_BRIDGE
+        jd_usb_process_tx();
+#endif
 
         // if no frame was received, stop
         if (fr == NULL)

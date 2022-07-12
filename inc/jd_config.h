@@ -96,12 +96,21 @@
 #define JD_FREE_SUPPORTED JD_CLIENT
 #endif
 
+#ifndef JD_USB_BRIDGE
+#define JD_USB_BRIDGE 0
+#endif
+
 #ifndef JD_BRIDGE
-#define JD_BRIDGE 0
+#define JD_BRIDGE JD_USB_BRIDGE
 #endif
 
 #ifndef JD_BRIDGE_SEND
+#if JD_USB_BRIDGE
+int jd_usb_send_frame(void *frame);
+#define JD_BRIDGE_SEND(f) jd_usb_send_frame(f)
+#else
 #define JD_BRIDGE_SEND(...) ((void)0)
+#endif
 #endif
 
 #ifndef JD_SEND_FRAME
@@ -118,6 +127,10 @@
 
 #ifndef JD_RX_QUEUE_SIZE
 #define JD_RX_QUEUE_SIZE 512
+#endif
+
+#ifndef JD_USB_QUEUE_SIZE
+#define JD_USB_QUEUE_SIZE 1024
 #endif
 
 #ifndef JD_LORA
