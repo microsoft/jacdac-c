@@ -122,6 +122,24 @@ void jd_queue_shift(jd_queue_t q);
 void jd_queue_test(void);
 int jd_queue_will_fit(jd_queue_t q, unsigned size);
 
+// jd_bqueue.c
+typedef struct jd_bqueue *jd_bqueue_t;
+jd_bqueue_t jd_bqueue_alloc(unsigned size);
+unsigned jd_bqueue_occupied_bytes(jd_bqueue_t q);
+unsigned jd_bqueue_free_bytes(jd_bqueue_t q);
+// returns 0 on success, -1 when full
+int jd_bqueue_push(jd_bqueue_t q, const void *data, unsigned len);
+// returns 0 if `size` bytes was popped, and -1 when nothing was popped
+int jd_bqueue_pop_atomic(jd_bqueue_t q, void *dst, unsigned size);
+// returns number of bytes popped
+unsigned jd_bqueue_pop_at_most(jd_bqueue_t q, void *dst, unsigned maxsize);
+// returns -1 when empty
+int jd_bqueue_pop_byte(jd_bqueue_t q);
+// low-level, not thread-safe interface
+unsigned jd_bqueue_available_cont_data(jd_bqueue_t q);
+uint8_t *jd_bqueue_cont_data_ptr(jd_bqueue_t q);
+void jd_bqueue_cont_data_advance(jd_bqueue_t q, unsigned sz);
+
 void jd_utoa(unsigned k, char *s);
 void jd_itoa(int n, char *s);
 void jd_string_reverse(char *s);
