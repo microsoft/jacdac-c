@@ -240,6 +240,12 @@ void jd_usb_push(const uint8_t *buf, unsigned len) {
                         USB_ERROR("mismatched stop");
                     }
                     continue;
+
+                case JD_USB_BRIDGE_QBYTE_RESERVED:
+                case JD_USB_BRIDGE_QBYTE_SERIAL_GAP:
+                case JD_USB_BRIDGE_QBYTE_FRAME_GAP:
+                    continue; // ignore
+
                 default:
                     if (usb_rx_state) {
                         USB_ERROR("invalid quote");
