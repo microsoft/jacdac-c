@@ -359,10 +359,6 @@ static void jd_process_everything_core(void) {
         jd_services_tick();
         app_process();
 
-#if JD_USB_BRIDGE
-        jd_usb_process_tx();
-#endif
-
         // if no frame was received, stop
         if (fr == NULL)
             break;

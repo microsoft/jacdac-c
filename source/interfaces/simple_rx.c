@@ -12,7 +12,8 @@ static jd_frame_t frameToHandle;
 
 void jd_rx_init(void) {
 #if JD_RX_QUEUE
-    rx_queue = jd_queue_alloc(JD_RX_QUEUE_SIZE);
+    if (!rx_queue)
+        rx_queue = jd_queue_alloc(JD_RX_QUEUE_SIZE);
 #endif
 }
 

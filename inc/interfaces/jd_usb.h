@@ -8,23 +8,24 @@
 
 #if JD_USB_BRIDGE
 
-int jd_usb_send_frame(void *frame);
 // true if any packets are pending in the queue
 bool jd_usb_is_pending(void);
-// call from RX ISR
-void jd_usb_process_rx(void);
-// called from jd_process_everything()
-void jd_usb_process_tx(void);
+// both return 0 on success
+int jd_usb_write_serial(const void *data, unsigned len);
+int jd_usb_send_frame(void *frame);
 
-// Defined by application:
-// estimate how much data next jd_usb_tx() can send
-int jd_usb_tx_free_space(void);
-// returns 0 on success
-int jd_usb_tx(const void *data, unsigned len);
-// indicate there will be no more jd_usb_tx() soon
-int jd_usb_tx_flush(void);
-// returns number of bytes read
-int jd_usb_rx(void *data, unsigned len);
+// USB interface
+// Defined by application, called by jd_usb when there is new data to be pulled
+void jd_usb_pull_ready(void);
+// Called by the application:
+// returns number of bytes to send over USB (placed in dst[])
+int jd_usb_pull(uint8_t dst[64]);
+// called by USB stack to process incoming USB data
+void jd_usb_push(const uint8_t *buf, unsigned len);
+
+
+
+
 
 #endif
 
