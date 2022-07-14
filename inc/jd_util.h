@@ -26,6 +26,7 @@ uint16_t jd_sd_crc16(const void *data, uint32_t size);
 
 int jd_shift_frame(jd_frame_t *frame);
 void jd_reset_frame(jd_frame_t *frame);
+void jd_pkt_set_broadcast(jd_packet_t *pkt, uint32_t service_class);
 void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service_cmd,
                        unsigned service_size);
 // jd_should_sample() will try to keep the period sampling rate, when delayed

@@ -106,6 +106,13 @@ int jd_shift_frame(jd_frame_t *frame) {
     return 1;
 }
 
+void jd_pkt_set_broadcast(jd_packet_t *pkt, uint32_t service_class) {
+    jd_frame_t *f = (jd_frame_t *)pkt;
+    f->flags |= JD_FRAME_FLAG_BROADCAST;
+    f->device_identifier = service_class | JD_DEVICE_IDENTIFIER_BROADCAST_MARK;
+    pkt->service_index = JD_SERVICE_INDEX_BROADCAST;
+}
+
 void jd_reset_frame(jd_frame_t *frame) {
     frame->size = 0x00;
 }
