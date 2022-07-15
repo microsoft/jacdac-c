@@ -175,7 +175,7 @@ void jd_bqueue_test(void) {
                 JD_ASSERT(buf[i] == pop_data++);
         }
 
-        JD_ASSERT(len == jd_bqueue_occupied_bytes(q));
+        JD_ASSERT(len == (int)jd_bqueue_occupied_bytes(q));
     }
 
     DMESG("q-test OK %d full", numfull);
