@@ -193,7 +193,7 @@ static void jd_usb_handle_frame(void) {
         ((frame->device_identifier & 0xffffffff) == JD_SERVICE_CLASS_USB_BRIDGE)) {
         jd_usb_handle_processing_packet((jd_packet_t *)frame);
     } else {
-        jd_rx_frame_received_loopback(frame);
+        jd_send_frame_raw(frame);
     }
 }
 
