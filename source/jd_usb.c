@@ -147,7 +147,9 @@ static int jd_usb_respond_to_processing_packet(uint16_t service_command) {
     jd_frame_t *frame = (jd_frame_t *)&pkt;
     jd_compute_crc(frame);
     JD_WAKE_MAIN();
-    return jd_queue_push(usb_queue, frame);
+    int r = jd_queue_push(usb_queue, frame);
+    jd_usb_pull_ready();
+    return r;
 }
 
 static void jd_usb_handle_processing_packet(jd_packet_t *pkt) {
