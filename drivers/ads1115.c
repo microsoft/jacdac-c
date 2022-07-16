@@ -163,7 +163,6 @@ static inline float ads1115_gain_mult(uint8_t bitmsk) {
 #define ADS1115_MAX_RETRIES 10000
 
 static int ads1115_read(void) {
-    int16_t res = 0;
     int retries = 0;
 
 #ifdef PIN_ACC_INT
@@ -188,13 +187,14 @@ static int ads1115_read(void) {
         JD_ASSERT(retries < ADS1115_MAX_RETRIES);
     }
 #endif
-    res = 0;
     target_wait_us(30);
-    int rsp = i2c_read_reg_buf(ads1115_address, ADS1115_CONV_REG, &res, 2);
+    uint8_t buf[2] = {0};
+    int rsp = i2c_read_reg_buf(ads1115_address, ADS1115_CONV_REG, buf, 2);
     (void)rsp;
-    LOG("REC: %x %x %d", res & 0xffff, flip(res) & 0xffff, rsp);
+    int16_t rr = (buf[0] << 8) | buf[1];
+    // LOG("REC: %x %x %d", res & 0xffff, flip(res) & 0xffff, rsp);
     // ads1115_read_i2c(ADS1115_CONV_REG, &res, 2);
-    return flip(res);
+    return rr;
 }
 
 static void ads1115_set_gain(int32_t gain_mv) {
