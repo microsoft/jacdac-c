@@ -64,4 +64,13 @@ void powersupply_init(const power_supply_params_t params) {
 
     pin_setup_output(params.enable_pin);
     pin_set(state->params.enable_pin, (state->params.enable_active_lo) ? 1 : 0);
+
+    // set sane default
+    state->output_voltage = 4.0;
+
+#if 1
+    // TODO disable this - currently the dashboard doesn't have power supply switch
+    state->enabled = 1;
+    reflect_register_state(state);
+#endif
 }
