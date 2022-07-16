@@ -177,6 +177,7 @@ static int ads1115_read(void) {
 #else
     while (1) {
         // ads1115_read_i2c(ADS1115_CONF_REG, &res, 2);
+        int16_t res = 0;
         i2c_read_reg_buf(ads1115_address, ADS1115_CONF_REG, &res, 2);
         if (res & (1 << ADS1115_CONF_OS))
             break;
