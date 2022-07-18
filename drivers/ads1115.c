@@ -139,14 +139,14 @@ static inline uint8_t ads1115_channel_bitmsk(uint8_t pos_channel, uint8_t neg_ch
 }
 
 static inline uint8_t ads1115_gain_bitmsk(int32_t gain_mv) {
-    for (int i = 0; i < ADS1115_GAIN_MAP_LEN; i++) {
+    for (int i = ADS1115_GAIN_MAP_LEN - 1; i >= 0 ; i--) {
         ads1115_gain_map_t g = gain_map[i];
-        if (gain_mv >= g.gain)
+        if (g.gain >= gain_mv)
             return g.bitmsk;
     }
 
-    // if the given gain is still smaller, return the smallest gain supported.
-    return gain_map[ADS1115_GAIN_MAP_LEN - 1].bitmsk;
+    // should we panic here?
+    return gain_map[0].bitmsk;
 }
 
 static inline float ads1115_gain_mult(uint8_t bitmsk) {

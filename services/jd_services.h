@@ -269,8 +269,6 @@ typedef struct {
     float min_voltage;
     float max_voltage;
     float initial_voltage;
-    uint8_t min_voltage_wiper_value;
-    uint8_t max_voltage_wiper_value;
     uint8_t enable_pin;
     bool enable_active_lo;
     uint8_t wiper_channel;
