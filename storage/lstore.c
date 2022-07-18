@@ -627,15 +627,30 @@ static int sd_write_data(const void *data, unsigned size) {
     return sd_get_resp();
 }
 
+static void cs_low(void) {
+#ifdef JD_SD_CS_PULL_UP
+    pin_setup_output(PIN_SD_CS);
+#endif
+    pin_set(PIN_SD_CS, 0);
+}
+
+static void cs_high(void) {
+    pin_set(PIN_SD_CS, 1);
+#ifdef JD_SD_CS_PULL_UP
+    target_wait_us(5);
+    pin_setup_input(PIN_SD_CS, PIN_PULL_UP);
+#endif
+}
+
 static int sd_check(void) {
     int err = -1;
-    pin_set(PIN_SD_CS, 0);
+    cs_low();
     if (sd_send_cmd(9, 0) == 0) {
         uint8_t csd[16];
         if (sd_read_data(csd, sizeof(csd)) == 0)
             err = 0;
     }
-    pin_set(PIN_SD_CS, 1);
+    cs_high();
     return err;
 }
 
@@ -652,7 +667,7 @@ static int sd_wait_busy(void) {
 
 static int sd_write_sector(uint32_t addr, const void *blk) {
     int err = -1000;
-    pin_set(PIN_SD_CS, 0);
+    cs_low();
     if (sd_send_cmd(24, addr) == 0) {
         int r = sd_write_data(blk, 512);
         if (r != 0xe5) {
@@ -661,7 +676,7 @@ static int sd_write_sector(uint32_t addr, const void *blk) {
             err = sd_wait_busy();
         }
     }
-    pin_set(PIN_SD_CS, 1);
+    cs_high();
     return err;
 }
 
@@ -699,13 +714,13 @@ void jd_lstore_panic_print_char(char ch) {
         pin_set(PIN_SD_CS, 1);
         target_wait_us(1 << 10);
 
-        pin_set(PIN_SD_CS, 0);
+        cs_low();
         int busy_cycles = 100;
         while (busy_cycles-- > 0 && pin_get(PIN_SD_MISO) == 0) {
             spi_bb_byte();
             target_wait_us(1 << 10);
         }
-        pin_set(PIN_SD_CS, 1);
+        cs_high();
 
         if (busy_cycles < 0) {
             PANIC_LOG("timeout busy");
