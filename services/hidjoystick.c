@@ -7,10 +7,9 @@
 
 #define STEP_MS 20
 
-// two analog (triggers - z, rz), 16 normal, 4 directions
-#define NUM_BUTTONS (2 + 16 + 4)
-#define NUM_AXIS 4
-#define BTN_ANALOG (0x3)
+#define NUM_BUTTONS (16)
+#define NUM_AXIS (4)
+#define BTN_ANALOG (0)
 
 struct srv_state {
     SRV_COMMON;
@@ -51,7 +50,7 @@ void hidjoystick_process(srv_t *state) {
 void hidjoystick_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_HID_JOYSTICK_CMD_SET_AXIS: {
-        int8_t *ax = &state->r.x;
+        int8_t *ax = &state->r.x0;
         int16_t *d = (int16_t *)pkt->data;
         for (int i = 0; i < NUM_AXIS; i++) {
             if (i * 2 + 1 < pkt->service_size)
@@ -63,23 +62,11 @@ void hidjoystick_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_HID_JOYSTICK_CMD_SET_BUTTONS:
         state->r.buttons = 0;
-        state->r.hat = 0;
-        state->r.z = 0;
-        state->r.rz = 0;
         for (int i = 0; i < pkt->service_size; ++i) {
-            if (i == 0)
-                state->r.z = pkt->data[0] >> 1;
-            else if (i == 1)
-                state->r.rz = pkt->data[0] >> 1;
-            else if (pkt->data[i]) {
-                i -= 2;
-                if (i < 16)
-                    state->r.buttons |= (1 << i);
-                else {
-                    i -= 16;
-                    if (i < 4)
-                        state->r.hat |= (1 << i);
-                }
+            if (pkt->data[i]) {
+                int k = i;
+                if (k < 16)
+                    state->r.buttons |= (1 << k);
             }
         }
         break;

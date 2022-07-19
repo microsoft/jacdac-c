@@ -21,10 +21,11 @@ typedef struct {
 } jd_hid_mouse_report_t;
 
 typedef struct {
-    int8_t x, y, rx, ry;
-    int8_t z, rz;
-    uint8_t hat;
-    uint32_t buttons;
+    int8_t throttle0;
+    int8_t throttle1;
+    int8_t x0, y0;
+    int8_t x1, y1;
+    uint16_t buttons;
 } jd_hid_gamepad_report_t;
 
 void jd_hid_keyboard_set_report(const jd_hid_keyboard_report_t *report);
