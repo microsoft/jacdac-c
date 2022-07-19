@@ -12,6 +12,7 @@
 bool jd_usb_is_pending(void);
 // both return 0 on success
 int jd_usb_write_serial(const void *data, unsigned len);
+unsigned jd_usb_serial_space(void);
 int jd_usb_send_frame(void *frame);
 
 // USB interface
@@ -22,10 +23,6 @@ void jd_usb_pull_ready(void);
 int jd_usb_pull(uint8_t dst[64]);
 // called by USB stack to process incoming USB data
 void jd_usb_push(const uint8_t *buf, unsigned len);
-
-
-
-
 
 #endif
 

@@ -19,6 +19,15 @@ static jd_frame_t usb_rx_buf;
 
 #define USB_ERROR(msg, ...) ERROR("USB: " msg, ##__VA_ARGS__)
 
+unsigned jd_usb_serial_space(void) {
+    int fr = jd_bqueue_free_bytes(usb_serial_queue);
+    if (usb_serial_gap == 1)
+        fr -= 2;
+    if (fr < 0)
+        return 0;
+    return fr;
+}
+
 int jd_usb_write_serial(const void *data, unsigned len) {
     if (len == 0 || !usb_serial_en)
         return 0;
