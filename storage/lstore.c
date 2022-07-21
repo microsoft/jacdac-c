@@ -1,5 +1,7 @@
 #include "jd_storage.h"
 
+#if JD_LSTORE
+
 #include "ff/ff.h"
 #include "ff/diskio.h"
 #include "services/interfaces/jd_pins.h"
@@ -8,6 +10,10 @@
 #define JD_SD_PANIC 1
 #else
 #define JD_SD_PANIC 0
+#endif
+
+#ifndef JD_LSTORE_FF
+#define JD_LSTORE_FF 1
 #endif
 
 #define NOT_IRQ()                                                                                  \
@@ -56,6 +62,7 @@ typedef struct jd_lstore_ctx {
 
 static jd_lstore_ctx_t *ls_ctx;
 
+#if JD_LSTORE_FF
 static FRESULT check_contiguous_file(FIL *fp) {
     DWORD clst, clsz, step;
     FSIZE_t fsz;
@@ -105,6 +112,7 @@ static void list_files(jd_lstore_ctx_t *ctx) {
     }
     CHK(f_closedir(&dir));
 }
+#endif
 #endif
 
 static void read_sectors(jd_lstore_file_t *f, uint32_t sector_addr, void *dst,
@@ -346,7 +354,8 @@ static int request_flush(jd_lstore_file_t *f) {
     f->block = f->block_alt;
     f->block_alt = tmp;
     f->needs_flushing = 1;
-    LOG("flushing %u/%u @%d", (unsigned)f->data_ptr, block_data_size(f), f - f->parent->logs);
+    LOG("flushing %u/%u @%d", (unsigned)f->data_ptr, block_data_size(f),
+        (int)(f - f->parent->logs));
     f->data_ptr = 0;
     return 0;
 }
@@ -488,6 +497,7 @@ void jd_lstore_init(void) {
     jd_lstore_ctx_t *ctx = jd_alloc(sizeof(*ctx));
     ls_ctx = ctx;
 
+#if JD_LSTORE_FF
     const char *drv = "0:";
 
     FRESULT res = f_mount(&ctx->fs, drv, 1);
@@ -546,6 +556,21 @@ void jd_lstore_init(void) {
     }
 
     jd_free(fil);
+#else
+    for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i) {
+        jd_lstore_file_t *lf = &ctx->logs[i];
+        lf->parent = ctx;
+        LOG("i=%d", i);
+        char *fn = jd_sprintf_a("log_%d.jdl", i);
+
+        lf->size = JD_LSTORE_FILE_SIZE;
+        CHK(jd_f_create(fn, &lf->size, &lf->sector_off));
+
+        LOG("%s off=[%x] sz=%u", fn, (unsigned)lf->sector_off, (unsigned)lf->size);
+
+        jd_free(fn);
+    }
+#endif
 
     mount_log(&ctx->logs[0], "packets and serial", 3); // 4K
     mount_log(&ctx->logs[1], "data log", 0);           // 0.5K
@@ -777,4 +802,5 @@ void jd_lstore_panic_print_str(const char *s) {
         jd_lstore_panic_print_char(*s++);
 }
 
+#endif
 #endif

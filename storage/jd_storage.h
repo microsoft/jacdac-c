@@ -3,9 +3,19 @@
 #include "jd_protocol.h"
 
 // config
+#ifndef JD_LSTORE_FLUSH_SECONDS
 #define JD_LSTORE_FLUSH_SECONDS 10
+#endif
+
+#ifndef JD_LSTORE_FILE_SIZE
 #define JD_LSTORE_FILE_SIZE (65 * 1024 * 1024)
+#endif
+
+#ifndef JD_LSTORE_NUM_FILES
 #define JD_LSTORE_NUM_FILES 2
+#endif
+
+#if JD_LSTORE
 
 // user-facing functions
 void jd_lstore_init(void);
@@ -17,6 +27,31 @@ bool jd_lstore_is_enabled(void);
 void jd_lstore_panic_print_char(char c);
 void jd_lstore_panic_print_str(const char *s);
 void jd_lstore_panic_flush(void);
+
+// these are only used when !JD_LSTORE_FF
+// create a file
+// *size is minumum size on input, actual size on output
+// *sector_off specifies offset to use when calling ff_disk_read/write()
+// returns 0 on success
+int jd_f_create(const char *name, uint32_t *size, uint32_t *sector_off);
+
+#else
+
+static inline void jd_lstore_init(void) {}
+static inline void jd_lstore_process(void) {}
+static inline int jd_lstore_append(unsigned logidx, unsigned type, const void *data,
+                                   unsigned datasize) {
+    return -10;
+}
+static inline int jd_lstore_append_frag(unsigned logidx, unsigned type, const void *data,
+                                        unsigned datasize) {
+    return -10;
+}
+static inline bool jd_lstore_is_enabled(void) {
+    return false;
+}
+
+#endif
 
 #define JD_LSTORE_TYPE_DEVINFO 0x01
 #define JD_LSTORE_TYPE_DMESG 0x02

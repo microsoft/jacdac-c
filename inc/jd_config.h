@@ -149,6 +149,10 @@ int jd_usb_send_frame(void *frame);
 #define JD_MS_TIMER JD_CLIENT
 #endif
 
+#ifndef JD_LSTORE
+#define JD_LSTORE JD_CLIENT
+#endif
+
 #ifndef JD_HAS_PWM_ENABLE
 #define JD_HAS_PWM_ENABLE 1
 #endif
