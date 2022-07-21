@@ -418,6 +418,19 @@ void jd_lstore_process(void) {
     }
 }
 
+void jd_lstore_force_flush(void) {
+    jd_lstore_ctx_t *ctx = ls_ctx;
+
+    if (!ctx || !ctx->logs[0].block)
+        return;
+
+    for (int k = 0; k < 2; ++k)
+        for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i) {
+            jd_lstore_file_t *lf = &ctx->logs[i];
+            flush_to_disk(lf);
+        }
+}
+
 int jd_lstore_append_frag(unsigned logidx, unsigned type, const void *data, unsigned datasize) {
     while (datasize > 0xff) {
         int r = jd_lstore_append(logidx, type, data, 0xff);
@@ -560,7 +573,6 @@ void jd_lstore_init(void) {
     for (int i = 0; i < JD_LSTORE_NUM_FILES; ++i) {
         jd_lstore_file_t *lf = &ctx->logs[i];
         lf->parent = ctx;
-        LOG("i=%d", i);
         char *fn = jd_sprintf_a("log_%d.jdl", i);
 
         lf->size = JD_LSTORE_FILE_SIZE;

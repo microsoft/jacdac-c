@@ -23,6 +23,8 @@ void jd_lstore_process(void);
 int jd_lstore_append(unsigned logidx, unsigned type, const void *data, unsigned datasize);
 int jd_lstore_append_frag(unsigned logidx, unsigned type, const void *data, unsigned datasize);
 bool jd_lstore_is_enabled(void);
+// should only be called before application exit and similar events
+void jd_lstore_force_flush(void);
 
 void jd_lstore_panic_print_char(char c);
 void jd_lstore_panic_print_str(const char *s);
@@ -38,6 +40,7 @@ int jd_f_create(const char *name, uint32_t *size, uint32_t *sector_off);
 #else
 
 static inline void jd_lstore_init(void) {}
+static inline void jd_lstore_force_flush(void) {}
 static inline void jd_lstore_process(void) {}
 static inline int jd_lstore_append(unsigned logidx, unsigned type, const void *data,
                                    unsigned datasize) {
