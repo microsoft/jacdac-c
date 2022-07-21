@@ -601,9 +601,11 @@ void jd_print_double(char *buf, NUMBER d, int numdigits) {
 
 #if JD_FREE_SUPPORTED
 char *jd_vsprintf_a(const char *format, va_list ap) {
+    va_list ap2;
+    va_copy(ap2, ap);
     int len = jd_vsprintf(NULL, 0, format, ap);
     char *r = jd_alloc(len);
-    jd_vsprintf(r, len, format, ap);
+    jd_vsprintf(r, len, format, ap2);
     return r;
 }
 
