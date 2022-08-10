@@ -28,6 +28,7 @@ struct srv_state {
 
     const power_config_t *cfg;
     uint8_t prev_power_status;
+    uint8_t hw_watchdog_pulse_status;
 
     // timers
     uint32_t next_shutdown;
@@ -36,6 +37,7 @@ struct srv_state {
     uint32_t power_switch_time;
     uint32_t power_on_complete;
     uint32_t re_enable;
+    uint32_t hw_watchdog_pulse;
 };
 
 REG_DEFINITION(                                   //
@@ -48,10 +50,15 @@ REG_DEFINITION(                                   //
     REG_U32(JD_POWER_REG_KEEP_ON_PULSE_PERIOD),   //
 )
 
-static void set_limiter(srv_t *state, int onoff) {
+#define HW_WATCHDOG() (state->cfg->en_active_high == 3)
+
+static void set_limiter(srv_t *state) {
+    int onoff = state->power_status == JD_POWER_POWER_STATUS_POWERING;
     LOG("lim: %d", onoff);
 
-    if (state->cfg->en_active_high == 2) {
+    if (HW_WATCHDOG()) {
+        // do nothing
+    } else if (state->cfg->en_active_high == 2) {
         if (onoff) {
             pin_set(state->cfg->pin_en, 0);
             pin_set(state->cfg->pin_fault, 1);
@@ -89,6 +96,16 @@ static void send_shutdown(srv_t *state) {
 }
 
 void power_process(srv_t *state) {
+    if (HW_WATCHDOG() && jd_should_sample(&state->hw_watchdog_pulse, 9500)) {
+        if (state->power_status == JD_POWER_POWER_STATUS_OVERLOAD ||
+            state->power_status == JD_POWER_POWER_STATUS_POWERING) {
+            pin_set(state->cfg->pin_en, state->hw_watchdog_pulse_status);
+            state->hw_watchdog_pulse_status = !state->hw_watchdog_pulse_status;
+        } else {
+            pin_set(state->cfg->pin_en, 0);
+        }
+    }
+
     if (jd_should_sample(&state->next_leds, 256 * 1024)) {
         set_leds(state);
     }
@@ -102,6 +119,10 @@ void power_process(srv_t *state) {
         pin_set(state->cfg->pin_pulse, pulse_delta < state->pulse_duration * 1000);
     }
 
+    if (HW_WATCHDOG() && state->power_status == JD_POWER_POWER_STATUS_OVERLOAD &&
+        pin_get(state->cfg->pin_fault))
+        state->power_status = JD_POWER_POWER_STATUS_POWERING;
+
     if (state->power_status == JD_POWER_POWER_STATUS_POWERING) {
         if (state->prev_power_status == JD_POWER_POWER_STATUS_POWERING) {
             // already in steady state
@@ -109,11 +130,11 @@ void power_process(srv_t *state) {
                 // fault!
                 state->power_status = JD_POWER_POWER_STATUS_OVERLOAD;
                 state->re_enable = now + jd_random_around(OVERLOAD_MS * 1000);
-                set_limiter(state, 0);
+                set_limiter(state);
             }
         } else {
             if (!state->power_on_complete) {
-                set_limiter(state, 1);
+                set_limiter(state);
                 int ign = state->cfg->fault_ignore_ms;
                 state->power_on_complete = now + MS(ign ? ign : 16); // some time to ramp up
                 if (!state->power_on_complete)                       // unlikely wrap-around
@@ -126,10 +147,17 @@ void power_process(srv_t *state) {
         }
     } else {
         if (state->prev_power_status != state->power_status)
-            set_limiter(state, 0);
+            set_limiter(state);
     }
 
     state->power_on_complete = 0;
+
+    if (state->prev_power_status != state->power_status) {
+        LOG("status %d -> %d", state->prev_power_status, state->power_status);
+        state->prev_power_status = state->power_status;
+        jd_send_event_ext(state, JD_POWER_EV_POWER_STATUS_CHANGED, &state->power_status,
+                          sizeof(state->power_status));
+    }
 
     if (in_past(state->next_shutdown)) {
         state->next_shutdown = now + jd_random_around(MS(512));
@@ -139,13 +167,6 @@ void power_process(srv_t *state) {
             send_shutdown(state);
         }
         return;
-    }
-
-    if (state->prev_power_status != state->power_status) {
-        LOG("status %d -> %d", state->prev_power_status, state->power_status);
-        state->prev_power_status = state->power_status;
-        jd_send_event_ext(state, JD_POWER_EV_POWER_STATUS_CHANGED, &state->power_status,
-                          sizeof(state->power_status));
     }
 
     if (!state->allowed)
@@ -166,13 +187,18 @@ void power_handle_packet(srv_t *state, jd_packet_t *pkt) {
     case JD_SET(JD_POWER_REG_MAX_POWER):
         return; // ignore writing to max_power
     case JD_POWER_CMD_SHUTDOWN:
+        if (pkt->flags & JD_FRAME_FLAG_LOOPBACK) // doesn't actually happen...
+            return;                              // our own!
         if ((state->power_status == JD_POWER_POWER_STATUS_POWERING ||
              state->power_status == JD_POWER_POWER_STATUS_OVERLOAD) &&
-            !shutdown_pending()) {
+            !shutdown_pending() && state->power_on_complete == 0) {
             state->power_status = JD_POWER_POWER_STATUS_OVERPROVISION;
             state->power_switch_time = now + jd_random_around(MS(8 * 1024)); // around 8s
         }
-        // shift the re-enable ahead
+        // note that we'll keep getting shutdown commands - if we're already over-provisioned
+        // we'll just keep shifting the re_enable timer forward, so it never triggers
+        // Once the shutdown packets stop, we won't wait for power_switch_time, but only
+        // for the re_enable
         state->re_enable = now + MS(1024) + jd_random_around(MS(256));
         return;
     }
@@ -194,7 +220,7 @@ void power_handle_packet(srv_t *state, jd_packet_t *pkt) {
     case JD_POWER_REG_KEEP_ON_PULSE_DURATION:
         if (state->pulse_period && state->pulse_duration) {
             // assuming 22R in 0805, we get around 1W or power dissipation, but can withstand only
-            // 1/8W continous so we limit duty cycle to 10%, and make sure it doesn't stay on for
+            // 1/8W continuos so we limit duty cycle to 10%, and make sure it doesn't stay on for
             // more than 1s
             if (state->pulse_duration > 1000)
                 state->pulse_duration = 1000;
@@ -210,13 +236,14 @@ void power_init(const power_config_t *cfg) {
     SRV_ALLOC(power);
     state->cfg = cfg;
 
-    pin_setup_input(cfg->pin_fault, PIN_PULL_UP);
+    pin_setup_input(cfg->pin_fault, HW_WATCHDOG() ? PIN_PULL_NONE : PIN_PULL_UP);
     pin_setup_output(cfg->pin_en);
-    set_limiter(state, 1);
     pin_set(cfg->pin_pulse, 1);
     pin_setup_output(cfg->pin_pulse);
 
     state->power_status = JD_POWER_POWER_STATUS_POWERING;
+    set_limiter(state);
+
     state->next_shutdown = now + jd_random_around(MS(256));
 
     state->allowed = 1;
@@ -233,7 +260,8 @@ void power_init(const power_config_t *cfg) {
         state->last_pulse = now - state->pulse_duration * 1000;
     }
 
-    tim_max_sleep = 1000; // wakeup at 1ms not usual 10ms to get faster over-current reaction
+    if (cfg->en_active_high < 2)
+        tim_max_sleep = 1000; // wakeup at 1ms not usual 10ms to get faster over-current reaction
 }
 
 #endif

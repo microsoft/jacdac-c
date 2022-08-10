@@ -114,7 +114,11 @@ typedef struct {
     uint8_t pin_fault; // active low
     uint8_t pin_en;
     uint8_t pin_pulse;
-    uint8_t en_active_high; // use '2' to indicate transistor-on-EN setup, where flt and en are connected at limiter
+
+    // use '2' to indicate transistor-on-EN setup, where flt and en are connected at limiter
+    // use '3' to indicate that EN should be pulsed at 50Hz (10ms on, 10ms off) to enable the limiter
+    uint8_t en_active_high; 
+
     uint16_t fault_ignore_ms; // defaults to 16ms
 } power_config_t;
 void power_init(const power_config_t *cfg);
