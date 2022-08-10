@@ -33,7 +33,7 @@ int jd_usb_write_serial(const void *data, unsigned len) {
         return 0;
     int r = -1;
     target_disable_irq();
-    int fr = jd_bqueue_free_bytes(usb_serial_queue);
+    unsigned fr = jd_bqueue_free_bytes(usb_serial_queue);
     if (fr >= 2 && usb_serial_gap == 1) {
         uint8_t gap[2] = {JD_USB_BRIDGE_QBYTE_MAGIC, JD_USB_BRIDGE_QBYTE_SERIAL_GAP};
         jd_bqueue_push(usb_serial_queue, gap, 2);
@@ -302,5 +302,7 @@ int jd_usb_send_frame(void *frame) {
     jd_usb_pull_ready();
     return r;
 }
+
+__attribute__((weak)) void jd_usb_process(void) {}
 
 #endif

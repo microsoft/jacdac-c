@@ -88,6 +88,7 @@ void spiflash_read_sfdp(uint32_t addr, void *buffer, uint32_t len) {
 }
 
 static uint32_t get_num_bytes(void) {
+    // TODO: send 0x9F command and return (1 << res[2]) - seems to work with everything
     sfdp_header0_t hd0;
     spiflash_read_sfdp(0, &hd0, sizeof(hd0));
     if (memcmp(hd0.magic, "SFDP", 4) != 0) {

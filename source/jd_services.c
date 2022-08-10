@@ -345,6 +345,10 @@ void jd_services_tick() {
     jd_client_process();
 #endif
 
+#if JD_USB_BRIDGE
+    jd_usb_process();
+#endif
+
     jd_tx_flush();
 }
 
