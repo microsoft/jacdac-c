@@ -38,6 +38,10 @@ struct srv_state {
     uint32_t power_on_complete;
     uint32_t re_enable;
     uint32_t hw_watchdog_pulse;
+#ifdef PIN_PWR_LED_PULSE
+    uint32_t led_pulse_on;
+    uint32_t led_pulse_off;
+#endif
 };
 
 REG_DEFINITION(                                   //
@@ -79,7 +83,11 @@ static uint32_t glows[] = {
     [JD_POWER_POWER_STATUS_OVERLOAD] = JD_GLOW(VERY_SLOW_LOW, GLOW_CH, MAGENTA),
     [JD_POWER_POWER_STATUS_OVERPROVISION] = JD_GLOW_OFF(GLOW_CH),
     [JD_POWER_POWER_STATUS_DISALLOWED] = JD_GLOW_OFF(GLOW_CH),
+#ifdef PIN_PWR_LED_PULSE
+    [JD_POWER_POWER_STATUS_POWERING] = JD_GLOW_OFF(GLOW_CH),
+#else
     [JD_POWER_POWER_STATUS_POWERING] = JD_GLOW(VERY_SLOW_LOW, GLOW_CH, GREEN),
+#endif
 };
 
 static void set_leds(srv_t *state) {
@@ -95,7 +103,34 @@ static void send_shutdown(srv_t *state) {
     jd_packet_ready();
 }
 
+static int has_power(void) {
+#ifdef PIN_PWR_DET
+    pin_setup_input(PIN_PWR_DET, PIN_PULL_NONE);
+    return pin_get(PIN_PWR_DET);
+#else
+    return 1;
+#endif
+}
+
 void power_process(srv_t *state) {
+    if (!has_power()) {
+        state->power_status = JD_POWER_POWER_STATUS_DISALLOWED; // TODO - use some other state
+    }
+
+#ifdef PIN_PWR_LED_PULSE
+    if (jd_should_sample(&state->led_pulse_on, 2 << 20)) {
+        state->led_pulse_off = now + (50 << 10);
+        if (state->power_status == JD_POWER_POWER_STATUS_POWERING) {
+            pin_set(PIN_PWR_LED_PULSE, 0);
+            pin_setup_output(PIN_PWR_LED_PULSE);
+        }
+    }
+    if (in_past(state->led_pulse_off)) {
+        pin_setup_analog_input(PIN_PWR_LED_PULSE);
+        state->led_pulse_off = now + (50 << 20);
+    }
+#endif
+
     if (HW_WATCHDOG() && jd_should_sample(&state->hw_watchdog_pulse, 9500)) {
         if (state->power_status == JD_POWER_POWER_STATUS_OVERLOAD ||
             state->power_status == JD_POWER_POWER_STATUS_POWERING) {
