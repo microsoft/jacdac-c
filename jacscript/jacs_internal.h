@@ -39,6 +39,7 @@ typedef struct jacs_fiber {
         } reg_get;
         struct {
             uint16_t string_idx;
+            uint16_t localsidx;
             uint8_t num_args;
         } logmsg;
     } pkt_data;
@@ -56,6 +57,8 @@ typedef struct jacs_fiber {
 
     uint32_t wake_time;
 
+    value_t ret_val;
+
     jacs_activation_t *activation;
     struct jacs_ctx *ctx;
 } jacs_fiber_t;
@@ -66,18 +69,14 @@ typedef struct jacs_fiber {
 #define JACS_CTX_TRACE_DISABLED 0x0008
 
 struct jacs_ctx {
-    value_t registers[JACS_NUM_REGS];
-    union {
-        struct {
-            uint16_t a, b, c, d;
-        };
-        uint16_t params[4];
-    };
     value_t *globals;
-
+    uint16_t opstack;
     uint16_t flags;
     uint16_t error_code;
     uint16_t error_pc;
+
+    value_t binop[2];
+    double binop_f[2];
 
     jacs_img_t img;
 
@@ -106,11 +105,14 @@ struct jacs_ctx {
 };
 
 struct jacs_activation {
+    uint16_t pc;
+    uint16_t maxpc;
     jacs_activation_t *caller;
     jacs_fiber_t *fiber;
     const jacs_function_desc_t *func;
-    uint16_t saved_regs;
-    uint16_t pc;
+    value_t *params;
+    uint8_t num_params;
+    uint8_t params_is_copy : 1;
     value_t locals[0];
 };
 
@@ -124,7 +126,10 @@ static inline bool jacs_trace_enabled(jacs_ctx_t *ctx) {
 }
 
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
-value_t jacs_runtime_failure(jacs_ctx_t *ctx);
+value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code);
+static inline value_t jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
+    return _jacs_runtime_failure(ctx, code - 60000);
+}
 
 // strformat.c
 size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
@@ -142,32 +147,29 @@ void jacs_jd_init_roles(jacs_ctx_t *ctx);
 void jacs_jd_free_roles(jacs_ctx_t *ctx);
 void jacs_jd_role_changed(jacs_ctx_t *ctx, jd_role_t *role);
 void jacs_jd_clear_pkt_kind(jacs_fiber_t *fib);
-void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args);
+void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned localsidx,
+                         unsigned num_args);
 
 // fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_yield(jacs_ctx_t *ctx);
-void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numargs);
+void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params,
+                              unsigned numargs);
 void jacs_fiber_return_from_call(jacs_activation_t *act);
-void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op);
+void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
+                      unsigned op);
 void jacs_fiber_run(jacs_fiber_t *fiber);
 void jacs_fiber_poke(jacs_ctx_t *ctx);
 void jacs_fiber_sync_now(jacs_ctx_t *ctx);
 void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 
 // step.c
-void jacs_act_step(jacs_activation_t *frame);
-void jacs_act_restore_regs(jacs_activation_t *act);
-value_t *jacs_act_saved_regs_ptr(jacs_activation_t *act);
+void jacs_vm_exec_stmt(jacs_activation_t *frame);
+void jacs_vm_check_stmt(void);
+void jacs_vm_check_expr(void);
 
-// math.c
-value_t jacs_step_unop(int op, value_t v);
-value_t jacs_step_binop(int op, value_t a, value_t b);
-value_t jacs_step_opmath1(int op, value_t a);
-value_t jacs_step_opmath2(int op, value_t a, value_t b);
-
-value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer,
+value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, uint32_t buffer,
                        value_t *setv);
 void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx);
 double jacs_read_number(void *data, unsigned bufsz, uint16_t fmt0);

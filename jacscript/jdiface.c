@@ -85,7 +85,8 @@ void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     jacs_fiber_sleep(fib, 0);
 }
 
-void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args) {
+void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned localsidx,
+                         unsigned num_args) {
     jacs_fiber_t *fib = ctx->curr_fiber;
 
     fib->role_idx = JACS_NO_ROLE;
@@ -95,6 +96,7 @@ void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args
     ctx->log_counter++;
     fib->pkt_data.logmsg.string_idx = string_idx;
     fib->pkt_data.logmsg.num_args = num_args;
+    fib->pkt_data.logmsg.localsidx = localsidx;
 
     if (handle_logmsg(fib, true) == RESUME_USER_CODE) {
         jacs_jd_clear_pkt_kind(fib);
@@ -273,10 +275,11 @@ static bool handle_logmsg(jacs_fiber_t *fiber, bool print) {
 
     jd_packet_t *pkt = &ctx->packet;
     unsigned str_idx = fiber->pkt_data.logmsg.string_idx;
-    unsigned sz = jacs_strformat(
-        jacs_img_get_string_ptr(&ctx->img, str_idx), jacs_img_get_string_len(&ctx->img, str_idx),
-        (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
-        jacs_act_saved_regs_ptr(fiber->activation), fiber->pkt_data.logmsg.num_args, 0);
+    unsigned sz = jacs_strformat(jacs_img_get_string_ptr(&ctx->img, str_idx),
+                                 jacs_img_get_string_len(&ctx->img, str_idx), (char *)pkt->data + 2,
+                                 JD_SERIAL_PAYLOAD_SIZE - 2,
+                                 fiber->activation->locals + fiber->pkt_data.logmsg.localsidx,
+                                 fiber->pkt_data.logmsg.num_args, 0);
     pkt->data[0] = low_log_counter & 0xff;     // log-counter
     pkt->data[1] = 0;                          // flags
     pkt->data[JD_SERIAL_PAYLOAD_SIZE - 1] = 0; // make sure to 0-terminate
@@ -360,9 +363,16 @@ void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     pkt = &ctx->packet;
 
     unsigned numroles = jacs_img_num_roles(&ctx->img);
+
+    // DMESG("pkt %d %x / %d", pkt->service_index, pkt->service_command, pkt->service_size);
+    // jd_log_packet(&ctx->packet);
+
     for (unsigned idx = 0; idx < numroles; ++idx) {
         if (jacs_jd_pkt_matches_role(ctx, idx)) {
-            // DMESG("wake pkt %x / %d", pkt->service_command, pkt->service_size);
+#if 0
+            DMESG("wake pkt s=%d %x / %d r=%s", pkt->service_index, pkt->service_command,
+                  pkt->service_size, ctx->roles[idx]->name);
+#endif
             jacs_fiber_sync_now(ctx);
             jacs_jd_update_all_regcache(ctx, idx);
             jacs_jd_wake_role(ctx, idx);

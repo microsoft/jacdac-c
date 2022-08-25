@@ -3,12 +3,9 @@
 #include "jacs_value.h"
 #include <stdbool.h>
 
-#define JACS_NUM_REGS 16
-
 typedef struct jacs_img {
     union {
         const uint8_t *data;
-        const uint16_t *instructions;
         const jacs_img_header_t *header;
     };
 } jacs_img_t;
@@ -56,10 +53,6 @@ static inline const jacs_buffer_desc_t *jacs_img_get_buffer(const jacs_img_t *im
                                         idx * sizeof(jacs_buffer_desc_t));
 }
 
-static inline bool jacs_is_prefix_instr(uint16_t instr) {
-    return (instr >> 12) <= JACS_OPTOP_SET_HIGH;
-}
-
 static inline const jacs_img_section_t *jacs_img_get_string(const jacs_img_t *img, uint32_t idx) {
     return (const jacs_img_section_t *)(img->data + img->header->strings.start +
                                         idx * sizeof(jacs_img_section_t));
@@ -72,3 +65,5 @@ static inline const char *jacs_img_get_string_ptr(const jacs_img_t *img, uint32_
 static inline unsigned jacs_img_get_string_len(const jacs_img_t *img, uint32_t idx) {
     return jacs_img_get_string(img, idx)->length;
 }
+
+const char *jacs_img_fun_name(const jacs_img_t *img, unsigned fidx);

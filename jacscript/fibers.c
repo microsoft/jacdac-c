@@ -1,5 +1,7 @@
 #include "jacs_internal.h"
 
+#define LOG JD_LOG
+
 void jacs_fiber_yield(jacs_ctx_t *ctx) {
     if (ctx->curr_fn && jacs_trace_enabled(ctx)) {
         jacs_trace_ev_fiber_yield_t ev = {.pc = ctx->curr_fn->pc};
@@ -13,23 +15,22 @@ void jacs_fiber_yield(jacs_ctx_t *ctx) {
 static void jacs_fiber_activate(jacs_activation_t *act) {
     act->fiber->activation = act;
     act->fiber->ctx->curr_fn = act;
-    jacs_act_restore_regs(act);
 }
 
-void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numargs) {
+void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params,
+                              unsigned numargs) {
     jacs_ctx_t *ctx = fiber->ctx;
     const jacs_function_desc_t *func = jacs_img_get_function(&ctx->img, fidx);
 
-    int numregs = func->num_regs_and_args & 0xf;
-
     jacs_activation_t *callee =
-        jd_alloc(sizeof(jacs_activation_t) + sizeof(value_t) * (numregs + func->num_locals));
-    memcpy(callee->locals, ctx->registers, numargs * sizeof(value_t));
-    callee->pc = func->start >> 1;
+        jd_alloc(sizeof(jacs_activation_t) + sizeof(value_t) * func->num_locals);
+    callee->params = params;
+    callee->num_params = numargs;
+    callee->pc = func->start;
+    callee->maxpc = func->start + func->length;
     callee->caller = fiber->activation;
     callee->fiber = fiber;
     callee->func = func;
-    callee->saved_regs = 0;
 
     // if fiber already activated, move the activation pointer
     if (fiber->activation)
@@ -63,19 +64,31 @@ static void free_fiber(jacs_fiber_t *fiber) {
     jd_free(fiber);
 }
 
+static void free_activation(jacs_activation_t *act) {
+    if (act->params_is_copy)
+        jd_free(act->params);
+    jd_free(act);
+}
+
+static void log_fiber_op(jacs_fiber_t *fiber, const char *op) {
+    LOG("%s fiber %s_F%d", op, jacs_img_fun_name(&fiber->ctx->img, fiber->bottom_function_idx),
+        fiber->bottom_function_idx);
+}
+
 void jacs_fiber_return_from_call(jacs_activation_t *act) {
     if (act->caller) {
         jacs_fiber_activate(act->caller);
-        jd_free(act);
+        free_activation(act);
     } else {
         jacs_fiber_t *fiber = act->fiber;
         if (fiber->pending) {
-            DMESG("re-run fiber %d ", fiber->bottom_function_idx);
+            log_fiber_op(fiber, "re-run");
             fiber->pending = 0;
-            act->pc = act->func->start >> 1;
+            act->pc = act->func->start;
         } else {
-            DMESG("free fiber %d", fiber->bottom_function_idx);
+            log_fiber_op(fiber, "free");
             jacs_fiber_yield(fiber->ctx);
+            free_activation(act);
             free_fiber(fiber);
         }
     }
@@ -89,7 +102,7 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx) {
         jacs_activation_t *act = f->activation;
         while (act) {
             jacs_activation_t *n = act->caller;
-            jd_free(act);
+            free_activation(act);
             act = n;
         }
         jd_free(f);
@@ -97,7 +110,15 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx) {
     }
 }
 
-void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op) {
+const char *jacs_img_fun_name(const jacs_img_t *img, unsigned fidx) {
+    if (fidx >= jacs_img_num_functions(img))
+        return "???";
+    const jacs_function_desc_t *func = jacs_img_get_function(img, fidx);
+    return jacs_img_get_string_ptr(img, func->name_idx);
+}
+
+void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
+                      unsigned op) {
     jacs_fiber_t *fiber;
 
     if (op != JACS_OPCALL_BG)
@@ -105,34 +126,34 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
             if (fiber->bottom_function_idx == fidx) {
                 if (op == JACS_OPCALL_BG_MAX1_PEND1) {
                     if (fiber->pending) {
-                        ctx->registers[0] = jacs_value_from_int(3);
-                        // DMESG("fiber already pending %d", fidx);
+                        fiber->ret_val = jacs_value_from_int(3);
+                        // LOG("fiber already pending %d", fidx);
                     } else {
                         fiber->pending = 1;
-                        // DMESG("pend fiber %d", fidx);
-                        ctx->registers[0] = jacs_value_from_int(2);
+                        // LOG("pend fiber %d", fidx);
+                        fiber->ret_val = jacs_value_from_int(2);
                     }
                 } else {
-                    ctx->registers[0] = jacs_zero;
+                    fiber->ret_val = jacs_zero;
                 }
                 return;
             }
         }
 
-    DMESG("start fiber %d", fidx);
-
     fiber = jd_alloc(sizeof(*fiber));
     fiber->ctx = ctx;
     fiber->bottom_function_idx = fidx;
 
-    jacs_fiber_call_function(fiber, fidx, numargs);
+    log_fiber_op(fiber, "start");
+
+    jacs_fiber_call_function(fiber, fidx, params, numargs);
 
     fiber->next = ctx->fibers;
     ctx->fibers = fiber;
 
     jacs_fiber_set_wake_time(fiber, jacs_now(ctx));
 
-    ctx->registers[0] = jacs_one;
+    fiber->ret_val = jacs_one;
 }
 
 void jacs_fiber_run(jacs_fiber_t *fiber) {
@@ -149,8 +170,6 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
     fiber->role_idx = JACS_NO_ROLE;
     jacs_fiber_set_wake_time(fiber, 0);
 
-    ctx->a = ctx->b = ctx->c = ctx->d = 0;
-
     ctx->curr_fiber = fiber;
     jacs_fiber_activate(fiber->activation);
 
@@ -161,7 +180,7 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
 
     unsigned maxsteps = JACS_MAX_STEPS;
     while (ctx->curr_fn && --maxsteps)
-        jacs_act_step(ctx->curr_fn);
+        jacs_vm_exec_stmt(ctx->curr_fn);
 
     if (maxsteps == 0)
         jacs_panic(ctx, JACS_PANIC_TIMEOUT);
@@ -172,6 +191,7 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
         code = JACS_PANIC_REBOOT;
     if (!ctx->error_code) {
         ctx->error_pc = ctx->curr_fn ? ctx->curr_fn->pc : 0;
+        // using DMESG here since this logging should never be disabled
         if (code == JACS_PANIC_REBOOT) {
             DMESG("RESTART requested");
         } else {
@@ -182,14 +202,17 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
         if (code != JACS_PANIC_REBOOT)
             for (jacs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
                 int idx = fn->func - jacs_img_get_function(&ctx->img, 0);
-                DMESG("  pc=%d @ fun%d", (int)(fn->pc - (fn->func->start >> 1)), idx);
+                DMESG("  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),
+                      jacs_img_fun_name(&ctx->img, idx), idx);
             }
     }
     jacs_fiber_yield(ctx);
 }
 
-value_t jacs_runtime_failure(jacs_ctx_t *ctx) {
-    jacs_panic(ctx, JACS_PANIC_RUNTIME_FAILURE);
+value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
+    if (code < 100)
+        code = 100;
+    jacs_panic(ctx, 60000 + code);
     return jacs_nan;
 }
 

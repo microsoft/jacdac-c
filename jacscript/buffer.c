@@ -80,7 +80,7 @@ static double clamp_double(value_t v, double l, double h) {
         F64 = SZ;                                                                                  \
         break;
 
-value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer,
+value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, uint32_t buffer,
                        value_t *setv) {
     int is_float = 0;
 
@@ -105,16 +105,21 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset,
     jacs_ctx_t *ctx = frame->fiber->ctx;
     jd_packet_t *pkt = &ctx->packet;
 
-    if ((fmt == 0b1000 || fmt == 0b1001) || shift > sz * 8 ||
-        buffer >= jacs_img_num_buffers(&ctx->img))
-        return jacs_runtime_failure(ctx);
+    if (fmt == 0b1000 || fmt == 0b1001)
+        return jacs_runtime_failure(ctx, 60100);
+
+    if (shift > sz * 8)
+        return jacs_runtime_failure(ctx, 60101);
+
+    if (buffer >= jacs_img_num_buffers(&ctx->img))
+        return jacs_runtime_failure(ctx, 60102);
 
     unsigned bufsz = buffer == 0 ? pkt->service_size : jacs_img_get_buffer(&ctx->img, buffer)->size;
 
     if (offset + sz > bufsz) {
         // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
         if (setv)
-            return jacs_runtime_failure(ctx);
+            return jacs_runtime_failure(ctx, 60103);
         else
             return jacs_nan;
     }
