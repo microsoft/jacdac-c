@@ -2,10 +2,9 @@
 #include "interfaces/jd_pins.h"
 #include "jacdac/dist/c/dotmatrix.h"
 #include "interfaces/jd_hw_pwr.h"
+#include "interfaces/jd_disp.h"
 
-#if defined(STM32X) && defined(NUM_DISPLAY_COLS)
-
-#include "tinyhw.h"
+#if defined(NUM_DISPLAY_COLS)
 
 #define BUFFER_SIZE (NUM_DISPLAY_COLS * ((NUM_DISPLAY_ROWS + 7) >> 3))
 
