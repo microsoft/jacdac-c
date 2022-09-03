@@ -55,6 +55,7 @@ extern "C" {
 #define JDSPI_MAGIC_NOOP 0xB3CD
 
 typedef void (*cb_t)(void);
+typedef int (*intfn_t)(void *);
 
 struct _jd_packet_t {
     uint16_t crc;

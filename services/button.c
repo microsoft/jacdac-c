@@ -12,13 +12,16 @@ struct srv_state {
     uint8_t backlight_pin;
     uint8_t prev_pressed;
     uint8_t active;
+    intfn_t is_active;
+    void *is_active_arg;
     uint32_t next_hold;
     uint32_t press_time;
     uint32_t nextSample;
 };
 
 static void update(srv_t *state) {
-    state->pressed = pin_get(state->pin) == state->active;
+    state->pressed = state->is_active ? state->is_active(state->is_active_arg)
+                                      : pin_get(state->pin) == state->active;
 
     if (state->pressed != state->prev_pressed) {
         state->prev_pressed = state->pressed;
@@ -65,5 +68,14 @@ void button_init(uint8_t pin, bool active, uint8_t backlight_pin) {
     state->active = active;
     pin_setup_output(backlight_pin);
     pin_setup_input(state->pin, state->active == 0 ? PIN_PULL_UP : PIN_PULL_DOWN);
+    update(state);
+}
+
+void button_init_fn(intfn_t is_active, void *is_active_arg) {
+    SRV_ALLOC(button);
+    state->is_active = is_active;
+    state->is_active_arg = is_active_arg;
+    state->pin = NO_PIN;
+    state->backlight_pin = NO_PIN;
     update(state);
 }

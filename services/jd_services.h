@@ -63,6 +63,8 @@ void servo_init(const servo_params_t *params);
 // An internal pull-up/down is setup correspondingly.
 // backlight_pin is active low, and can be disabled with NO_PIN.
 void button_init(uint8_t pin, bool active, uint8_t backlight_pin);
+// Generic version with callback
+void button_init_fn(intfn_t is_active, void *is_active_arg);
 
 typedef uint8_t (*active_cb_t)(uint32_t *state);
 void switch_init(active_cb_t is_active, uint8_t variant);
