@@ -122,6 +122,14 @@ jd_role_manager_roles_t *rolemgr_serialize_role(jd_role_t *r) {
 void rolemgr_process(srv_t *state) {
     while (state->list_ptr) {
         jd_role_t *r = state->list_ptr;
+        while (r) {
+            if (r->hidden)
+                r = r->_next;
+            else
+                break;
+        }
+        if (!r)
+            break;
 
         unsigned sz = rolemgr_serialized_role_size(r);
         int err = jd_opipe_check_space(&state->list_pipe, sz);

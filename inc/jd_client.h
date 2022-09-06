@@ -120,6 +120,7 @@ typedef struct jd_role {
     struct jd_role *_next;
     const char *name;
     uint32_t service_class;
+    uint32_t hidden : 1;
     jd_device_service_t *service;
 } jd_role_t;
 
