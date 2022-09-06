@@ -295,6 +295,16 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
     if (pkt->device_identifier == jd_device_id()) {
         jd_app_handle_command(pkt);
         if (pkt->service_index < num_services) {
+#if JD_INSTANCE_NAME
+            if (pkt->service_command == JD_GET(JD_REG_INSTANCE_NAME)) {
+                const char *name = app_get_instance_name(pkt->service_index);
+                if (name == NULL)
+                    jd_send_not_implemented(pkt);
+                else
+                    jd_respond_string(pkt, name);
+                return;
+            }
+#endif
             srv_t *s = services[pkt->service_index];
             s->vt->handle_pkt(s, pkt);
         }
@@ -433,3 +443,7 @@ void dump_pkt(jd_packet_t *pkt, const char *msg) {
 }
 
 __attribute__((weak)) void app_process(void) {}
+
+__attribute__((weak)) const char *app_get_instance_name(int service_idx) {
+    return NULL;
+}
