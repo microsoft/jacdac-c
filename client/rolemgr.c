@@ -258,6 +258,8 @@ jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
         }
     }
 
+    state->changed = 1;
+
     return r;
 }
 
@@ -305,6 +307,8 @@ void jd_role_free_all() {
         r->name = NULL;
         jd_free(r);
     }
+
+    state->changed = 1;
 }
 
 jd_role_t *jd_role_by_service(jd_device_service_t *serv) {
