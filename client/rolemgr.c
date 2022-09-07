@@ -119,18 +119,19 @@ jd_role_manager_roles_t *rolemgr_serialize_role(jd_role_t *r) {
     return tmp;
 }
 
+static jd_role_t *next_visible(jd_role_t *r) {
+    while (r) {
+        if (r->hidden)
+            r = r->_next;
+        else
+            break;
+    }
+    return r;
+}
+
 void rolemgr_process(srv_t *state) {
     while (state->list_ptr) {
         jd_role_t *r = state->list_ptr;
-        while (r) {
-            if (r->hidden)
-                r = r->_next;
-            else
-                break;
-        }
-        if (!r)
-            break;
-
         unsigned sz = rolemgr_serialized_role_size(r);
         int err = jd_opipe_check_space(&state->list_pipe, sz);
         if (err == JD_PIPE_TRY_AGAIN)
@@ -145,7 +146,7 @@ void rolemgr_process(srv_t *state) {
         JD_ASSERT(err == 0);
         jd_free(tmp);
 
-        state->list_ptr = r->_next;
+        state->list_ptr = next_visible(r->_next);
 
         if (state->list_ptr == NULL)
             jd_opipe_close(&state->list_pipe);
@@ -194,7 +195,7 @@ void rolemgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_ROLE_MANAGER_CMD_LIST_ROLES:
         if (jd_opipe_open_cmd(&state->list_pipe, pkt) == 0) {
-            if (NULL == (state->list_ptr = state->roles)) {
+            if (NULL == (state->list_ptr = next_visible(state->roles))) {
                 // if nothing to list, close immediately
                 jd_opipe_close(&state->list_pipe);
             }
