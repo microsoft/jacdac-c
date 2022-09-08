@@ -34,29 +34,32 @@ bool jd_should_sample(uint32_t *sample, uint32_t period);
 // jd_should_sample_delay() will wait at least `period` until next sampling
 bool jd_should_sample_delay(uint32_t *sample, uint32_t period);
 
+// approx. a <= b modulo overflows
+// checks if time from a to b is at most 0x7fff_ffff
 static inline bool is_before(uint32_t a, uint32_t b) {
-    return ((b - a) >> 29) == 0;
+    return ((b - a) >> 31) == 0;
 }
 
 // check if given timestamp is already in the past, regardless of overflows on 'now'
-// the moment has to be no more than ~500 seconds in the past
+// the moment has to be no more than ~2100 seconds in the past
 static inline bool in_past(uint32_t moment) {
     extern uint32_t now;
-    return ((now - moment) >> 29) == 0;
+    return is_before(moment, now);
 }
 static inline bool in_future(uint32_t moment) {
     extern uint32_t now;
-    return ((moment - now) >> 29) == 0;
+    return is_before(now, moment);
 }
 
 #if JD_MS_TIMER
+// this works up to around 24 days
 static inline bool in_past_ms(uint32_t moment) {
     extern uint32_t now_ms;
-    return ((now_ms - moment) >> 29) == 0;
+    return is_before(moment, now_ms);
 }
 static inline bool in_future_ms(uint32_t moment) {
     extern uint32_t now_ms;
-    return ((moment - now_ms) >> 29) == 0;
+    return is_before(now_ms, moment);
 }
 bool jd_should_sample_ms(uint32_t *sample, uint32_t period);
 #endif
