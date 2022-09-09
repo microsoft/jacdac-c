@@ -178,3 +178,19 @@ int sensor_should_stream(srv_t *state) {
     }
     return false;
 }
+
+bool sensor_should_send_threshold_event(uint32_t *block, uint32_t debounce_ms, bool cond_ok) {
+    if (*block == 0 || in_past(*block)) {
+        if (cond_ok) {
+            if (*block == 0) {
+                *block = now + (debounce_ms << 10);
+                return 1;
+            } else {
+                *block = now;
+            }
+        } else {
+            *block = 0;
+        }
+    }
+    return 0;
+}

@@ -47,6 +47,7 @@ void sensor_process(srv_t *state);
 void sensor_send_status(srv_t *state);
 void *sensor_get_reading(srv_t *state);
 bool sensor_maybe_init(srv_t *state);
+bool sensor_should_send_threshold_event(uint32_t *block, uint32_t debounce_ms, bool cond_ok);
 
 // sync layout changes with env_sensor_handle_packet()
 typedef struct {
