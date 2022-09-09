@@ -339,8 +339,6 @@ void jd_client_handle_packet(jd_packet_t *pkt) {
     if (pkt->flags & JD_FRAME_FLAG_COMMAND) {
 
     } else {
-        jd_opipe_handle_packet(pkt);
-
         // report
         if (pkt->service_index == 0 && pkt->service_command == 0) {
             if (!dev)

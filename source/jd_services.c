@@ -260,14 +260,18 @@ static void handle_ctrl_tick(jd_packet_t *pkt) {
 }
 
 bool jd_services_needs_frame(jd_frame_t *frame) {
-#if JD_CLIENT || JD_PIPES
+#if JD_HANDLE_ALL_PACKETS
     return 1;
 #else
     jd_packet_t *pkt = (jd_packet_t *)frame;
     if (pkt->flags & JD_FRAME_FLAG_COMMAND) {
         return (pkt->flags & JD_FRAME_FLAG_BROADCAST) || pkt->device_identifier == jd_device_id();
     } else {
+#if JD_CLIENT || JD_PIPES
+        return 1;
+#else
         return is_client_announce(pkt);
+#endif
     }
 #endif
 }
