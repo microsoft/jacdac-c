@@ -114,7 +114,15 @@ static int has_power(void) {
 
 void power_process(srv_t *state) {
     if (!has_power()) {
-        state->power_status = JD_POWER_POWER_STATUS_DISALLOWED; // TODO - use some other state
+        if (state->power_status == JD_POWER_POWER_STATUS_POWERING) {
+            LOG("no power");
+            state->power_status = JD_POWER_POWER_STATUS_DISALLOWED; // TODO - use some other state
+        }
+    } else {
+        if (state->allowed && state->power_status == JD_POWER_POWER_STATUS_DISALLOWED) {
+            LOG("power returned");
+            state->power_status = JD_POWER_POWER_STATUS_POWERING;
+        }
     }
 
 #ifdef PIN_PWR_LED_PULSE
