@@ -202,4 +202,8 @@ int jd_usb_send_frame(void *frame);
         JD_ERROR_BLINK(JD_BLINK_ERROR_OVF);                                                        \
     } while (0)
 
+#ifndef JD_SIMPLE_ALLOC
+#define JD_SIMPLE_ALLOC 1
+#endif
+
 #endif

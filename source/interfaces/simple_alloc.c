@@ -3,6 +3,8 @@
 
 #include "jd_protocol.h"
 
+#if JD_SIMPLE_ALLOC
+
 #define STACK_SIZE 512
 #define STACK_BASE ((uintptr_t)&_estack)
 #define HEAP_BASE ((uintptr_t)&_end)
@@ -150,3 +152,5 @@ void *jd_alloc_emergency_area(uint32_t size) {
         jd_panic();
     return (void *)HEAP_BASE;
 }
+
+#endif
