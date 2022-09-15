@@ -62,6 +62,10 @@ uint16_t jd_crc16(const void *data, uint32_t size) {
     return crc;
 }
 
+bool jd_frame_crc_ok(jd_frame_t *frame) {
+    return jd_crc16((uint8_t *)frame + 2, JD_FRAME_SIZE(frame) - 2) == frame->crc;
+}
+
 void jd_compute_crc(jd_frame_t *frame) {
     frame->crc = jd_crc16((uint8_t *)frame + 2, JD_FRAME_SIZE(frame) - 2);
 }

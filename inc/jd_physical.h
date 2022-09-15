@@ -93,6 +93,7 @@ typedef struct _jd_pipe_cmd_t jd_pipe_cmd_t;
 
 void jd_packet_ready(void);
 void jd_compute_crc(jd_frame_t *frame);
+bool jd_frame_crc_ok(jd_frame_t *frame);
 // these are to be called by uart implementation
 void jd_tx_completed(int errCode);
 void jd_rx_completed(int dataLeft);
