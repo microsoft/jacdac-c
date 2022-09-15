@@ -17,6 +17,8 @@ static jd_opipe_desc_t *opipes;
 
 int _jd_tx_push_frame(jd_frame_t *f, int wait);
 
+static int jd_opipe_send_close_pkt(jd_opipe_desc_t *str);
+
 static void jd_opipe_unlink(jd_opipe_desc_t *str) {
     if (str->status == ST_FREE)
         return;
@@ -76,6 +78,8 @@ void jd_opipe_handle_packet(jd_packet_t *pkt) {
             jd_reset_frame(&str->frame);
             if (str->status == ST_CLOSED_WAITING) {
                 jd_opipe_unlink(str);
+            } else if (str->status == ST_CLOSED_UNSENT) {
+                jd_opipe_send_close_pkt(str);
             }
         }
     }
@@ -90,6 +94,9 @@ void jd_opipe_process() {
                 if (jd_send_frame(&str->frame) == 0) {
                     str->retry_time = now + ((4 * 1024) << str->curr_retry);
                     str->curr_retry++;
+                } else {
+                    // in case of ovf, give it some time
+                    str->retry_time = now + (64 << 10);
                 }
             } else if (str->curr_retry == JD_OPIPE_MAX_RETRIES + 1) {
                 str->retry_time = now + 32 * 1024; // grace period for final ACK
@@ -152,9 +159,20 @@ int jd_opipe_write(jd_opipe_desc_t *str, const void *data, unsigned len) {
     return jd_opipe_write_ex(str, data, len, 0);
 }
 
-int jd_opipe_close(jd_opipe_desc_t *str) {
-    int r;
+static int jd_opipe_send_close_pkt(jd_opipe_desc_t *str) {
+    str->status = ST_OPEN; // avoid error check in jd_opipe_check_space()
+    int r = jd_opipe_write_ex(str, NULL, 0, JD_PIPE_CLOSE_MASK);
+    if (r == JD_PIPE_OK) {
+        str->status = ST_CLOSED_WAITING;
+        do_flush(str);
+        return JD_PIPE_TRY_AGAIN;
+    } else {
+        str->status = ST_CLOSED_UNSENT;
+        return r;
+    }
+}
 
+int jd_opipe_close(jd_opipe_desc_t *str) {
     switch (str->status) {
     case ST_DROPPED:
         jd_opipe_unlink(str);
@@ -165,16 +183,7 @@ int jd_opipe_close(jd_opipe_desc_t *str) {
         return JD_PIPE_TRY_AGAIN;
     case ST_OPEN:
     case ST_CLOSED_UNSENT:
-        str->status = ST_OPEN; // avoid error check in jd_opipe_check_space()
-        r = jd_opipe_write_ex(str, NULL, 0, JD_PIPE_CLOSE_MASK);
-        if (r == JD_PIPE_OK) {
-            str->status = ST_CLOSED_WAITING;
-            do_flush(str);
-            return JD_PIPE_TRY_AGAIN;
-        } else {
-            str->status = ST_CLOSED_UNSENT;
-            return r;
-        }
+        return jd_opipe_send_close_pkt(str);
     default:
         jd_panic();
         return -1;
