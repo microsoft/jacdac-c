@@ -99,7 +99,7 @@ uint32_t history_ptr;
 #endif
 
 static void update(srv_t *state) {
-    uint32_t now_ms = tim_get_micros() >> 10; // roughly milliseconds
+    uint32_t nowms = tim_get_micros() >> 10; // roughly milliseconds
 
     uint16_t *channel_data = state->api->get_reading();
 
@@ -131,15 +131,15 @@ static void update(srv_t *state) {
         if (is_pressed != was_pressed) {
             if (is_pressed) {
                 jd_send_event_ext(state, JD_MULTITOUCH_EV_TOUCH, &i, sizeof(i));
-                p->start_press = now_ms;
-                if (now_ms - p->start_debounced > 500)
+                p->start_press = nowms;
+                if (nowms - p->start_debounced > 500)
                     p->start_debounced = p->start_press;
                 detect_swipe(state);
             } else {
-                p->end_press = now_ms;
+                p->end_press = nowms;
                 jd_send_event_ext(state, JD_MULTITOUCH_EV_RELEASE, &i, sizeof(i));
 #if CON_LOG
-                jdcon_log("press p%d %dms", i, now_ms - p->start_press);
+                jdcon_log("press p%d %dms", i, nowms - p->start_press);
 #endif
             }
         }

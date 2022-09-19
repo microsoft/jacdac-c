@@ -50,8 +50,8 @@ uint32_t jd_random_around(uint32_t v) {
 }
 
 // https://wiki.nicksoft.info/mcu:pic16:crc-16:home
-uint16_t jd_crc16(const void *data, uint32_t size) {
-    const uint8_t *ptr = (const uint8_t *)data;
+uint16_t jd_crc16(const void *data0, uint32_t size) {
+    const uint8_t *ptr = (const uint8_t *)data0;
     uint16_t crc = 0xffff;
     while (size--) {
         uint8_t data = *ptr++;

@@ -147,8 +147,8 @@ void jd_bqueue_test(void) {
         if ((jd_random() & 1) == 1) {
             int sz = (jd_random() & (sizeof(buf) - 1)) + 1;
             if (sz + len < TEST_SIZE) {
-                for (int i = 0; i < sz; ++i)
-                    buf[i] = push_data++;
+                for (int j = 0; i < sz; ++j)
+                    buf[j] = push_data++;
                 // DMESG("push %d", sz);
                 int r = jd_bqueue_push(q, buf, sz);
                 JD_ASSERT(r == 0);
@@ -171,8 +171,8 @@ void jd_bqueue_test(void) {
             len -= sz;
             // DMESG("pop %d", sz);
 
-            for (int i = 0; i < sz; ++i)
-                JD_ASSERT(buf[i] == pop_data++);
+            for (int j = 0; j < sz; ++j)
+                JD_ASSERT(buf[j] == pop_data++);
         }
 
         JD_ASSERT(len == (int)jd_bqueue_occupied_bytes(q));

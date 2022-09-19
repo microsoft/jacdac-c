@@ -124,8 +124,8 @@ void jd_queue_test() {
                 DMESG("pop %d", f->crc);
                 ASSERT(f->crc == shift);
                 shift++;
-                for (int i = 0; i < f->size; ++i)
-                    ASSERT(f->data[i] == 0);
+                for (int j = 0; j < f->size; ++j)
+                    ASSERT(f->data[j] == 0);
                 jd_queue_shift(q);
             }
         }
