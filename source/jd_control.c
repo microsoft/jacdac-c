@@ -91,13 +91,11 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 #endif
 
     case JD_GET(JD_CONTROL_REG_DEVICE_DESCRIPTION):
-        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_dev_class_name,
-                strlen(app_dev_class_name));
+        jd_respond_string(pkt, app_get_dev_class_name());
         break;
 
     case JD_GET(JD_CONTROL_REG_FIRMWARE_VERSION):
-        jd_send(JD_SERVICE_INDEX_CONTROL, pkt->service_command, app_fw_version,
-                strlen(app_fw_version));
+        jd_respond_string(pkt, app_get_fw_version());
         break;
 
     case JD_GET(JD_CONTROL_REG_PRODUCT_IDENTIFIER):

@@ -76,9 +76,6 @@ struct srv_state_common {
 
 typedef struct srv_state_common srv_common_t;
 
-extern const char app_dev_class_name[];
-extern const char app_fw_version[];
-
 srv_t *jd_allocate_service(const srv_vt_t *vt);
 
 /**
@@ -125,7 +122,6 @@ void jd_services_tick(void);
  * This may also be called recursively if sensor implementation decides to sleep.
  */
 void jd_process_everything(void);
-
 
 /**
  * Refresh 'now' (and 'now_ms' if configured).
@@ -183,10 +179,9 @@ void jd_services_packet_queued(void);
  */
 void jd_services_sleep_us(uint32_t delta);
 
-/**
- * TODO: work out if this is required, or if we can write it out...
- **/
 uint32_t app_get_device_class(void);
+const char *app_get_fw_version(void);
+const char *app_get_dev_class_name(void);
 
 #define SRV_DEF_SZ(id, service_cls, sz)                                                            \
     static const srv_vt_t id##_vt = {                                                              \

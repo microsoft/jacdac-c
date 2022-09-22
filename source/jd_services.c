@@ -451,3 +451,14 @@ __attribute__((weak)) void app_process(void) {}
 __attribute__((weak)) const char *app_get_instance_name(int service_idx) {
     return NULL;
 }
+
+extern const char app_fw_version[];
+extern const char app_dev_class_name[];
+
+__attribute__((weak)) const char *app_get_fw_version(void) {
+    return app_fw_version;
+}
+
+__attribute__((weak)) const char *app_get_dev_class_name(void) {
+    return app_dev_class_name;
+}
