@@ -294,8 +294,8 @@ static uint32_t random_magic(void) {
 static void fill_devinfo(jd_lstore_device_info_t *hd) {
     memset(hd, 0, sizeof(*hd));
     hd->device_id = jd_device_id();
-    STRCPY(hd->firmware_name, app_dev_class_name);
-    STRCPY(hd->firmware_version, app_fw_version);
+    STRCPY(hd->firmware_name, app_get_dev_class_name());
+    STRCPY(hd->firmware_version, app_get_fw_version());
 }
 
 static void mount_log(jd_lstore_file_t *f, const char *name, int bl_shift) {
