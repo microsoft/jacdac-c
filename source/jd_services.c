@@ -187,6 +187,8 @@ void jd_services_init() {
     srv_t *tmp[MAX_SERV];
     services = tmp;
 
+    jd_refresh_now();
+
     jd_ctrl_init();
 #ifdef JD_CONSOLE
     jdcon_init();
