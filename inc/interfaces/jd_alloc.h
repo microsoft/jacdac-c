@@ -17,6 +17,10 @@
  **/
 void jd_alloc_init(void);
 
+#if JD_JACSCRIPT
+void jd_alloc_add_chunk(void *start, unsigned size);
+#endif
+
 /**
  * Any dynamic allocations made by the jacdac-c library will use this function.
  * It zeroes-out the memory and never returns NULL.

@@ -96,6 +96,10 @@
 #define JD_FREE_SUPPORTED JD_CLIENT
 #endif
 
+#ifndef JD_JACSCRIPT
+#define JD_JACSCRIPT JD_CLIENT
+#endif
+
 #ifndef JD_USB_BRIDGE
 #define JD_USB_BRIDGE 0
 #endif
@@ -188,7 +192,7 @@ int jd_usb_send_frame(void *frame);
 #define ERROR(msg, ...)                                                                            \
     do {                                                                                           \
         JD_LOG("! " msg, ##__VA_ARGS__);                                                           \
-        JD_ERROR_BLINK(JD_BLINK_ERROR_GENERAL);                                                            \
+        JD_ERROR_BLINK(JD_BLINK_ERROR_GENERAL);                                                    \
     } while (0)
 
 #define LINE_ERROR(msg, ...)                                                                       \
@@ -203,7 +207,15 @@ int jd_usb_send_frame(void *frame);
     } while (0)
 
 #ifndef JD_SIMPLE_ALLOC
-#define JD_SIMPLE_ALLOC 1
+#define JD_SIMPLE_ALLOC (!JD_FREE_SUPPORTED)
+#endif
+
+#ifndef JD_HW_ALLOC
+#define JD_HW_ALLOC JD_SIMPLE_ALLOC
+#endif
+
+#ifndef JD_GC_ALLOC
+#define JD_GC_ALLOC (JD_HW_ALLOC && !JD_SIMPLE_ALLOC)
 #endif
 
 #endif
