@@ -637,8 +637,8 @@ static int urlencode_core(char *dst, const char *src) {
     int len = 0;
     while (*src) {
         uint8_t c = *src++;
-        if ((48 <= c && c <= 57) || (97 <= (c | 0x20) && (c | 0x20) <= 122) ||
-            (c == 45 || c == 46 || c == 95 || c == 126)) {
+        if (('0' <= c && c <= '9') || ('a' <= (c | 0x20) && (c | 0x20) <= 'z') ||
+            (c == '-' || c == '.' || c == '_' || c == '~')) {
             if (dst)
                 *dst++ = c;
             len++;
