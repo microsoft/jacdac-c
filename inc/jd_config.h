@@ -218,4 +218,9 @@ int jd_usb_send_frame(void *frame);
 #define JD_GC_ALLOC (JD_HW_ALLOC && !JD_SIMPLE_ALLOC)
 #endif
 
+#ifndef JD_GC_KB
+#define JD_GC_KB 64
+#endif
+
+
 #endif
