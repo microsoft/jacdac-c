@@ -121,11 +121,14 @@ static void lps33hwtr_init(void) {
 
     if (v == LPS33HW_ID) {
         // OK
-        ctx->ctrl1 = readReg(LPS33HW_CTRL_REG1);
+        
         // Reset and reboot
         // BOOT|FIFO_EN|STOP_ON_FTH|IF_ADD_INC|I2C_DIS|[SWRESET]|0|ONE_SHOT
         writeReg(LPS33HW_CTRL_REG2, LPS33HW_DEFAULT_CTRL_REG2 | 0x04);
-        writeReg(LPS33HW_CTRL_REG1, ctx->ctrl1);
+        while (readReg(LPS33HW_CTRL_REG2) & 0x04)
+            ;
+    
+        // writeReg(LPS33HW_CTRL_REG1, ctx->ctrl1);
     } else {
         DMESG("invalid chip");
         hw_panic();
@@ -167,17 +170,18 @@ __attribute__((unused)) int32_t lps33hwtr_get_temperature(void) {
 static void lps33hwtr_process(void) {
     ctx_t *ctx = &state;
 
-    if (jd_should_sample_delay(&ctx->nextsample, 1000)) {
+    if (jd_should_sample_delay(&ctx->nextsample, SAMPLING_MS * 1000)) {
         uint8_t data[5];
         readData(LPS33HW_PRESS_OUT_XL, (uint8_t *)data, sizeof(data));
         uint32_t pressure = (data[2] << 16) | (data[1] << 8) | data[0];
         pressure = pressure >> 2;
 
-        uint16_t rtemp = (data[4] << 8) | data[3];
-        int32_t temp = rtemp * 10;
-        ctx->nextsample = now + SAMPLING_MS * 1000;
+        int16_t rtemp = (data[4] << 8) | data[3];
+        int32_t temp = (rtemp << 10) / 100;
+
         env_set_value(&ctx->pressure, pressure, pressure_error);
         env_set_value(&ctx->temperature, temp, temperature_error);
+
         ctx->inited = 2;
     }
 }
