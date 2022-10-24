@@ -222,5 +222,8 @@ int jd_usb_send_frame(void *frame);
 #define JD_GC_KB 64
 #endif
 
+#ifndef JD_AES_SOFT
+#define JD_AES_SOFT 1
+#endif
 
 #endif
