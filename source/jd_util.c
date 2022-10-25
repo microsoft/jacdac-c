@@ -692,14 +692,14 @@ char *jd_strdup(const char *a) {
     return jd_concat3(a, NULL, NULL);
 }
 
-static int jd_json_escape_core(const char *str, char *dst) {
+static int jd_json_escape_core(const char *str, unsigned sz, char *dst) {
     int len = 1;
 
     if (dst)
         *dst++ = '"';
 
-    while (*str) {
-        char c = *str++;
+    for (unsigned i = 0; i < sz; ++i) {
+        char c = str[i];
         int q = 0;
         switch (c) {
         case '"':
@@ -754,10 +754,10 @@ static int jd_json_escape_core(const char *str, char *dst) {
     return len;
 }
 
-char *jd_json_escape(const char *str) {
-    int len = jd_json_escape_core(str, NULL);
+char *jd_json_escape(const char *str, unsigned sz) {
+    int len = jd_json_escape_core(str, sz, NULL);
     char *r = jd_alloc(len);
-    jd_json_escape_core(str, r);
+    jd_json_escape_core(str, sz, r);
     return r;
 }
 
