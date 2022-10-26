@@ -83,6 +83,10 @@
 #define JD_WR_OVERHEAD 8
 #endif
 
+#ifndef JD_PHYSICAL
+#define JD_PHYSICAL 1
+#endif
+
 #ifndef JD_CLIENT
 #define JD_CLIENT 0
 #endif
@@ -108,13 +112,30 @@
 #define JD_BRIDGE JD_USB_BRIDGE
 #endif
 
-#ifndef JD_BRIDGE_SEND
+#ifndef JD_USB_BRIDGE_SEND
 #if JD_USB_BRIDGE
 int jd_usb_send_frame(void *frame);
-#define JD_BRIDGE_SEND(f) jd_usb_send_frame(f)
+#define JD_USB_BRIDGE_SEND(f) jd_usb_send_frame(f)
 #else
-#define JD_BRIDGE_SEND(...) ((void)0)
+#define JD_USB_BRIDGE_SEND(...) ((void)0)
 #endif
+#endif
+
+#ifndef JD_NET_BRIDGE_SEND
+#if JD_NET_BRIDGE
+int jd_net_send_frame(void *frame);
+#define JD_NET_BRIDGE_SEND(f) jd_net_send_frame(f)
+#else
+#define JD_NET_BRIDGE_SEND(...) ((void)0)
+#endif
+#endif
+
+#ifndef JD_BRIDGE_SEND
+#define JD_BRIDGE_SEND(f)                                                                          \
+    do {                                                                                           \
+        JD_USB_BRIDGE_SEND(f);                                                                     \
+        JD_NET_BRIDGE_SEND(f);                                                                     \
+    } while (0)
 #endif
 
 #ifndef JD_SEND_FRAME

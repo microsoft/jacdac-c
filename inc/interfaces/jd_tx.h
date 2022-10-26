@@ -38,6 +38,7 @@ static inline void jd_send_event(srv_t *srv, uint32_t eventid) {
 void jd_process_event_queue(void);
 
 // this is needed for pipes and clients, not regular servers
+// this will send the frame on the wire and on the USB bridge
 int jd_send_frame(jd_frame_t *f);
 // this will not forward to USB port - it is called from USB code
 int jd_send_frame_raw(jd_frame_t *f);

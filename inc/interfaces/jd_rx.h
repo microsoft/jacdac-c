@@ -17,6 +17,7 @@ void jd_rx_release_frame(jd_frame_t *frame);
 bool jd_rx_has_frame(void);
 
 #if JD_CLIENT || JD_BRIDGE
+// this will not forward the frame to the USB bridge
 int jd_rx_frame_received_loopback(jd_frame_t *frame);
 #else
 static inline int jd_rx_frame_received_loopback(jd_frame_t *frame) {

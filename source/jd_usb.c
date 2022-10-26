@@ -168,6 +168,8 @@ static void jd_usb_handle_processing_packet(jd_packet_t *pkt) {
     case JD_USB_BRIDGE_CMD_ENABLE_PACKETS:
     case JD_USB_BRIDGE_CMD_DISABLE_PACKETS:
         usb_fwd_en = cmd & 1;
+        if (usb_fwd_en)
+            jd_net_disable_fwd();
         jd_usb_respond_to_processing_packet(cmd);
         break;
 
@@ -202,6 +204,7 @@ static void jd_usb_handle_frame(void) {
         ((frame->device_identifier & 0xffffffff) == JD_SERVICE_CLASS_USB_BRIDGE)) {
         jd_usb_handle_processing_packet((jd_packet_t *)frame);
     } else {
+        jd_net_disable_fwd();
         jd_send_frame_raw(frame);
     }
 }
@@ -304,5 +307,7 @@ int jd_usb_send_frame(void *frame) {
 }
 
 __attribute__((weak)) void jd_usb_process(void) {}
+
+__attribute__((weak)) void jd_net_disable_fwd(void) {}
 
 #endif

@@ -147,7 +147,7 @@ void jd_bqueue_test(void) {
         if ((jd_random() & 1) == 1) {
             int sz = (jd_random() & (sizeof(buf) - 1)) + 1;
             if (sz + len < TEST_SIZE) {
-                for (int j = 0; i < sz; ++j)
+                for (int j = 0; j < sz; ++j)
                     buf[j] = push_data++;
                 // DMESG("push %d", sz);
                 int r = jd_bqueue_push(q, buf, sz);

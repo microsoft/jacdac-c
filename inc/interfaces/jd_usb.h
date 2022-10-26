@@ -28,4 +28,6 @@ void jd_usb_process(void);
 
 #endif
 
+void jd_net_disable_fwd(void);
+
 #endif
