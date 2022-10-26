@@ -3,6 +3,8 @@
 
 #include "jd_protocol.h"
 
+#if JD_PHYSICAL
+
 void _jd_phys_start(void);
 
 void jd_init() {
@@ -20,3 +22,5 @@ void jd_init() {
 
     jd_blink(JD_BLINK_STARTUP);
 }
+
+#endif

@@ -3,6 +3,8 @@
 
 #include "jd_protocol.h"
 
+#if JD_PHYSICAL
+
 // Enabling logging can cause delays and dropped packets!
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
@@ -249,3 +251,5 @@ void jd_packet_ready(void) {
 void _jd_phys_start(void) {
     set_tick_timer(0);
 }
+
+#endif
