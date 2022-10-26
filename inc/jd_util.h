@@ -150,6 +150,7 @@ void jd_string_reverse(char *s);
 int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap);
 __attribute__((format(printf, 3, 4))) int jd_sprintf(char *dst, unsigned dstsize,
                                                      const char *format, ...);
+int jd_atoi(const char *s);
 
 void jd_log_packet(jd_packet_t *pkt);
 void jd_device_short_id(char short_id[5], uint64_t long_id);

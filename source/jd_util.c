@@ -278,6 +278,29 @@ void jd_utoa(unsigned k, char *s) {
     jd_string_reverse(s0);
 }
 
+int jd_atoi(const char *s) {
+    int neg = 0;
+    int r = 0;
+    if (*s == '-') {
+        neg = 1;
+        s++;
+    }
+    for (;;) {
+        int k = *s++ - '0';
+        if (0 <= k && k <= 9) {
+            r *= 10;
+            r += k;
+        } else {
+            break;
+        }
+    }
+
+    if (neg)
+        return -r;
+    else
+        return r;
+}
+
 static void writeNum(char *buf, uintptr_t n, bool full) {
     int i = 0;
     int sh = sizeof(uintptr_t) * 8 - 4;
