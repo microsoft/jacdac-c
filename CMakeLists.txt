@@ -10,6 +10,7 @@ file(GLOB JDC_FILES
   client/*.c
   storage/*.c
   storage/ff/*.c
+  network/*.c
 
   jacdac/dist/c/jd_spec_pack.c
 )
