@@ -372,7 +372,9 @@ static void jd_process_everything_core(void) {
     for (;;) {
         jd_frame_t *fr = jd_rx_get_frame();
         if (fr) {
+            // DMESG("FR { %x", fr->crc);
             jd_services_process_frame(fr);
+            // DMESG("FR } %x", fr->crc);
             jd_rx_release_frame(fr);
         }
 

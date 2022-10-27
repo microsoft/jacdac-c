@@ -38,6 +38,7 @@ static int jd_rx_frame_received_core(jd_frame_t *frame, bool is_loop) {
     JD_WAKE_MAIN();
 
 #if JD_RX_QUEUE
+    // DMESG("PUSH %x l=%d", frame->crc, is_loop);
     return jd_queue_push(rx_queue, frame);
 #else
     if (occupied)
