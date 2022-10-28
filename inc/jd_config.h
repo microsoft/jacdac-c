@@ -227,18 +227,22 @@ int jd_net_send_frame(void *frame);
         JD_ERROR_BLINK(JD_BLINK_ERROR_OVF);                                                        \
     } while (0)
 
+// Simple alloc doesn't support jd_free()
 #ifndef JD_SIMPLE_ALLOC
 #define JD_SIMPLE_ALLOC (!JD_FREE_SUPPORTED)
 #endif
 
+// If enabled, system memory allocator is not used
 #ifndef JD_HW_ALLOC
 #define JD_HW_ALLOC JD_SIMPLE_ALLOC
 #endif
 
+// Whether to implement jd_alloc() as allocating in the GC heap
 #ifndef JD_GC_ALLOC
 #define JD_GC_ALLOC (JD_HW_ALLOC && !JD_SIMPLE_ALLOC)
 #endif
 
+// If not JD_HW_ALLOC, how big should be the GC block(s)
 #ifndef JD_GC_KB
 #define JD_GC_KB 64
 #endif
