@@ -81,6 +81,7 @@ char *jd_vsprintf_a(const char *format, va_list ap);
 __attribute__((format(printf, 1, 2))) char *jd_sprintf_a(const char *format, ...);
 char *jd_to_hex_a(const void *src, size_t len);
 char *jd_device_short_id_a(uint64_t long_id);
+void *jd_from_hex_a(const char *src, unsigned *size);
 
 char *jd_strdup(const char *s);
 char *jd_concat_many(const char **parts);

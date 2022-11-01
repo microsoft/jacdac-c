@@ -214,6 +214,13 @@ int jd_from_hex(void *dst, const char *src) {
     return dp - (uint8_t *)dst;
 }
 
+void *jd_from_hex_a(const char *src, unsigned *size) {
+    unsigned sz = strlen(src) / 2;
+    void *r = jd_alloc(sz);
+    *size = jd_from_hex(r, src);
+    return r;
+}
+
 #if JD_VERBOSE_ASSERT
 void jd_assert_fail(const char *expr, const char *file, unsigned line, const char *funname) {
     DMESG("assertion '%s' failed at %s:%d in %s", expr, file, line, funname);
