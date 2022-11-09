@@ -251,4 +251,8 @@ int jd_net_send_frame(void *frame);
 #define JD_AES_SOFT 1
 #endif
 
+#ifndef JD_SHORT_FLOAT
+#define JD_SHORT_FLOAT 0
+#endif
+
 #endif

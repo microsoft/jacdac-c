@@ -80,10 +80,6 @@ bool jdc_is_bound(jdc_t c);
 // This calls can block
 //
 
-jd_float_t jd_to_float(const void *src, unsigned numfmt);
-// returns size
-int jd_from_float(void *dst, unsigned numfmt, jd_float_t v);
-
 int jdc_get_register(jdc_t c, uint16_t regcode, void *dst, unsigned size);
 int jdc_get_register_float(jdc_t c, uint16_t regcode, jd_float_t *dst, unsigned numfmt);
 int jdc_set_register(jdc_t c, uint16_t regcode, const void *payload, unsigned size);
