@@ -45,7 +45,7 @@ static void init_chip(void) {
     }
 
     writeReg(0x0f, 0x40);
-    writeReg(0x0f, 0x03 | r_accel->config);
+    writeReg(0x0f, 0x03 & r_accel->config);
     writeReg(0x20, 0x00);
     writeReg(0x11, 0x34); // power on
     writeReg(0x10, 0x07);
@@ -58,9 +58,9 @@ static void *da213b_get_sample(void) {
     static int32_t sample[3];
     readData(0x02, (uint8_t *)data, 6);
     int shift = r_accel->scale;
-    sample[0] = data[1] << shift;
-    sample[1] = -data[0] << shift;
-    sample[2] = -data[2] << shift;
+    sample[0] = data[0] << shift;
+    sample[1] = data[1] << shift;
+    sample[2] = data[2] << shift;
 
     return sample;
 }
@@ -80,8 +80,8 @@ static int32_t da213b_set_range(int32_t range) {
 }
 
 static void da213b_init(void) {
-    i2c_init();
     r_accel = sensor_lookup_range(accel_ranges, 8 << 20);
+    i2c_init();
 
     int v = readReg(REG_CHIP_ID);
     DMESG("DA213b acc id: %x", v); // should be 0x13
