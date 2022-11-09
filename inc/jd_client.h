@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+//
+// Low-level, event-based, async, single-threaded client interface.
+//
+
 #pragma once
 
 #include "jd_protocol.h"
