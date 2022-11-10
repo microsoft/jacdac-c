@@ -119,7 +119,7 @@ static void read_sectors(jd_lstore_file_t *f, uint32_t sector_addr, void *dst,
                          uint32_t num_sectors) {
     jd_lstore_ctx_t *ctx = f->parent;
     JD_ASSERT(!ctx->panic_mode);
-    CHK(ff_disk_read(ctx->fs.pdrv, dst, f->sector_off + sector_addr, num_sectors));
+    // CHK(ff_disk_read(ctx->fs.pdrv, dst, f->sector_off + sector_addr, num_sectors));
 }
 
 #if JD_SD_PANIC
@@ -147,7 +147,7 @@ static void write_sectors(jd_lstore_file_t *f, uint32_t sector_addr, const void 
         return;
     }
 
-    CHK(ff_disk_write(ctx->fs.pdrv, src, f->sector_off + sector_addr, num_sectors));
+    // CHK(ff_disk_write(ctx->fs.pdrv, src, f->sector_off + sector_addr, num_sectors));
 }
 
 static bool validate_header(jd_lstore_file_t *f, jd_lstore_main_header_t *hd) {
