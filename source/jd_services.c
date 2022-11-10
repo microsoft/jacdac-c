@@ -361,6 +361,11 @@ void jd_services_tick() {
     jd_client_process();
 #endif
 
+#if JD_LSTORE
+    void jd_lstore_process(void);
+    jd_lstore_process();
+#endif
+
 #if JD_USB_BRIDGE
     jd_usb_process();
 #endif

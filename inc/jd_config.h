@@ -255,4 +255,16 @@ int jd_net_send_frame(void *frame);
 #define JD_SHORT_FLOAT 0
 #endif
 
+#ifndef JD_THR_PTHREAD
+#define JD_THR_PTHREAD 0
+#endif
+
+#ifndef JD_THR_AZURE_RTOS
+#define JD_THR_AZURE_RTOS 0
+#endif
+
+#ifndef JD_THR_FREE_RTOS
+#define JD_THR_FREE_RTOS 0
+#endif
+
 #endif

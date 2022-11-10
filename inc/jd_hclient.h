@@ -5,17 +5,9 @@
 
 #include "jd_protocol.h"
 #include "jd_pipes.h"
+#include "jd_numfmt.h"
 
 typedef struct jdc_client *jdc_t;
-
-#if 0
-typedef struct jdc_client {
-    struct jd_hclient *next;
-    jd_mutex_t mutex; // for accessing 'service'
-    uint32_t service_class;
-    struct jd_device_service *service;
-} jdc_t;
-#endif
 
 #define JDC_STATUS_OK 0
 #define JDC_STATUS_UNBOUND -1
@@ -89,14 +81,20 @@ int jdc_run_action(jdc_t c, uint16_t action_code, const void *payload, unsigned 
 // Globals
 //
 
-// Start the Jacdac processing thread, wait until all roles are bound
-// or timeout expires, and then start the callback thread.
-void jdc_start_threads(unsigned role_timeout_ms);
+// Start the Jacdac processing thread, start the callback thread, and run init_cb() there.
+// init_cb defaults to jdc_wait_roles_bound(1000) if NULL.
+void jdc_start_threads(void (*init_cb)(void));
 
-// Disable/enable calls to event handlers. If you block multiple times, you have to resume multiple
-// times.
-void jdc_block_events(void);
-void jdc_resume_events(void);
+// Wait until all roles are bound or timeout expires.
+void jdc_wait_roles_bound(unsigned timeout_ms);
+
+typedef void (*jdc_generic_cb_t)(void *userdata);
+
+// Schedule code on the callback thread (at the end of event queue).
+// Can be only called after jdc_start_threads(). ???
+// 
+void jdc_run(jdc_generic_cb_t cb, void *userdata);
+void jdc_run_and_wait(jdc_generic_cb_t cb, void *userdata);
 
 // Used by RTOS-port.
 // Run event handlers for all pending events on hclients.
@@ -107,25 +105,8 @@ void jdc_resume_events(void);
 // Return value of 0 implies timeout_ms elapsed without any incoming events.
 int jdc_process_events(unsigned timeout_ms);
 
-// Threading APIs to be implemented by RTOS port
 
-typedef struct jd_mutex jd_mutex_t;
-typedef struct jd_thread *jd_thread_t;
-
-// jd_mutex_t can be a struct
-// jd_thread_t must be a pointer; it will be compared using '=='
-
-// priority inheritance should be enabled if available
-int jd_thr_init_mutex(jd_mutex_t *mutex);
-void jd_thr_destroy_mutex(jd_mutex_t *mutex);
-void jd_thr_acquire_mutex(jd_mutex_t *mutex);
-void jd_thr_release_mutex(jd_mutex_t *mutex);
-
-jd_thread_t jd_thr_self(void);
-void jd_thr_suspend_self(void);
-void jd_thr_resume(jd_thread_t t);
-
-#if 1
+#if 0
 // generated client code will look something like this
 typedef struct {
     jdc_t jdc;
@@ -235,14 +216,13 @@ static void init_roles() {
 }
 
 void sample1() {
-    jdc_block_events();
-    init_roles();
-    jdc_resume_events();
+    // ...
+    jdc_run((jdc_generic_cb_t)init_roles, NULL);
 }
 
 void sample2() {
     init_roles();
-    jdc_start_threads(1000);
+    jdc_start_threads(NULL);
 }
 
 #endif
