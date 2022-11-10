@@ -66,14 +66,15 @@ void jdc_destroy(jdc_t c);
 
 int jdc_get_binding_info(jdc_t c, uint64_t *device_id, uint8_t *service_index);
 const char *jdc_get_name(jdc_t c);
+uint32_t jdc_get_service_class(jdc_t c);
 bool jdc_is_bound(jdc_t c);
 
 //
 // This calls can block
 //
 
-int jdc_get_register(jdc_t c, uint16_t regcode, void *dst, unsigned size);
-int jdc_get_register_float(jdc_t c, uint16_t regcode, jd_float_t *dst, unsigned numfmt);
+int jdc_get_register(jdc_t c, uint16_t regcode, void *dst, unsigned size, unsigned cache_policy);
+int jdc_get_register_float(jdc_t c, uint16_t regcode, jd_float_t *dst, unsigned numfmt, unsigned cache_policy);
 int jdc_set_register(jdc_t c, uint16_t regcode, const void *payload, unsigned size);
 int jdc_run_action(jdc_t c, uint16_t action_code, const void *payload, unsigned size);
 
@@ -92,7 +93,7 @@ typedef void (*jdc_generic_cb_t)(void *userdata);
 
 // Schedule code on the callback thread (at the end of event queue).
 // Can be only called after jdc_start_threads(). ???
-// 
+//
 void jdc_run(jdc_generic_cb_t cb, void *userdata);
 void jdc_run_and_wait(jdc_generic_cb_t cb, void *userdata);
 
@@ -104,7 +105,6 @@ void jdc_run_and_wait(jdc_generic_cb_t cb, void *userdata);
 // Returns number of event handlers run.
 // Return value of 0 implies timeout_ms elapsed without any incoming events.
 int jdc_process_events(unsigned timeout_ms);
-
 
 #if 0
 // generated client code will look something like this
