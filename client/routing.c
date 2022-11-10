@@ -267,9 +267,9 @@ const jd_register_query_t *jd_service_query(jd_device_service_t *serv, int reg_c
         dev->_queries = q;
     }
     if (!jd_register_not_implemented(q) &&
-        (!q->last_query || (refresh_ms && in_past(q->last_query + refresh_ms * 1000)))) {
+        (!q->last_query_ms || (refresh_ms && in_past_ms(q->last_query_ms + refresh_ms)))) {
         jd_service_send_cmd(serv, JD_GET(reg_code), NULL, 0);
-        q->last_query = now;
+        q->last_query_ms = now_ms;
     }
     return q;
 }

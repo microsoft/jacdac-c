@@ -59,7 +59,7 @@ typedef struct jd_register_query {
     uint16_t reg_code;
     uint8_t service_index;
     uint8_t resp_size;
-    uint32_t last_query;
+    uint32_t last_query_ms;
     union {
         uint32_t u32;
         uint8_t data[JD_REGISTER_QUERY_MAX_INLINE];
