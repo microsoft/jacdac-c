@@ -2,6 +2,8 @@
 #include "jd_hclient.h"
 #include "jd_thr.h"
 
+#if JD_THR_ANY
+
 static void TODO() {
     DMESG("not implemented yet");
     jd_panic();
@@ -262,3 +264,5 @@ int jdc_get_register(jdc_t c, uint16_t regcode, void *dst, unsigned size, unsign
     jd_thr_unlock(&c->mutex);
     return r;
 }
+
+#endif

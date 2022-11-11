@@ -267,4 +267,6 @@ int jd_net_send_frame(void *frame);
 #define JD_THR_FREE_RTOS 0
 #endif
 
+#define JD_THR_ANY (JD_THR_PTHREAD || JD_THR_AZURE_RTOS || JD_THR_FREE_RTOS)
+
 #endif

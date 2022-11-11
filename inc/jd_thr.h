@@ -5,6 +5,8 @@
 
 #include "jd_protocol.h"
 
+#if JD_THR_ANY
+
 #if JD_THR_PTHREAD
 #include <pthread.h>
 typedef pthread_mutex_t jd_mutex_t;
@@ -40,3 +42,5 @@ void jd_thr_unlock(jd_mutex_t *mutex);
 jd_thread_t jd_thr_self(void);
 void jd_thr_suspend_self(void);
 void jd_thr_resume(jd_thread_t t);
+
+#endif
