@@ -241,3 +241,19 @@ static void jdc_event_handler(void *_state, int event_id, void *arg0, void *arg1
 
     jd_thr_unlock(&c->mutex);
 }
+
+int jdc_get_register(jdc_t c, uint16_t regcode, void *dst, unsigned size, unsigned refresh_ms) {
+    int r = 0;
+    jd_thr_lock(&c->mutex);
+    if (!c->service) {
+        r = JDC_STATUS_UNBOUND;
+    } else {
+        const jd_register_query_t *q = jd_service_query(c->service, regcode, refresh_ms);
+        if (jd_register_not_implemented(q)) {
+            r = JDC_STATUS_NOT_IMPL;
+        } else {
+            TODO();
+        }
+    }
+    jd_thr_unlock(&c->mutex);
+}
