@@ -44,6 +44,11 @@ static int read_data(void) {
     return (data[1] << 8) | data[2];
 }
 
+static bool th02_is_present(void) {
+    // addr is always 0x40; ID is 0x50
+    return i2c_read_reg(TH02_ADDR, TH02_ID) == 0x50;
+}
+
 static void th02_init(void) {
     ctx_t *ctx = &state;
     if (ctx->inited)
@@ -109,10 +114,12 @@ const env_sensor_api_t temperature_th02 = {
     .init = th02_init,
     .process = th02_process,
     .get_reading = th02_temperature,
+    .is_present = th02_is_present,
 };
 
 const env_sensor_api_t humidity_th02 = {
     .init = th02_init,
     .process = th02_process,
     .get_reading = th02_humidity,
+    .is_present = th02_is_present,
 };

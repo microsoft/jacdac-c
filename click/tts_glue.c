@@ -1,7 +1,7 @@
 #include "color.h"
 #include "interfaces/jd_sensor_api.h"
 #include "tts.h"
-#include "jd_services.h"
+#include "services/jd_services.h"
 #include "tinyhw.h"
 
 #ifdef MIKROBUS_AVAILABLE

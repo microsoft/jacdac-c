@@ -1,6 +1,5 @@
 #include "jd_drivers.h"
-#include "jd_services.h"
-#include "board.h"
+#include "services/jd_services.h"
 
 #define SPIFLASH_PAGE_SIZE 256
 

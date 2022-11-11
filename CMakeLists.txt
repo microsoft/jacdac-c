@@ -6,6 +6,7 @@ file(GLOB JDC_FILES
   jacscript/*.c
   services/*.c
   source/*.c
+  drivers/*.c
   source/interfaces/*.c
   client/*.c
   storage/*.c

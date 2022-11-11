@@ -1,6 +1,5 @@
 #include "jd_drivers.h"
-#include "jd_services.h"
-#include "board.h"
+#include "services/jd_services.h"
 
 #define ADS1115_CONV_REG 0x0
 #define ADS1115_CONF_REG 0x1

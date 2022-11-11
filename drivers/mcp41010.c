@@ -1,8 +1,7 @@
-#include "board.h"
+#include "jd_drivers.h"
 
 #ifdef PIN_CS
-#include "jd_drivers.h"
-#include "jd_services.h"
+#include "services/jd_services.h"
 
 #define MCP_41010_WRITE_DATA 0x10
 #define MCP_41010_SHUTDOWN 0x20

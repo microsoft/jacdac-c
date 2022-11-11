@@ -1,5 +1,5 @@
 #include "jd_drivers.h"
-#include "jd_services.h"
+#include "services/jd_services.h"
 
 #define CAP1298_ADDR 0x28
 
