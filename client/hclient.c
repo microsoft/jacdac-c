@@ -38,6 +38,10 @@ static jd_thread_t callback_thread;
 
 static void jdc_event_handler(void *_state, int event_id, void *arg0, void *arg1);
 
+void jdc_wait_roles_bound(unsigned timeout_ms) {
+    TODO();
+}
+
 static void callback_worker(void *userdata) {
     void (*cb)(void) = userdata;
     if (cb)
@@ -213,7 +217,7 @@ static void jdc_event_handler(void *_state, int event_id, void *arg0, void *arg1
         break;
 
     case JD_CLIENT_EV_SERVICE_REGISTER_CHANGED:
-    case JD_CLIENT_EV_SERVICE_REGISTER_NOT_IMPLEMENTED:
+    case JD_CLIENT_EV_SERVICE_REGISTER_NOT_IMPLEMENTED: {
         reg_query_t *rest = NULL, *next;
         for (reg_query_t *r = c->queries; r; r = next) {
             next = r->next;
@@ -236,7 +240,7 @@ static void jdc_event_handler(void *_state, int event_id, void *arg0, void *arg1
             }
         }
         c->queries = rest;
-        break;
+    } break;
     }
 
     jd_thr_unlock(&c->mutex);
@@ -256,4 +260,5 @@ int jdc_get_register(jdc_t c, uint16_t regcode, void *dst, unsigned size, unsign
         }
     }
     jd_thr_unlock(&c->mutex);
+    return r;
 }
