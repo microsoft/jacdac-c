@@ -22,6 +22,8 @@
 #define RATE_BITS 2
 #define RATE_PER_SECOND (1 << RATE_BITS)
 
+static uint8_t dev_addr = DPS310_ADDR;
+
 static const uint32_t scale_factor[] = {
     0x80000, 0x180000, 0x380000, 0x780000, 0x3e000, 0x7e000, 0xfe000, 0x1fe000,
 };
@@ -59,14 +61,14 @@ static int twos_complement(int val, int bits) {
         return val;
 }
 static void write_reg(uint8_t addr, uint8_t v) {
-    i2c_write_reg(DPS310_ADDR, addr, v);
+    i2c_write_reg(dev_addr, addr, v);
 }
 static uint8_t read_reg(uint8_t addr) {
-    return i2c_read_reg(DPS310_ADDR, addr);
+    return i2c_read_reg(dev_addr, addr);
 }
 static int read24(uint8_t addr) {
     uint8_t tmp[3];
-    i2c_read_reg_buf(DPS310_ADDR, addr, tmp, sizeof(tmp));
+    i2c_read_reg_buf(dev_addr, addr, tmp, sizeof(tmp));
     int v = tmp[2] | (tmp[1] << 8) | (tmp[0] << 16);
     return twos_complement(v, 24);
 }
@@ -79,6 +81,17 @@ static bool meas_cfg_has_bit(int bit) {
 static void wait_meas_cfg_bit(int bit) {
     while (!meas_cfg_has_bit(bit))
         target_wait_us(1000);
+}
+
+static bool dps310_is_present(void) {
+    for (int i = 0x76; i <= 0x77; ++i) {
+        int v = i2c_read_reg(i, DPS310_PROD_ID);
+        if (v == 0x10) {
+            dev_addr = i;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 static void dps310_init(void) {
@@ -97,7 +110,7 @@ static void dps310_init(void) {
     ctx->inited = 1;
     i2c_init();
 
-    if (i2c_read_reg(DPS310_ADDR, DPS310_PROD_ID) != 0x10)
+    if (i2c_read_reg(dev_addr, DPS310_PROD_ID) != 0x10)
         hw_panic();
 
     write_reg(DPS310_RESET, 0x89);
@@ -115,7 +128,7 @@ static void dps310_init(void) {
     wait_meas_cfg_bit(7); // COEF_RDY
 
     uint8_t coeffs[18];
-    i2c_read_reg_buf(DPS310_ADDR, 0x10, coeffs, sizeof(coeffs));
+    i2c_read_reg_buf(dev_addr, 0x10, coeffs, sizeof(coeffs));
 
     ctx->c0 = twos_complement((coeffs[0] << 4) | ((coeffs[1] >> 4) & 0x0F), 12);
     ctx->c1 = twos_complement(((coeffs[1] & 0x0F) << 8) | coeffs[2], 12);
@@ -170,7 +183,7 @@ ENV_INIT_DUAL(dps310_init, dps310_sleep);
 ENV_DEFINE_GETTER(dps310, temperature)
 ENV_DEFINE_GETTER(dps310, pressure)
 
-#define FUNS(val, idx) ENV_GETTER(dps310, val, idx)
+#define FUNS(val, idx) ENV_GETTER(dps310, val, idx), .is_present = dps310_is_present
 
 const env_sensor_api_t temperature_dps310 = {FUNS(temperature, 0)};
 const env_sensor_api_t pressure_dps310 = {FUNS(pressure, 1)};

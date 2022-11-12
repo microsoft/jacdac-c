@@ -48,14 +48,16 @@ static const sensor_range_t accel_ranges[] = { //
 #endif
 
 static uint8_t inited;
+static uint8_t acc_addr = ACC_I2C_ADDR;
+
 static const sensor_range_t *r_accel, *r_gyro;
 
 static void writeReg(uint8_t reg, uint8_t val) {
-    i2c_write_reg(ACC_I2C_ADDR, reg, val);
+    i2c_write_reg(acc_addr, reg, val);
 }
 
 static void readData(uint8_t reg, uint8_t *dst, int len) {
-    i2c_read_reg_buf(ACC_I2C_ADDR, reg, dst, len);
+    i2c_read_reg_buf(acc_addr, reg, dst, len);
 }
 
 static int readReg(uint8_t reg) {
@@ -123,6 +125,17 @@ static int32_t lsm6ds_gyro_set_range(int32_t range) {
     return r_gyro->range;
 }
 
+static bool lsm6ds_is_present(void) {
+    for (int i = 0x6A; i <= 0x6B; ++i) {
+        int v = i2c_read_reg(i, LSM6DS_WHOAMI);
+        if (v == ID_LSM6DSOX || v == ID_LSM6DS3TR_C) {
+            acc_addr = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static void lsm6ds_init(void) {
     if (inited)
         return;
@@ -152,6 +165,7 @@ const accelerometer_api_t accelerometer_lsm6ds = {
     .get_range = lsm6ds_accel_get_range,
     .set_range = lsm6ds_accel_set_range,
     .ranges = accel_ranges,
+    .is_present = lsm6ds_is_present,
 };
 
 const gyroscope_api_t gyroscope_lsm6ds = {
@@ -161,4 +175,5 @@ const gyroscope_api_t gyroscope_lsm6ds = {
     .get_range = lsm6ds_gyro_get_range,
     .set_range = lsm6ds_gyro_set_range,
     .ranges = gyro_ranges,
+    .is_present = lsm6ds_is_present,
 };

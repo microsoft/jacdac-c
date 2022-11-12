@@ -66,3 +66,29 @@ extern const env_sensor_api_t temperature_lps33hwtr;
 extern const env_sensor_api_t co2_scd40;
 extern const env_sensor_api_t temperature_scd40;
 extern const env_sensor_api_t humidity_scd40;
+
+// I2C scanning
+extern const accelerometer_api_t *i2c_accelerometers[];
+extern const gyroscope_api_t *i2c_gyro[];
+extern const captouch_api_t *i2c_captouch[];
+extern const env_sensor_api_t *i2c_temperature[];
+extern const env_sensor_api_t *i2c_pressure[];
+extern const env_sensor_api_t *i2c_humidity[];
+extern const env_sensor_api_t *i2c_co2[];
+extern const env_sensor_api_t *i2c_tvoc[];
+extern const env_sensor_api_t *i2c_illuminance[];
+extern const env_sensor_api_t *i2c_uvindex[];
+
+int jd_scan_i2c(const sensor_api_t **apis, void (*init)(const sensor_api_t *));
+
+int jd_scan_accelerometers(void);
+int jd_scan_gyroscopes(void);
+int jd_scan_temperature(void);
+int jd_scan_pressure(void);
+int jd_scan_humidity(void);
+int jd_scan_co2(void);
+int jd_scan_tvoc(void);
+int jd_scan_uvindex(void);
+int jd_scan_illuminance(void);
+
+int jd_scan_all(void);

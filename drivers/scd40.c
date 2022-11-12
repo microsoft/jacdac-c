@@ -94,6 +94,11 @@ static int scd_read_serial(void) {
     return 0;
 }
 
+static bool scd40_is_present(void) {
+    i2c_init();
+    return scd_read_serial() == 0;
+}
+
 static void scd40_init(void) {
     ctx_t *ctx = &state;
     if (ctx->inited)
@@ -128,11 +133,6 @@ static void scd40_sleep(void) {
     ctx_t *ctx = &state;
     ctx->inited = 0;
     send_cmd(SCD40_STOP_PERIODIC_MEASUREMENT);
-}
-
-static bool scd40_is_present(void) {
-    i2c_init();
-    return read_data_ready() >= 0;
 }
 
 static void scd40_process(void) {

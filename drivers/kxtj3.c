@@ -14,6 +14,8 @@
 #define ACCEL_RANGE(dps, cfg, scale)                                                               \
     { dps * 1024 * 1024, cfg, scale }
 
+static uint8_t acc_addr = ACC_I2C_ADDR;
+
 static const sensor_range_t accel_ranges[] = { //
     ACCEL_RANGE(2, (0b000 << 2), 6),
     ACCEL_RANGE(4, (0b010 << 2), 7),
@@ -24,17 +26,28 @@ static const sensor_range_t accel_ranges[] = { //
 static const sensor_range_t *r_accel;
 
 static void writeReg(uint8_t reg, uint8_t val) {
-    i2c_write_reg(ACC_I2C_ADDR, reg, val);
+    i2c_write_reg(acc_addr, reg, val);
 }
 
 static void readData(uint8_t reg, uint8_t *dst, int len) {
-    i2c_read_reg_buf(ACC_I2C_ADDR, reg, dst, len);
+    i2c_read_reg_buf(acc_addr, reg, dst, len);
 }
 
 static int readReg(uint8_t reg) {
     uint8_t r = 0;
     readData(reg, &r, 1);
     return r;
+}
+
+static bool kxtj3_is_present(void) {
+    for (int i = 0x0E; i <= 0x0F; ++i) {
+        int v = i2c_read_reg(i, WHO_AM_I);
+        if (v == 0x35) {
+            acc_addr = i;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 static void init_chip(void) {
@@ -101,4 +114,5 @@ const accelerometer_api_t accelerometer_kxtj3 = {
     .get_range = kxtj3_accel_get_range,
     .set_range = kxtj3_accel_set_range,
     .ranges = accel_ranges,
+    .is_present = kxtj3_is_present,
 };

@@ -62,6 +62,10 @@ static void write_reg(uint8_t reg, uint8_t val) {
         hw_panic();
 }
 
+static bool mpl3115a2_is_present(void) {
+    return i2c_read_reg(MPL3115A2_ADDR, MPL3115A2_WHOAMI) == 0xC4;
+}
+
 static void mpl3115a2_init(void) {
     ctx_t *ctx = &state;
     if (ctx->inited)
@@ -142,10 +146,12 @@ const env_sensor_api_t temperature_mpl3115a2 = {
     .init = mpl3115a2_init,
     .process = mpl3115a2_process,
     .get_reading = mpl3115a2_temperature,
+    .is_present = mpl3115a2_is_present,
 };
 
 const env_sensor_api_t pressure_mpl3115a2 = {
     .init = mpl3115a2_init,
     .process = mpl3115a2_process,
     .get_reading = mpl3115a2_pressure,
+    .is_present = mpl3115a2_is_present,
 };

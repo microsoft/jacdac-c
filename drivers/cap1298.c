@@ -56,6 +56,10 @@ void cap1298_cfg(void) {
     writeReg(MULTI_TOUCH_CFG_ADDR, 0b00000000);
 }
 
+bool cap1298_is_present(void) {
+    return i2c_read_reg(CAP1298_ADDR, PROD_ID_ADDR) == PROD_ID_VAL;
+}
+
 void cap1298_init(void) {
 
     i2c_init();
@@ -78,4 +82,5 @@ void cap1298_init(void) {
 const captouch_api_t captouch_cap1298 = {
     .init = cap1298_init,
     .get_reading = cap1298_read,
+    .is_present = cap1298_is_present,
 };

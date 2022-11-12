@@ -29,6 +29,10 @@ static ctx_t state;
 #define LTR390UV_ALSDATA 0x0D
 #define LTR390UV_UVSDATA 0x10
 
+static bool ltr390uv_is_present(void) {
+    return (i2c_read_reg(LTR390UV_ADDR, LTR390UV_PART_ID) >> 4) == 0xB;
+}
+
 static void ltr390uv_init(void) {
     ctx_t *ctx = &state;
     if (ctx->inited)
@@ -44,6 +48,8 @@ static void ltr390uv_init(void) {
 
     ctx->inited = 1;
     i2c_init();
+
+    DMESG("pres %d", ltr390uv_is_present());
 
     int id = i2c_read_reg(LTR390UV_ADDR, LTR390UV_PART_ID);
     DMESG("LTR390UV part=%x", id);
@@ -120,10 +126,12 @@ const env_sensor_api_t illuminance_ltr390uv = {
     .init = ltr390uv_init,
     .process = ltr390uv_process,
     .get_reading = ltr390uv_ambient,
+    .is_present = ltr390uv_is_present,
 };
 
 const env_sensor_api_t uvindex_ltr390uv = {
     .init = ltr390uv_init,
     .process = ltr390uv_process,
     .get_reading = ltr390uv_uvi,
+    .is_present = ltr390uv_is_present,
 };

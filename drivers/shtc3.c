@@ -40,6 +40,14 @@ static void wake(void) {
     target_wait_us(300); // 200us seems minimum; play it safe with 300us
 }
 
+static bool shtc3_is_present(void) {
+    if (i2c_write_reg16_buf(SHTC3_ADDR, SHTC3_WAKEUP, NULL, 0) != 0)
+        return 0;
+    target_wait_us(300);
+    // addr fixed to 0x70
+    return (jd_sgp_read_u16(SHTC3_ADDR, SHTC3_ID, 0) & 0x083f) == 0x0807;
+}
+
 static void shtc3_init(void) {
     ctx_t *ctx = &state;
     if (ctx->inited)
@@ -54,11 +62,9 @@ static void shtc3_init(void) {
 
     ctx->inited = 1;
     i2c_init();
+    DMESG("pres %d", shtc3_is_present());
     wake();
-    int id = i2c_read_reg16(SHTC3_ADDR, SHTC3_ID);
-    DMESG("SHTC3 id=%x", id);
-    if (id <= 0)
-        hw_panic();
+    DMESG("SHTC3 id=%x", jd_sgp_read_u16(SHTC3_ADDR, SHTC3_ID, 0));
     send_cmd(SHTC3_SLEEP);
 }
 
@@ -106,10 +112,12 @@ const env_sensor_api_t temperature_shtc3 = {
     .init = shtc3_init,
     .process = shtc3_process,
     .get_reading = shtc3_temperature,
+    .is_present = shtc3_is_present,
 };
 
 const env_sensor_api_t humidity_shtc3 = {
     .init = shtc3_init,
     .process = shtc3_process,
     .get_reading = shtc3_humidity,
+    .is_present = shtc3_is_present,
 };

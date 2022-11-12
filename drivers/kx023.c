@@ -1,8 +1,8 @@
 #include "jd_drivers.h"
 
 #ifndef ACC_I2C_ADDR
-// alt address 0x3E
-#define ACC_I2C_ADDR 0x3C
+// alt address 0x1E
+#define ACC_I2C_ADDR 0x1F
 #endif
 
 #define WHO_AM_I 0x0F
@@ -33,6 +33,8 @@
 #define CS_SET(v) ((void)0)
 #endif
 
+static uint8_t acc_addr = ACC_I2C_ADDR;
+
 static void writeReg(uint8_t reg, uint8_t val) {
 #ifdef ACC_SPI
     CS_SET(0);
@@ -40,7 +42,7 @@ static void writeReg(uint8_t reg, uint8_t val) {
     bspi_send(buf, 2);
     CS_SET(1);
 #else
-    i2c_write_reg(ACC_I2C_ADDR, reg, val);
+    i2c_write_reg(acc_addr, reg, val);
 #endif
 }
 
@@ -52,7 +54,7 @@ static void readData(uint8_t reg, uint8_t *dst, int len) {
     bspi_recv(dst, len);
     CS_SET(1);
 #else
-    i2c_read_reg_buf(ACC_I2C_ADDR, reg, dst, len);
+    i2c_read_reg_buf(acc_addr, reg, dst, len);
 #endif
 }
 
@@ -96,6 +98,17 @@ static void kx023_sleep(void) {
     writeReg(CNTL1, 0x00);
 }
 
+static bool kx023_is_present(void) {
+    for (int i = 0x1E; i <= 0x1F; ++i) {
+        int v = i2c_read_reg(i, WHO_AM_I);
+        if (v == 0x15) {
+            acc_addr = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static void kx023_init(void) {
 #ifdef ACC_SPI
     bspi_init();
@@ -120,4 +133,5 @@ const accelerometer_api_t accelerometer_kx023 = {
     .init = kx023_init,
     .get_reading = kx023_get_sample,
     .sleep = kx023_sleep,
+    .is_present = kx023_is_present,
 };

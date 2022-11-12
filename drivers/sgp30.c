@@ -42,9 +42,32 @@ uint8_t jd_sgp_crc8(const uint8_t *data, int len) {
     return res;
 }
 
+int jd_sgp_read_u16(uint8_t dev_addr, uint16_t regaddr, unsigned wait) {
+    uint8_t buf[3];
+    int r;
+    if (wait == 0)
+        r = i2c_read_reg16_buf(dev_addr, regaddr, buf, sizeof(buf));
+    else {
+        r = i2c_write_reg16_buf(dev_addr, regaddr, NULL, 0);
+        if (r == 0) {
+            target_wait_us(wait);
+            r = i2c_read_ex(dev_addr, buf, sizeof(buf));
+        }
+    }
+    if (r == 0 && jd_sgp_crc8(buf, 2) == buf[2]) {
+        return (buf[0] << 8) | (buf[1]);
+    }
+    return -1;
+}
+
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg16_buf(SGP30_ADDR, cmd, NULL, 0))
         hw_panic();
+}
+
+static bool sgp30_is_present(void) {
+    i2c_init();
+    return (jd_sgp_read_u16(SGP30_ADDR, sgp30_get_feature_set_version, 2000) & 0xff00) == 0x0000;
 }
 
 static void sgp30_init(void) {
@@ -59,14 +82,13 @@ static void sgp30_init(void) {
 
     ctx->inited = 1;
     i2c_init();
+    // DMESG("SGP30 pres=%x", sgp30_is_present());
 
-    send_cmd(sgp30_get_feature_set_version);
-    jd_services_sleep_us(2000);
-
-    uint8_t data[2];
-    if (i2c_read_ex(SGP30_ADDR, data, sizeof(data)))
+    int id = jd_sgp_read_u16(SGP30_ADDR, sgp30_get_feature_set_version, 2000);
+    if (id < 0)
         hw_panic();
-    DMESG("SGP30 id=%x %x", data[0], data[1]);
+
+    DMESG("SGP30 id=%x", id);
 
     ctx->nextsample = now + (1 << 20);
     send_cmd(sgp30_tvoc_init_continuous);
@@ -127,13 +149,6 @@ static void sgp30_process(void) {
 static void sgp30_sleep(void) {
     // this is "general call" to register 0x06
     i2c_write_reg_buf(0x00, 0x06, NULL, 0);
-}
-
-static bool sgp30_is_present(void) {
-    i2c_init();
-    if (i2c_write_reg16_buf(SGP30_ADDR, sgp30_get_feature_set_version, NULL, 0))
-        return 0;
-    return 1;
 }
 
 static uint32_t sgp30_conditioning_period(void) {

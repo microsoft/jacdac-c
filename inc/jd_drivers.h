@@ -52,5 +52,6 @@
 
 // Used by various Sensirion sensors
 uint8_t jd_sgp_crc8(const uint8_t *data, int len);
+int jd_sgp_read_u16(uint8_t dev_addr, uint16_t regaddr, unsigned wait);
 
 #endif

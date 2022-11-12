@@ -36,6 +36,8 @@
 
 #define SAMPLING_MS 100 // 10 hz
 
+static uint8_t lps33hw_addr = LPS33HW_I2C_ADDR;
+
 typedef struct state {
     uint8_t inited;
     uint8_t ctrl1;
@@ -65,11 +67,11 @@ typedef enum {
 } LPS33HW_LowPassFilter;
 
 static void writeReg(uint8_t reg, uint8_t val) {
-    i2c_write_reg(LPS33HW_I2C_ADDR, reg, val);
+    i2c_write_reg(lps33hw_addr, reg, val);
 }
 
 static void readData(uint8_t reg, uint8_t *dst, int len) {
-    int r = i2c_read_reg_buf(LPS33HW_I2C_ADDR, reg, dst, len);
+    int r = i2c_read_reg_buf(lps33hw_addr, reg, dst, len);
     if (r < 0)
         hw_panic();
 }
@@ -99,6 +101,17 @@ static void lps33hwtr_set_rate(LPS33HW_DataRate new_rate) {
     writeReg(LPS33HW_CTRL_REG1, ctx->ctrl1);
 }
 
+static bool lps33hwtr_is_present(void) {
+    for (int i = 0x5C; i <= 0x5D; ++i) {
+        int v = i2c_read_reg(i, LPS33HW_WHO_AM_I);
+        if (v == LPS33HW_ID) {
+            lps33hw_addr = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static void lps33hwtr_init(void) {
     ctx_t *ctx = &state;
     if (ctx->inited)
@@ -121,13 +134,13 @@ static void lps33hwtr_init(void) {
 
     if (v == LPS33HW_ID) {
         // OK
-        
+
         // Reset and reboot
         // BOOT|FIFO_EN|STOP_ON_FTH|IF_ADD_INC|I2C_DIS|[SWRESET]|0|ONE_SHOT
         writeReg(LPS33HW_CTRL_REG2, LPS33HW_DEFAULT_CTRL_REG2 | 0x04);
         while (readReg(LPS33HW_CTRL_REG2) & 0x04)
             ;
-    
+
         // writeReg(LPS33HW_CTRL_REG1, ctx->ctrl1);
     } else {
         DMESG("invalid chip");
@@ -201,7 +214,15 @@ static void *lps33hwtr_temperature(void) {
 }
 
 const env_sensor_api_t temperature_lps33hwtr = {
-    .init = lps33hwtr_init, .process = lps33hwtr_process, .get_reading = lps33hwtr_temperature};
+    .init = lps33hwtr_init,
+    .process = lps33hwtr_process,
+    .get_reading = lps33hwtr_temperature,
+    .is_present = lps33hwtr_is_present,
+};
 
 const env_sensor_api_t pressure_lps33hwtr = {
-    .init = lps33hwtr_init, .process = lps33hwtr_process, .get_reading = lps33hwtr_pressure};
+    .init = lps33hwtr_init,
+    .process = lps33hwtr_process,
+    .get_reading = lps33hwtr_pressure,
+    .is_present = lps33hwtr_is_present,
+};
