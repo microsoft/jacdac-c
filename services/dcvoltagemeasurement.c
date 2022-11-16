@@ -33,10 +33,10 @@ void dcvoltagemeasurement_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(dcvoltagemeasurement, JD_SERVICE_CLASS_DC_VOLTAGE_MEASUREMENT);
-void dcvoltagemeasurement_init(const dcvoltagemeasurement_params_t params) {
+void dcvoltagemeasurement_init(const dcvoltagemeasurement_params_t *params) {
     SRV_ALLOC(dcvoltagemeasurement);
-    state->streaming_interval = 100;
-    state->api = params.api;
-    state->measurement_type = params.measurement_type;
-    state->measurement_name = params.measurement_name;
+    state->streaming_interval = 500;
+    state->api = params->api;
+    state->measurement_type = params->measurement_type;
+    state->measurement_name = params->measurement_name;
 }

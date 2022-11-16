@@ -31,9 +31,9 @@ void dccurrentmeasurement_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(dccurrentmeasurement, JD_SERVICE_CLASS_DC_CURRENT_MEASUREMENT);
-void dccurrentmeasurement_init(const dccurrentmeasurement_params_t params) {
+void dccurrentmeasurement_init(const dccurrentmeasurement_params_t *params) {
     SRV_ALLOC(dccurrentmeasurement);
-    state->streaming_interval = 100;
-    state->api = params.api;
-    state->measurement_name = params.measurement_name;
+    state->streaming_interval = 500;
+    state->api = params->api;
+    state->measurement_name = params->measurement_name;
 }
