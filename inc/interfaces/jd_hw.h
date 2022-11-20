@@ -62,7 +62,7 @@ uint16_t adc_read_temp(void);
 
 // i2c.c
 // addr are always 7bit
-void i2c_init(void);
+int i2c_init(void);
 int i2c_setup_write(uint8_t addr, unsigned len, bool repeated);
 int i2c_write(uint8_t c);
 int i2c_finish_write(bool repeated);

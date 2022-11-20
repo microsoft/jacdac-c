@@ -79,7 +79,7 @@ extern const env_sensor_api_t *i2c_tvoc[];
 extern const env_sensor_api_t *i2c_illuminance[];
 extern const env_sensor_api_t *i2c_uvindex[];
 
-int jd_scan_i2c(const sensor_api_t **apis, void (*init)(const sensor_api_t *));
+int jd_scan_i2c(const char *label, const sensor_api_t **apis, void (*init)(const sensor_api_t *));
 
 int jd_scan_accelerometers(void);
 int jd_scan_gyroscopes(void);

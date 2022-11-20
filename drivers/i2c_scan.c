@@ -66,52 +66,55 @@ const env_sensor_api_t *i2c_uvindex[] = {
     NULL,
 };
 
-int jd_scan_i2c(const sensor_api_t **apis, void (*init)(const sensor_api_t *)) {
-    i2c_init();
+int jd_scan_i2c(const char *label, const sensor_api_t **apis, void (*init)(const sensor_api_t *)) {
     int num = 0;
-    for (unsigned i = 0; apis[i] != NULL; ++i) {
-        if (apis[i]->is_present()) {
-            init(apis[i]);
-            num++;
+    if (i2c_init() == 0) {
+        unsigned i;
+        for (i = 0; apis[i] != NULL; ++i) {
+            if (apis[i]->is_present()) {
+                init(apis[i]);
+                num++;
+            }
         }
+        DMESG("I2C scanned %d %s, found %d", i, label, num);
     }
     return num;
 }
 
 int jd_scan_accelerometers(void) {
-    return jd_scan_i2c(i2c_accelerometers, accelerometer_init);
+    return jd_scan_i2c("accel", i2c_accelerometers, accelerometer_init);
 }
 
 int jd_scan_gyroscopes(void) {
-    return jd_scan_i2c(i2c_gyro, gyroscope_init);
+    return jd_scan_i2c("gyro", i2c_gyro, gyroscope_init);
 }
 
 int jd_scan_temperature(void) {
-    return jd_scan_i2c(i2c_temperature, temperature_init);
+    return jd_scan_i2c("temp", i2c_temperature, temperature_init);
 }
 
 int jd_scan_pressure(void) {
-    return jd_scan_i2c(i2c_pressure, barometer_init);
+    return jd_scan_i2c("pressure", i2c_pressure, barometer_init);
 }
 
 int jd_scan_humidity(void) {
-    return jd_scan_i2c(i2c_humidity, humidity_init);
+    return jd_scan_i2c("humidity", i2c_humidity, humidity_init);
 }
 
 int jd_scan_co2(void) {
-    return jd_scan_i2c(i2c_co2, eco2_init);
+    return jd_scan_i2c("co2", i2c_co2, eco2_init);
 }
 
 int jd_scan_tvoc(void) {
-    return jd_scan_i2c(i2c_tvoc, tvoc_init);
+    return jd_scan_i2c("tvoc", i2c_tvoc, tvoc_init);
 }
 
 int jd_scan_uvindex(void) {
-    return jd_scan_i2c(i2c_uvindex, uvindex_init);
+    return jd_scan_i2c("uvi", i2c_uvindex, uvindex_init);
 }
 
 int jd_scan_illuminance(void) {
-    return jd_scan_i2c(i2c_illuminance, illuminance_init);
+    return jd_scan_i2c("illum", i2c_illuminance, illuminance_init);
 }
 
 int jd_scan_all(void) {
