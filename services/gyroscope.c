@@ -7,7 +7,10 @@
 
 struct srv_state {
     SENSOR_COMMON;
-    jd_gyroscope_rotation_rates_t sample;
+    union {
+        jd_gyroscope_rotation_rates_t sample;
+        int32_t sample_arr[3];
+    };
     uint32_t nextSample;
 };
 
@@ -31,8 +34,8 @@ void gyroscope_process(srv_t *state) {
     sensor_process(state);
     void *tmp = sensor_get_reading(state);
     if (tmp) {
-        memcpy(&state->sample.x, tmp, 3 * 4);
-        gyroscope_data_transform(&state->sample.x);
+        memcpy(state->sample_arr, tmp, 3 * 4);
+        gyroscope_data_transform(state->sample_arr);
     }
 
     sensor_process_simple(state, &state->sample, sizeof(state->sample));

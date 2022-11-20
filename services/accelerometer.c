@@ -61,7 +61,10 @@ struct srv_state {
     uint16_t g_events;
     uint16_t currentGesture, lastGesture;
     uint32_t nextSample;
-    jd_accelerometer_forces_t sample;
+    union {
+        jd_accelerometer_forces_t sample;
+        int32_t sample_arr[3];
+    };
     struct ShakeHistory shake;
 };
 
@@ -224,8 +227,8 @@ void accelerometer_process(srv_t *state) {
     sensor_process(state);
     void *tmp = sensor_get_reading(state);
     if (tmp) {
-        memcpy(&sample.x, tmp, 3 * 4);
-        accelerometer_data_transform(&sample.x);
+        memcpy(state->sample_arr, tmp, 3 * 4);
+        accelerometer_data_transform(state->sample_arr);
     }
 
     process_events(state);
