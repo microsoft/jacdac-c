@@ -69,6 +69,11 @@
     enum { CONCAT_0(_static_assert_, CONCAT_0(__LINE__, id)) = 1 / ((e) ? 1 : 0) };
 #endif
 
+// if running off external flash, put this function in RAM
+#ifndef JD_FAST_FUNC
+#define JD_FAST_FUNC /* */
+#endif
+
 #ifndef JD_EVENT_QUEUE_SIZE
 #define JD_EVENT_QUEUE_SIZE 128
 #endif
