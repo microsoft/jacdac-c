@@ -306,8 +306,17 @@ int jd_usb_send_frame(void *frame) {
     return r;
 }
 
+void jd_usb_enable_serial(void) {
+    jd_usb_init();
+    usb_serial_en = 1;
+}
+
 __attribute__((weak)) void jd_usb_process(void) {}
 
 __attribute__((weak)) void jd_net_disable_fwd(void) {}
+
+__attribute__((weak)) bool jd_usb_looks_connected(void) {
+    return true;
+}
 
 #endif
