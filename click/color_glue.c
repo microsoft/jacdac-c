@@ -10,7 +10,7 @@ static void glue_color_init(void) {
     color_cfg_setup(&cfg);
     COLOR_MAP_MIKROBUS(cfg, NA);
     if (color_init_(&ctx, &cfg))
-        hw_panic();
+        JD_PANIC();
     color_default_cfg(&ctx);
     color_write_byte(&ctx, COLOR_REG_RGBC_TIME, COLOR_RGBC_TIME_154ms);
     color_set_led(&ctx, 1, 1, 1);

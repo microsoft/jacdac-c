@@ -62,7 +62,7 @@ void *jd_alloc(uint32_t size) {
     void *r = aptr;
     aptr += size;
     if ((uintptr_t)aptr > HEAP_END)
-        jd_panic();
+        JD_PANIC();
     memset(r, 0x00, size << 2);
 
     return r;
@@ -74,7 +74,7 @@ uint32_t jd_available_memory() {
 
 void *jd_alloc_emergency_area(uint32_t size) {
     if (size > HEAP_SIZE)
-        jd_panic();
+        JD_PANIC();
     return (void *)HEAP_BASE;
 }
 

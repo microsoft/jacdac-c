@@ -1,8 +1,6 @@
 #include "jd_protocol.h"
 
-#define ASSERT(cond)                                                                               \
-    if (!(cond))                                                                                   \
-    jd_panic()
+#define ASSERT JD_ASSERT
 
 struct jd_queue {
     uint16_t front;
@@ -28,7 +26,7 @@ int jd_queue_will_fit(jd_queue_t q, unsigned size) {
 
 int jd_queue_push(jd_queue_t q, jd_frame_t *pkt) {
     if (pkt->size == 0)
-        jd_panic();
+        JD_PANIC();
 
     target_disable_irq();
 

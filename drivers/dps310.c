@@ -111,7 +111,7 @@ static void dps310_init(void) {
     i2c_init();
 
     if (i2c_read_reg(dev_addr, DPS310_PROD_ID) != 0x10)
-        hw_panic();
+        JD_PANIC();
 
     write_reg(DPS310_RESET, 0x89);
     target_wait_us(10000);

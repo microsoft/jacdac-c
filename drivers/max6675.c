@@ -45,7 +45,7 @@ static void max6675_process(void) {
         uint16_t rtemp = (data[0] << 8) | data[1];
         if (rtemp & 4) {
             DMESG("fault! 0x%x", rtemp);
-            hw_panic();
+            JD_PANIC();
         }
 
         rtemp &= ~7;

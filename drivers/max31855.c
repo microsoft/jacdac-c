@@ -45,7 +45,7 @@ static void max31855_process(void) {
         int16_t rtemp = (data[0] << 8) | data[1];
         if (rtemp & 1) {
             DMESG("fault! f=%d", data[3] & 7);
-            hw_panic();
+            JD_PANIC();
         }
 
         rtemp &= ~3;

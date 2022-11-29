@@ -79,7 +79,7 @@ void jd_tx_init(void) {
 
 int jd_send(unsigned service_num, unsigned service_cmd, const void *data, unsigned service_size) {
     if (target_in_irq())
-        jd_panic();
+        JD_PANIC();
 
     void *trg = jd_push_in_frame(&tx_acc_buffer, service_num, service_cmd, service_size);
     if (!trg) {
@@ -166,7 +166,7 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
 
 void jd_tx_flush() {
     if (target_in_irq())
-        jd_panic();
+        JD_PANIC();
     jd_frame_t *f = &tx_acc_buffer;
     if (f->size == 0)
         return;

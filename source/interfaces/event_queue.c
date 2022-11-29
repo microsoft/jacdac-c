@@ -32,7 +32,7 @@ static inline ev_t *next_ev(ev_t *ev) {
 
 static uint16_t next_event_cmd(uint32_t eventid) {
     if (eventid >> 8)
-        jd_panic();
+        JD_PANIC();
     info.counter++;
     return JD_CMD_EVENT_MK(info.counter, eventid);
 }

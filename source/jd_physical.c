@@ -54,7 +54,7 @@ static void tick(void) {
         uint32_t d = tim_get_micros() - start_tx;
         if (d > 3000) {
             DMESG("TX fail; %u us", (unsigned)d);
-            jd_panic();
+            JD_PANIC();
         }
     }
     set_tick_timer(0);
@@ -153,7 +153,7 @@ void jd_line_falling() {
     // target_disable_irq();
     // no need to disable IRQ - we're at the highest IRQ level
     if (phys_status & JD_STATUS_RX_ACTIVE)
-        jd_panic();
+        JD_PANIC();
     phys_status |= JD_STATUS_RX_ACTIVE;
 
     // 1us faster than memset() on SAMD21

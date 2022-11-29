@@ -32,7 +32,7 @@ static const int32_t temperature_error[] = {ERR_TEMP(-40, 0.8), ERR_TEMP(5, 0.2)
 
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg16_buf(SHTC3_ADDR, cmd, NULL, 0))
-        hw_panic();
+        JD_PANIC();
 }
 
 static void wake(void) {
@@ -81,7 +81,7 @@ static void shtc3_process(void) {
         } else {
             uint8_t data[6];
             if (i2c_read_ex(SHTC3_ADDR, data, sizeof(data)))
-                hw_panic();
+                JD_PANIC();
             uint16_t temp = (data[0] << 8) | data[1];
             uint16_t hum = (data[3] << 8) | data[4];
             send_cmd(SHTC3_SLEEP);

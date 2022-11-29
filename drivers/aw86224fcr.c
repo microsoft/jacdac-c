@@ -39,7 +39,7 @@
 
 static void write_reg(uint8_t reg, uint8_t v) {
     if (i2c_write_reg(AW86224_FCR_ADDR, reg, v) != 0)
-        hw_panic();
+        JD_PANIC();
 }
 
 static void aw86224fcr_go(void) {

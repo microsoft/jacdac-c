@@ -32,7 +32,7 @@ static ctx_t state;
 
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg16_buf(SGPC3_ADDR, cmd, NULL, 0))
-        hw_panic();
+        JD_PANIC();
 }
 
 static void sgpc3_send_cmd_buf(uint16_t cmd, const uint8_t *buf, unsigned len) {
@@ -40,7 +40,7 @@ static void sgpc3_send_cmd_buf(uint16_t cmd, const uint8_t *buf, unsigned len) {
     memcpy(tmp, buf, len);
     tmp[len] = jd_sgp_crc8(tmp, len);
     if (i2c_write_reg16_buf(SGPC3_ADDR, cmd, tmp, len + 1))
-        hw_panic();
+        JD_PANIC();
 }
 
 static void sgpc3_init(void) {
@@ -60,7 +60,7 @@ static void sgpc3_init(void) {
     target_wait_us(10000);
     uint8_t data[2];
     if (i2c_read_ex(SGPC3_ADDR, data, sizeof(data)))
-        hw_panic();
+        JD_PANIC();
     DMESG("SGPC3 id=%x %x", data[0], data[1]);
 
     uint8_t arg[2] = {0, 1}; // low-power
@@ -82,7 +82,7 @@ static void sgpc3_process(void) {
             // don't set it before fully initialized
             if (ctx->inited >= 3)
                 if (i2c_write_reg16_buf(SGPC3_ADDR, sgpc3_set_absolute_humidity, ctx->hum_comp, 3))
-                    hw_panic();
+                    JD_PANIC();
             ctx->state = ST_HUM_ISSUED;
             break;
 
@@ -97,7 +97,7 @@ static void sgpc3_process(void) {
 #if 0
             uint8_t data[6];
             if (i2c_read_ex(SGPC3_ADDR, data, sizeof(data)))
-                hw_panic();
+                JD_PANIC();
             DMESG("rd: %x %x %x %x %x %x", data[0], data[1], data[2], data[3], data[4], data[5]);
             ctx->state = ST_IDLE;
 
@@ -122,7 +122,7 @@ static void sgpc3_process(void) {
 #else
             uint8_t data[3];
             if (i2c_read_ex(SGPC3_ADDR, data, sizeof(data)))
-                hw_panic();
+                JD_PANIC();
             DMESG("rd: %x %x %x", data[0], data[1], data[2]);
             ctx->state = ST_IDLE;
 
@@ -142,7 +142,7 @@ static void sgpc3_process(void) {
         }
 
         default:
-            hw_panic();
+            JD_PANIC();
         }
     }
 }

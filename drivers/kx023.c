@@ -123,7 +123,7 @@ static void kx023_init(void) {
         // OK
     } else {
         DMESG("invalid chip");
-        hw_panic();
+        JD_PANIC();
     }
 
     init_chip();

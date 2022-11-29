@@ -4,7 +4,7 @@
 // we don't lock and instead assume we're not running in an interrupt handler
 #define LOCK()                                                                                     \
     if (target_in_irq())                                                                           \
-    jd_panic()
+    JD_PANIC()
 #define UNLOCK() ((void)0)
 
 #define ST_FREE 0x00
@@ -185,7 +185,7 @@ int jd_opipe_close(jd_opipe_desc_t *str) {
     case ST_CLOSED_UNSENT:
         return jd_opipe_send_close_pkt(str);
     default:
-        jd_panic();
+        JD_PANIC();
         return -1;
     }
 }

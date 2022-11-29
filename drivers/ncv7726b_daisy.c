@@ -53,7 +53,7 @@ static int chip_no(uint8_t ch, uint16_t *mask) {
         ch -= CH_PER_CHIP;
     }
 
-    jd_panic();
+    JD_PANIC();
 }
 
 static void ncv7726b_channel_set(uint8_t channel, int state) {

@@ -54,7 +54,7 @@ static void ltr390uv_init(void) {
     int id = i2c_read_reg(LTR390UV_ADDR, LTR390UV_PART_ID);
     DMESG("LTR390UV part=%x", id);
     if ((id >> 4) != 0xB)
-        hw_panic();
+        JD_PANIC();
     i2c_write_reg(LTR390UV_ADDR, LTR390UV_MEAS_RATE, 0x22); // 18bit/100ms
 
     ctx->gain = 3;
@@ -69,7 +69,7 @@ static bool data_ready(void) {
 static uint32_t read_data(int addr) {
     uint8_t data[3];
     if (i2c_read_reg_buf(LTR390UV_ADDR, addr, data, 3))
-        hw_panic();
+        JD_PANIC();
     return data[0] | (data[1] << 8) | ((data[2] & 0xf) << 16);
 }
 

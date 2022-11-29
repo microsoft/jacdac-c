@@ -73,7 +73,7 @@ static void writeReg(uint8_t reg, uint8_t val) {
 static void readData(uint8_t reg, uint8_t *dst, int len) {
     int r = i2c_read_reg_buf(lps33hw_addr, reg, dst, len);
     if (r < 0)
-        hw_panic();
+        JD_PANIC();
 }
 
 static int readReg(uint8_t reg) {
@@ -144,7 +144,7 @@ static void lps33hwtr_init(void) {
         // writeReg(LPS33HW_CTRL_REG1, ctx->ctrl1);
     } else {
         DMESG("invalid chip");
-        hw_panic();
+        JD_PANIC();
     }
     lps33hwtr_set_rate(RATE_10_HZ);
     // 0|ODR2|ODR1|ODR0|EN_LPFP|LPFP_CFG|[BDU]|SIM

@@ -40,7 +40,7 @@ static const int32_t temperature_error[] = {ERR_TEMP(-10, 1.5), ERR_TEMP(15, 0.8
 
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg16_buf(SCD40_ADDR, cmd, NULL, 0))
-        hw_panic();
+        JD_PANIC();
     jd_services_sleep_us(1000);
 }
 
@@ -64,7 +64,7 @@ static int read_data_ready(void) {
 static bool data_ready(void) {
     int d = read_data_ready();
     if (d < 0)
-        hw_panic();
+        JD_PANIC();
     return (d & ((1 << 11) - 1)) != 0;
 }
 
@@ -116,7 +116,7 @@ static void scd40_init(void) {
 
     if (read_data_ready() < 0) {
         DMESG("SCD40 missing");
-        hw_panic();
+        JD_PANIC();
     }
 
     if (scd_read_serial() != 0) {
@@ -146,7 +146,7 @@ static void scd40_process(void) {
             send_cmd(SCD40_READ_MEASUREMENT);
             uint8_t data[9];
             if (i2c_read_ex(SCD40_ADDR, data, sizeof(data)))
-                hw_panic();
+                JD_PANIC();
             ctx->co2.value = WORD(0) << 10;
             // 50ppm + 5% of reading; 5% * (1<<10) == 51.2
             ctx->co2.error = (50 << 10) + WORD(0) * 51;

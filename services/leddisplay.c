@@ -116,7 +116,7 @@ void leddisplay_init(uint8_t leddisplay_type, uint32_t num_pixels, uint32_t defa
                      uint8_t variant) {
     SRV_ALLOC(leddisplay);
     if (num_pixels * 3 > JD_SERIAL_PAYLOAD_SIZE)
-        jd_panic();
+        JD_PANIC();
     state_ = state; // there is global singleton state
     state->leddisplay_type = leddisplay_type;
     state->numpixels = num_pixels;

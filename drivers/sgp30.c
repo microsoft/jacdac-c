@@ -62,7 +62,7 @@ int jd_sgp_read_u16(uint8_t dev_addr, uint16_t regaddr, unsigned wait) {
 
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg16_buf(SGP30_ADDR, cmd, NULL, 0))
-        hw_panic();
+        JD_PANIC();
 }
 
 static bool sgp30_is_present(void) {
@@ -86,7 +86,7 @@ static void sgp30_init(void) {
 
     int id = jd_sgp_read_u16(SGP30_ADDR, sgp30_get_feature_set_version, 2000);
     if (id < 0)
-        hw_panic();
+        JD_PANIC();
 
     DMESG("SGP30 id=%x", id);
 
@@ -103,7 +103,7 @@ static void sgp30_process(void) {
             // don't set it before fully initialized
             if (ctx->inited >= 3)
                 if (i2c_write_reg16_buf(SGP30_ADDR, sgp30_set_absolute_humidity, ctx->hum_comp, 3))
-                    hw_panic();
+                    JD_PANIC();
             ctx->state = ST_HUM_ISSUED;
             break;
 
@@ -116,7 +116,7 @@ static void sgp30_process(void) {
         case ST_READ_ISSUED: {
             uint8_t data[6];
             if (i2c_read_ex(SGP30_ADDR, data, sizeof(data)))
-                hw_panic();
+                JD_PANIC();
             ctx->state = ST_IDLE;
 
             if (ctx->inited == 1) {
@@ -141,7 +141,7 @@ static void sgp30_process(void) {
         }
 
         default:
-            hw_panic();
+            JD_PANIC();
         }
     }
 }

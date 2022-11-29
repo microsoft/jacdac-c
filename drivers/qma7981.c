@@ -205,7 +205,7 @@ static void qma7981_init(void) {
         }
     } else {
         DMESG("invalid chip");
-        hw_panic();
+        JD_PANIC();
     }
 
     init_chip();

@@ -52,14 +52,14 @@ static const int32_t temperature_error[] = {ERR_TEMP(-40, 3), ERR_TEMP(85, 1), E
 static int read_reg(uint8_t reg) {
     int r = i2c_read_reg(MPL3115A2_ADDR, reg);
     if (r < 0)
-        hw_panic();
+        JD_PANIC();
     return r;
 }
 
 static void write_reg(uint8_t reg, uint8_t val) {
     int r = i2c_write_reg(MPL3115A2_ADDR, reg, val);
     if (r < 0)
-        hw_panic();
+        JD_PANIC();
 }
 
 static bool mpl3115a2_is_present(void) {
@@ -82,7 +82,7 @@ static void mpl3115a2_init(void) {
     i2c_init();
 
     if (read_reg(MPL3115A2_WHOAMI) != 0xC4)
-        hw_panic();
+        JD_PANIC();
 
     ctx->ctrl1 = OVERSAMPLE_REG1(CHOSEN_OVERSAMPLE);
     write_reg(MPL3115A2_CTRL_REG1, ctx->ctrl1);
@@ -104,14 +104,14 @@ static void mpl3115a2_process(void) {
                 int r = i2c_read_reg_buf(MPL3115A2_ADDR, MPL3115A2_REG_PRESSURE_MSB, data,
                                          sizeof(data));
                 if (r < 0)
-                    hw_panic();
+                    JD_PANIC();
 
                 uint32_t pressure = (data[0] << 16) | (data[1] << 8) | data[2];
                 pressure = (pressure >> 4) * 64 / 25;
 
                 r = i2c_read_reg_buf(MPL3115A2_ADDR, MPL3115A2_REG_TEMP_MSB, data, 2);
                 if (r < 0)
-                    hw_panic();
+                    JD_PANIC();
 
                 int temp = (int16_t)((data[0] << 8) | data[1]);
                 temp = (temp >> 4) << 6;

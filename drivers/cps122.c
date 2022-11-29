@@ -28,7 +28,7 @@ static const int32_t temperature_error[] = {ERR_TEMP(-40, 1.0), ERR_TEMP(85, 1.0
 
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg_buf(CPS122_ADDR, cmd, NULL, 0))
-        hw_panic();
+        JD_PANIC();
 }
 
 static void cps122_init(void) {
@@ -49,7 +49,7 @@ static void cps122_init(void) {
     uint8_t buf[5];
     int id = i2c_read_reg_buf(CPS122_ADDR, CPS122_GD, buf, sizeof(buf));
     if (id < 0)
-        hw_panic();
+        JD_PANIC();
 #endif
 }
 
@@ -66,7 +66,7 @@ static void cps122_process(void) {
             uint8_t data[5];
             int r = i2c_read_reg_buf(CPS122_ADDR, CPS122_GD, data, sizeof(data));
             if (r < 0)
-                hw_panic();
+                JD_PANIC();
 
             int16_t rtemp = (data[3] << 8) | data[4];
             int32_t temp = rtemp << 2;

@@ -105,7 +105,7 @@ int sensor_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 void *sensor_get_reading(srv_t *state) {
     if (!state->api)
-        jd_panic();
+        JD_PANIC();
     if (!state->jd_inited)
         return NULL;
     void *r = state->api->get_reading();

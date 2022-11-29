@@ -6,7 +6,7 @@
 // we don't lock and instead assume we're not running in an interrupt handler
 #define LOCK()                                                                                     \
     if (target_in_irq())                                                                           \
-    jd_panic()
+    JD_PANIC()
 #define UNLOCK() ((void)0)
 
 static jd_ipipe_desc_t *ipipes;

@@ -3,9 +3,7 @@
 
 #if defined(SPI_RX) && defined(PIN_CS)
 
-#define ASSERT(cond)                                                                               \
-    if (!(cond))                                                                                   \
-    jd_panic()
+#define ASSERT JD_ASSERT
 
 // #define DBG DMESG
 #define DBG(...) ((void)0)
@@ -71,10 +69,10 @@ static void ncv7726b_write_state(void) {
             // drive direction needs to be explicit otherwise driver could
             // cause attached component to get hot.
             if (!(driver_state_ls & (1 << i)) && !(driver_state_hs & (1 << i)))
-                jd_panic();
+                JD_PANIC();
 
             if ((driver_state_ls & (1 << i)) && (driver_state_hs & (1 << i)))
-                jd_panic();
+                JD_PANIC();
 
             if (driver_state_ls & (1 << i)) {
                 DBG("LSL %x", CNF_START << (i - 1));
@@ -101,10 +99,10 @@ static void ncv7726b_write_state(void) {
             // drive direction needs to be explicit otherwise driver could
             // cause attached component to get hot.
             if (!(driver_state_ls & (1 << i)) && !(driver_state_hs & (1 << i)))
-                jd_panic();
+                JD_PANIC();
 
             if ((driver_state_ls & (1 << i)) && (driver_state_hs & (1 << i)))
-                jd_panic();
+                JD_PANIC();
 
             if (driver_state_ls & (1 << i)) {
                 DBG("LSH %x", CNF_START << (i - 7));

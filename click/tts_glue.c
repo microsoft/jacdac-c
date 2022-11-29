@@ -7,7 +7,7 @@
 #ifdef MIKROBUS_AVAILABLE
 
 void fatal_error( uint16_t *err ) {
-    hw_panic();
+    JD_PANIC();
 }
 
 void msg_blocked( uint16_t *req, uint16_t *err ) {

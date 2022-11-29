@@ -37,7 +37,7 @@ void relay_process(srv_t *state) {
 
     // if (state->params.pin_relay_feedback != NO_PIN && server_state !=
     // (bool)pin_get(state->params.pin_relay_feedback))
-    //     hw_panic();
+    //     JD_PANIC();
 }
 
 void relay_handle_packet(srv_t *state, jd_packet_t *pkt) {

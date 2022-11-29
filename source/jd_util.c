@@ -16,9 +16,11 @@ uint32_t jd_hash_fnv1a(const void *data, unsigned len) {
     return h;
 }
 
-__attribute__((weak)) void jd_panic(void) {
-    hw_panic();
+#ifndef JD_PANIC
+__attribute__((weak)) void JD_PANIC(void) {
+    JD_PANIC();
 }
+#endif
 
 __attribute__((weak)) uint64_t jd_device_id(void) {
     return hw_device_id();
@@ -124,9 +126,9 @@ void jd_reset_frame(jd_frame_t *frame) {
 void *jd_push_in_frame(jd_frame_t *frame, unsigned service_num, unsigned service_cmd,
                        unsigned service_size) {
     if (service_num >> 8)
-        jd_panic();
+        JD_PANIC();
     if (service_cmd >> 16)
-        jd_panic();
+        JD_PANIC();
     uint8_t *dst = frame->data + frame->size;
     unsigned szLeft = frame->data + JD_SERIAL_PAYLOAD_SIZE - dst;
     if (service_size + 4 > szLeft)
@@ -224,7 +226,7 @@ void *jd_from_hex_a(const char *src, unsigned *size) {
 #if JD_VERBOSE_ASSERT
 void jd_assert_fail(const char *expr, const char *file, unsigned line, const char *funname) {
     DMESG("assertion '%s' failed at %s:%d in %s", expr, file, line, funname);
-    jd_panic();
+    hw_panic();
 }
 #endif
 

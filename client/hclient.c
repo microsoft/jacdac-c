@@ -6,7 +6,7 @@
 
 static void TODO() {
     DMESG("not implemented yet");
-    jd_panic();
+    JD_PANIC();
 }
 
 typedef struct reg_query {

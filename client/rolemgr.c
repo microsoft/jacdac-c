@@ -242,10 +242,10 @@ static void stop_list(srv_t *state) {
 jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
     srv_t *state = _state;
     if (!state)
-        jd_panic();
+        JD_PANIC();
 
     if (rolemgr_lookup(state, name, strlen(name)))
-        jd_panic();
+        JD_PANIC();
 
     stop_list(state);
 
@@ -293,7 +293,7 @@ void jd_role_free(jd_role_t *role) {
             }
         }
         if (!q)
-            jd_panic();
+            JD_PANIC();
     }
     role->name = NULL;
     jd_free(role);

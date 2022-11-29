@@ -26,7 +26,7 @@ static const int32_t temperature_error[] = {
 
 static void ds18b20_cmd(uint8_t cmd) {
     if (one_reset() != 0)
-        hw_panic();
+        JD_PANIC();
     if (cmd != DS18B20_READ_ROM)
         one_write(DS18B20_SKIP_ROM);
     one_write(cmd);

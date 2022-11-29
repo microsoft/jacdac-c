@@ -58,7 +58,7 @@ static void th02_init(void) {
     int id = i2c_read_reg(TH02_ADDR, TH02_ID);
     DMESG("TH02 id=%x", id);
     if (id < 0)
-        hw_panic();
+        JD_PANIC();
     ctx->temperature.min_value = SCALE_TEMP(-40);
     ctx->temperature.max_value = SCALE_TEMP(70);
     ctx->humidity.min_value = SCALE_TEMP(0);

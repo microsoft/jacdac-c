@@ -18,7 +18,7 @@
 
 #define NOT_IRQ()                                                                                  \
     if (target_in_irq())                                                                           \
-    jd_panic()
+    JD_PANIC()
 
 #define SECTOR_SHIFT 9
 #define SECTOR_SIZE (1 << SECTOR_SHIFT)
@@ -318,7 +318,7 @@ static void mount_log(jd_lstore_file_t *f, const char *name, int bl_shift) {
         LOG("writing new header for '%s'", name);
         write_sectors(f, 0, hd, 1);
         if (!validate_header(f, hd))
-            jd_panic();
+            JD_PANIC();
     }
 
     f->header_blocks = hd->header_blocks;
@@ -516,7 +516,7 @@ void jd_lstore_init(void) {
     FRESULT res = f_mount(&ctx->fs, drv, 1);
     if (res != FR_OK) {
         DMESG("failed to mount card (%d)", res);
-        jd_panic();
+        JD_PANIC();
     } else {
         unsigned kb = (ctx->fs.n_fatent >> 1) * ctx->fs.csize;
         LOG("mounted! %uMB", kb >> 10);

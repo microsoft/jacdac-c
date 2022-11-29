@@ -101,7 +101,7 @@ static void kxtj3_init(void) {
         // OK
     } else {
         DMESG("invalid chip");
-        hw_panic();
+        JD_PANIC();
     }
 
     kxtj3_accel_set_range(8 << 20);

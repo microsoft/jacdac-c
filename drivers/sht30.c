@@ -30,7 +30,7 @@ static const int32_t temperature_error[] = {ERR_TEMP(-40, 0.6), ERR_TEMP(0, 0.2)
 
 static void send_cmd(uint16_t cmd) {
     if (i2c_write_reg16_buf(sht30_addr, cmd, NULL, 0))
-        hw_panic();
+        JD_PANIC();
 }
 
 static void wake(void) {
@@ -66,7 +66,7 @@ static void sht30_init(void) {
     int id = i2c_read_reg16(sht30_addr, SHT30_STATUS);
     DMESG("SHT30 status=%x", id);
     if (id < 0)
-        hw_panic();
+        JD_PANIC();
 }
 
 static void sht30_process(void) {
@@ -82,7 +82,7 @@ static void sht30_process(void) {
         } else {
             uint8_t data[6];
             if (i2c_read_ex(sht30_addr, data, sizeof(data)))
-                hw_panic();
+                JD_PANIC();
             uint16_t temp = (data[0] << 8) | data[1];
             uint16_t hum = (data[3] << 8) | data[4];
             ctx->read_issued = 0;

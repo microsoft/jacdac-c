@@ -171,7 +171,7 @@ void jd_numfmt_write_i32(void *data, unsigned fmt, int32_t q) {
         SET_VAL_DIRECT(I32);
         SET_VAL_DIRECT(I64);
     default:
-        jd_panic();
+        JD_PANIC();
         break;
     }
 }
@@ -199,7 +199,7 @@ int32_t jd_numfmt_read_i32(const void *data, unsigned fmt) {
         GET_VAL_DIRECT(I32);
         GET_VAL_INT(I64);
     default:
-        jd_panic();
+        JD_PANIC();
     }
 
     return I32;

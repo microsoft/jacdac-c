@@ -92,7 +92,7 @@ static uint32_t get_num_bytes(void) {
     spiflash_read_sfdp(0, &hd0, sizeof(hd0));
     if (memcmp(hd0.magic, "SFDP", 4) != 0) {
         DMESG("SFDP: wrong magic");
-        jd_panic();
+        JD_PANIC();
     }
     sfdp_header_t hd;
     spiflash_read_sfdp(sizeof(hd0), &hd, sizeof(hd));

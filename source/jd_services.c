@@ -90,7 +90,7 @@ int service_handle_register(srv_t *state, jd_packet_t *pkt, const uint16_t sdesc
             regsz = sdesc[++i];
 
         if (!regsz)
-            jd_panic();
+            JD_PANIC();
 
         if (tp != _JD_REG_BIT && tp != _JD_REG_BYTES) {
             if (bitoffset) {
@@ -171,7 +171,7 @@ void jd_services_process_frame(jd_frame_t *frame) {
 srv_t *jd_allocate_service(const srv_vt_t *vt) {
     // always allocate instances idx - it should be stable when we disable some services
     if (num_services >= MAX_SERV)
-        jd_panic();
+        JD_PANIC();
     srv_t *r = jd_alloc(vt->state_size);
     r->vt = vt;
     r->service_index = num_services;
@@ -438,7 +438,7 @@ void jd_services_sleep_us(uint32_t delta) {
     if (!curr_serv || curr_serv == IN_SERV_SLEEP) {
         // not allowed outside of regular (non-ctrl) service process() callback
         DMESG("sleep outside of process()");
-        jd_panic();
+        JD_PANIC();
     }
     curr_service_process = IN_SERV_SLEEP;
     jd_refresh_now();
