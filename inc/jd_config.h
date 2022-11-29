@@ -168,7 +168,7 @@ int jd_net_send_frame(void *frame);
 #endif
 
 #ifndef JD_VERBOSE_ASSERT
-#define JD_VERBOSE_ASSERT 0
+#define JD_VERBOSE_ASSERT (JD_CLIENT || JD_LORA || JD_64)
 #endif
 
 #ifndef JD_ADVANCED_STRING

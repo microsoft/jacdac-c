@@ -7,7 +7,6 @@
 #include "jd_physical.h"
 #include <stdarg.h>
 
-__attribute__((noreturn)) void jd_panic(void);
 uint64_t jd_device_id(void);
 
 uint32_t jd_random_around(uint32_t v);
@@ -95,8 +94,10 @@ jd_frame_t *jd_dup_frame(const jd_frame_t *frame);
 #if JD_VERBOSE_ASSERT
 __attribute__((noreturn)) void jd_assert_fail(const char *expr, const char *file, unsigned line,
                                               const char *funname);
+__attribute__((noreturn)) void jd_panic_core(const char *file, unsigned line, const char *funname);
 #else
-#define jd_assert_fail(...) jd_panic()
+#define jd_assert_fail(...) hw_panic()
+#define jd_panic_core(...) hw_panic()
 #endif
 
 #if 1
@@ -109,6 +110,8 @@ __attribute__((noreturn)) void jd_assert_fail(const char *expr, const char *file
 #else
 #define JD_ASSERT(cond) ((void)0)
 #endif
+
+#define JD_PANIC() jd_panic_core(__FILE__, __LINE__, __func__)
 
 // never compiled out
 #define JD_CHK(call)                                                                               \

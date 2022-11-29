@@ -228,6 +228,10 @@ void jd_assert_fail(const char *expr, const char *file, unsigned line, const cha
     DMESG("assertion '%s' failed at %s:%d in %s", expr, file, line, funname);
     hw_panic();
 }
+void jd_panic_core(const char *file, unsigned line, const char *funname) {
+    DMESG("JD_PANIC() at %s:%d in %s", file, line, funname);
+    hw_panic();
+}
 #endif
 
 /**
