@@ -93,6 +93,9 @@ void jd_process_event_queue(void) {
 void jd_send_event_ext(srv_t *srv, uint32_t eventid, const void *data, uint32_t data_bytes) {
     srv_common_t *state = (srv_common_t *)srv;
 
+    if (target_in_irq())
+        JD_PANIC();
+
     uint16_t cmd = next_event_cmd(eventid);
     jd_send(state->service_index, cmd, data, data_bytes);
 
