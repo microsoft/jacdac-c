@@ -803,4 +803,12 @@ jd_frame_t *jd_dup_frame(const jd_frame_t *frame) {
     memcpy(r, frame, sz);
     return r;
 }
+
+void *jd_memdup(const void *src, unsigned size) {
+    if (size == 0)
+        return jd_alloc(1);
+    void *r = jd_alloc(size);
+    memcpy(r, src, size);
+    return r;
+}
 #endif

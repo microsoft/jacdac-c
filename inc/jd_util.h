@@ -89,6 +89,7 @@ char *jd_concat3(const char *a, const char *b, const char *c);
 char *jd_urlencode(const char *src);
 char *jd_json_escape(const char *str, unsigned sz);
 jd_frame_t *jd_dup_frame(const jd_frame_t *frame);
+void *jd_memdup(const void *src, unsigned size);
 #endif
 
 #if JD_VERBOSE_ASSERT
