@@ -1,5 +1,5 @@
 let fs = require("fs")
-let sums = { }
+let sums = {}
 let inprog = false
 let inram = false
 let indata = false
@@ -10,11 +10,11 @@ for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
   if (/^r[oa]m\s/.test(line)) continue
   let m = /^ \.(\w+)/.exec(line)
   if (m) {
-    if (m[1] == "text" || m[1] == "binmeta" || m[1] == "rodata" || m[1] == "data" || m[1] == "isr_vector")
+    if (m[1] == "text" || m[1] == "binmeta" || m[1] == "rodata" || m[1] == "data" || m[1] == "isr_vector" || m[1] == "iram1")
       inprog = true
     else
       inprog = false
-    if (m[1] == "data" || m[1] == "bss")
+    if (m[1] == "data" || m[1] == "bss" || m[1] == "sbss" || m[1] == "noinit")
       inram = true
     else
       inram = false
@@ -27,6 +27,8 @@ for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
   if (!inprog && !inram) continue
   m = /\s+(0x00[a-f0-9]+)\s+(0x[a-f0-9]+)\s+(.*)/.exec(line)
   if (!m) continue
+  const iniram = /^0x00000000403/.test(m[1])
+
   let addr = parseInt(m[1])
   let size = parseInt(m[2])
   if (!addr || !size) continue
@@ -39,11 +41,11 @@ for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
   if (dofun) name += fun
 
   function doSum(pref) {
-      const n = pref + "." + name
-      if (!sums[n]) sums[n] = 0
-      sums[n] += size
-      if (!sums[pref + ".TOTAL"]) sums[pref + ".TOTAL"] = 0
-      sums[pref + ".TOTAL"] += size
+    const n = pref + "." + name
+    if (!sums[n]) sums[n] = 0
+    sums[n] += size
+    if (!sums[pref + ".TOTAL"]) sums[pref + ".TOTAL"] = 0
+    sums[pref + ".TOTAL"] += size
   }
 
   if (indata)
@@ -56,6 +58,9 @@ for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
 
   if (inram)
     doSum("RAM")
+
+  if (iniram)
+    doSum("IRAM")
 
   let pref = inram ? "RAM." : ""
 
@@ -80,4 +85,5 @@ order("RAM")
 order("DATA")
 order("TEXT")
 order("FLASH")
+order("IRAM")
 
