@@ -3,7 +3,7 @@ if (NOT DEFINED JACDAC_USER_CONFIG_DIR)
 endif()
 
 file(GLOB JDC_FILES 
-  jacscript/*.c
+  devicescript/*.c
   services/*.c
   source/*.c
   drivers/*.c
@@ -22,7 +22,7 @@ add_library(jacdac STATIC
 
 target_include_directories(jacdac PUBLIC 
     ./inc
-    ./jacscript
+    ./devicescript
     .
     ${JACDAC_USER_CONFIG_DIR}
 )
