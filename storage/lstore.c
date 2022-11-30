@@ -340,8 +340,7 @@ static void mount_log(jd_lstore_file_t *f, const char *name, int bl_shift) {
     f->block->block_magic0 = f->block_magic0;
     block_footer(f)->block_magic1 = f->block_magic1;
 
-    f->block_alt = jd_alloc(block_size(f));
-    memcpy(f->block_alt, f->block, block_size(f));
+    f->block_alt = jd_memdup(f->block, block_size(f));
 
     LOG("generation %u (ptr=%u)", (unsigned)f->block_generation, (unsigned)f->block_ptr);
 }

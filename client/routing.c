@@ -122,7 +122,6 @@ static jd_device_t *jd_device_alloc(jd_packet_t *announce) {
     int num_services = announce->service_size >> 2;
     int sz = sizeof(jd_device_t) + (num_services * sizeof(jd_device_service_t));
     jd_device_t *d = jd_alloc(sz);
-    memset(d, 0, sz);
     d->num_services = num_services;
     d->device_identifier = announce->device_identifier;
     d->_expires = now + EXPIRES_USEC;
@@ -259,7 +258,6 @@ const jd_register_query_t *jd_service_query(jd_device_service_t *serv, int reg_c
     jd_register_query_t *q = jd_service_query_lookup(serv, reg_code);
     if (!q) {
         q = jd_alloc(sizeof(jd_register_query_t));
-        memset(q, 0, sizeof(*q));
         jd_device_t *dev = jd_service_parent(serv);
         q->reg_code = reg_code;
         q->service_index = serv->service_index;
