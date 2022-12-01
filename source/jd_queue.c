@@ -83,6 +83,12 @@ void jd_queue_shift(jd_queue_t q) {
     }
 }
 
+void jd_queue_clear(jd_queue_t q) {
+    target_disable_irq();
+    q->front = q->back = 0;
+    target_enable_irq();
+}
+
 jd_queue_t jd_queue_alloc(unsigned size) {
     jd_queue_t q = jd_alloc(sizeof(*q) + size);
     q->size = q->curr_size = size;

@@ -7,6 +7,7 @@ static uint8_t usb_fwd_en;
 static uint8_t usb_serial_en;
 static uint8_t usb_frame_ptr;
 static uint8_t usb_frame_gap;
+static uint8_t usb_panic_disconnected;
 
 static jd_queue_t usb_queue;
 static uint8_t usb_serial_gap;
@@ -309,6 +310,32 @@ int jd_usb_send_frame(void *frame) {
 void jd_usb_enable_serial(void) {
     jd_usb_init();
     usb_serial_en = 1;
+}
+
+void jd_usb_panic_flush(void) {
+    if (usb_panic_disconnected)
+        return;
+    usb_fwd_en = 0;
+    jd_queue_clear(usb_queue);
+    unsigned bytes = jd_bqueue_occupied_bytes(usb_serial_queue);
+    unsigned num_pull = 0;
+    while (bytes > 0) {
+        jd_usb_pull_ready();
+        unsigned nbytes = jd_bqueue_occupied_bytes(usb_serial_queue);
+        if (nbytes != bytes) {
+            num_pull = 0;
+            bytes = nbytes;
+        }
+        if (num_pull++ > 50000) {
+            usb_panic_disconnected = 1;
+            break;
+        }
+    }
+}
+
+void jd_usb_panic_enter(void) {
+    jd_usb_enable_serial(); // in case it wasn't there
+    jd_usb_panic_flush();
 }
 
 __attribute__((weak)) void jd_usb_process(void) {}

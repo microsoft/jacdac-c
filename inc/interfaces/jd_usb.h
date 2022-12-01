@@ -15,6 +15,8 @@ int jd_usb_write_serial(const void *data, unsigned len);
 unsigned jd_usb_serial_space(void);
 int jd_usb_send_frame(void *frame);
 void jd_usb_enable_serial(void);
+void jd_usb_panic_enter(void);
+void jd_usb_panic_flush(void);
 
 // USB interface
 // Defined by application, called by jd_usb when there is new data to be pulled

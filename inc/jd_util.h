@@ -130,6 +130,7 @@ jd_frame_t *jd_queue_front(jd_queue_t q);
 void jd_queue_shift(jd_queue_t q);
 void jd_queue_test(void);
 int jd_queue_will_fit(jd_queue_t q, unsigned size);
+void jd_queue_clear(jd_queue_t q);
 
 // jd_bqueue.c
 typedef struct jd_bqueue *jd_bqueue_t;
