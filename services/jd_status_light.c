@@ -95,7 +95,24 @@ static void re_glow(status_ctx_t *state) {
 }
 
 static void rgbled_show(status_ctx_t *state) {
-#ifdef PIN_LED_R
+#if defined(LED_SET_RGB)
+    int chg = 0;
+    for (int i = 0; i < 3; ++i) {
+        channel_t *ch = &state->channels[i];
+        int32_t c = ch->value;
+        if (state->color_override)
+            c = state->color_override & (1 << i) ? 0xff00 : 0x0000;
+        c = (c * ch->mult) >> (8 + 8);
+        if (c > 0xff)
+            c = 0xff;
+        if (ch->pwm != c) {
+            chg = 1;
+            ch->pwm = c;
+        }
+    }
+    if (chg)
+        LED_SET_RGB(state->channels[0].pwm, state->channels[1].pwm, state->channels[2].pwm);
+#elif defined(PIN_LED_R)
     int sum = 0;
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
@@ -287,20 +304,31 @@ int jd_status_handle_packet(jd_packet_t *pkt) {
     return 0;
 }
 
+#ifdef LED_R_MULT
+static const uint8_t mults[] = {LED_R_MULT, LED_G_MULT, LED_B_MULT};
+#endif
+
 #ifdef PIN_LED_R
-const uint8_t mults[] = {LED_R_MULT, LED_G_MULT, LED_B_MULT};
-const uint8_t pins[] = {PIN_LED_R, PIN_LED_G, PIN_LED_B};
+static const uint8_t pins[] = {PIN_LED_R, PIN_LED_G, PIN_LED_B};
 #endif
 
 void jd_status_init() {
     status_ctx_t *state = &status_ctx;
 
-#ifdef PIN_LED_R
+#if defined(PIN_LED_R) || defined(LED_SET_RGB)
     for (int i = 0; i < 3; ++i) {
         channel_t *ch = &state->channels[i];
+#ifdef PIN_LED_R
         ch->pin = pins[i];
-        ch->mult = mults[i];
         ch->pwm = jd_pwm_init(ch->pin, RGB_LED_PERIOD, 0, 1);
+#else
+        ch->pwm = 1; // force refresh
+#endif
+#ifdef LED_R_MULT
+        ch->mult = mults[i];
+#else
+        ch->mult = 255;
+#endif
     }
 #else
     for (int i = 0; i < 3; ++i) {
