@@ -207,9 +207,12 @@ void jd_status_process() {
     uint16_t encoded = state->queued_blinks[0];
     if (encoded && jd_should_sample(&state->blink_step, 128 << 10)) {
         if (_JD_BLINK_DURATION(encoded) == JD_BLINK_DURATION_FAINT) {
+#ifndef LED_SET_RGB
+            // faint blinks don't really work with WS2812B
             set_blink_color(state, encoded);
             // target_wait_us(100); - enough delay from just calling these functions
             set_blink_color(state, 0);
+#endif
             state->blink_rep += 2;
         } else {
             if (state->blink_rep & 1) {
