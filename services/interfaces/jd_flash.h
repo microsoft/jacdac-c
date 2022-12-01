@@ -13,7 +13,10 @@ void flash_sync(void);
 char *jd_settings_get(const char *key);
 int jd_settings_set(const char *key, const char *val);
 
+// returns the size of the item, or -1 when not found
+// if space < return value, the dst might or might not have been modified
 int jd_settings_get_bin(const char *key, void *dst, unsigned space);
+// returns 0 on success
 int jd_settings_set_bin(const char *key, const void *val, unsigned size);
 
 #endif
