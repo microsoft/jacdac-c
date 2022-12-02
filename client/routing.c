@@ -61,9 +61,9 @@ void jd_client_log_event(int event_id, void *arg0, void *arg1) {
         break;
     case JD_CLIENT_EV_SERVICE_PACKET:
         if (verbose_log) {
-            DMESG("serv %s/%d[0x%x] - pkt cmd=%x sz=%d", jd_service_parent(serv)->short_id,
+            DMESG("serv %s/%d[0x%x] - pkt cmd=%x sz=%d %-s...", jd_service_parent(serv)->short_id,
                   serv->service_index, (unsigned)serv->service_class, pkt->service_command,
-                  pkt->service_size);
+                  pkt->service_size, jd_to_hex_a(pkt->data, 4));
         }
         break;
     case JD_CLIENT_EV_NON_SERVICE_PACKET:
