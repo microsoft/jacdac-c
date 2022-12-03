@@ -71,6 +71,7 @@ jd_frame_t *jd_queue_front(jd_queue_t q) {
 }
 
 void jd_queue_shift(jd_queue_t q) {
+    target_disable_irq();
     jd_frame_t *pkt = jd_queue_front(q);
     ASSERT(pkt != NULL);
     unsigned size = FRM_SIZE(pkt);
@@ -81,6 +82,7 @@ void jd_queue_shift(jd_queue_t q) {
     } else {
         q->front += size;
     }
+    target_enable_irq();
 }
 
 void jd_queue_clear(jd_queue_t q) {
