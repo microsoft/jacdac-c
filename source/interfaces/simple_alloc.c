@@ -46,7 +46,7 @@ void jd_alloc_init(void) {
     aptr = (uintptr_t *)HEAP_BASE;
 #endif
 
-#if JD_JACSCRIPT
+#if JD_DEVICESCRIPT
     jd_alloc_add_chunk((void*)HEAP_BASE, HEAP_SIZE);
 #endif
 

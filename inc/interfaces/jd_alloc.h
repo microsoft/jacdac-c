@@ -17,7 +17,7 @@
  **/
 void jd_alloc_init(void);
 
-#if JD_JACSCRIPT && JD_HW_ALLOC
+#if JD_DEVICESCRIPT && JD_HW_ALLOC
 void jd_alloc_add_chunk(void *start, unsigned size);
 #endif
 
