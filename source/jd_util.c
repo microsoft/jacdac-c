@@ -646,6 +646,7 @@ char *jd_vsprintf_a(const char *format, va_list ap) {
     int len = jd_vsprintf(NULL, 0, format, ap);
     char *r = jd_alloc(len);
     jd_vsprintf(r, len, format, ap2);
+    va_end(ap2);
     return r;
 }
 
