@@ -23,7 +23,7 @@ typedef double jd_float_t;
 #define JD_NUMFMT_F32 0b1010
 #define JD_NUMFMT_F64 0b1011
 
-#define JD_NUMFMT(fmt, shift) (JACS_NUMFMT_##fmt | ((shift) << 4))
+#define JD_NUMFMT(fmt, shift) (DEVS_NUMFMT_##fmt | ((shift) << 4))
 
 static inline int jd_numfmt_bytes(unsigned numfmt) {
     return (1 << (numfmt & 0b11));
