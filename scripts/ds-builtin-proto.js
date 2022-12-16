@@ -5,6 +5,9 @@ const scriptArgs = process.argv.slice(2)
 let numerr = 0
 
 const byObj = {}
+const allfuns = []
+
+const firstFun = 0xf000
 
 let r = `// auto-generated!
 #include "devs_internal.h"
@@ -62,10 +65,11 @@ for (const fn of scriptArgs) {
 
         const fl = flags.length == 0 ? "0" : flags.join("|")
 
-        const init = `{ N(${methodName.toUpperCase()}), ${params.length}, ${fl}, (void*)${fnName}  }`
         if (!byObj[objId])
             byObj[objId] = []
-        byObj[objId].push(init)
+        byObj[objId].push(`{ N(${methodName.toUpperCase()}), 0x${(firstFun + allfuns.length).toString(16)} }`)
+
+        allfuns.push(`{ N(${methodName.toUpperCase()}), ${params.length}, ${fl}, (void*)${fnName}  }`)
     }
 
     function error(msg) {
@@ -79,9 +83,9 @@ if (numerr)
 
 r += "\n"
 for (const k of Object.keys(byObj)) {
-    r += `static const devs_builtin_proto_entry_t ${k}_entries[] = {\n`
+    r += `static const devs_builtin_proto_entry_t ${k}_entries[] = { //\n`
     r += byObj[k].join(",\n")
-    r += ",\n{ 0, 0, 0, 0 }};\n\n"
+    r += ",\n{ 0, 0 }};\n\n"
 }
 
 r += `const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {\n`
@@ -89,8 +93,15 @@ for (const k of Object.keys(byObj)) {
     r += `[DEVS_BUILTIN_OBJECT_${k.toUpperCase()}] = { DEVS_BUILTIN_PROTO_INIT, ${k}_entries },\n`
 }
 
-r += "};\n"
+r += "};\n\n"
+
+
+r += `uint16_t devs_num_builtin_functions = ${allfuns.length};\n`
+r += `const devs_builtin_function_t devs_builtin_functions[${allfuns.length}] = {\n`
+r += allfuns.join(",\n")
+r += "};\n\n"
 
 r += `STATIC_ASSERT(${maxParms} <= DEVS_BUILTIN_MAX_ARGS);\n`
+r += `STATIC_ASSERT(${firstFun} == DEVS_FIRST_BUILTIN_FUNCTION);\n`
 
 fs.writeFileSync(path.dirname(scriptArgs[0]) + "/protogen.c", r)
