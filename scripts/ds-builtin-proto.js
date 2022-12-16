@@ -84,7 +84,7 @@ for (const k of Object.keys(byObj)) {
     r += ",\n{ 0, 0, 0, 0 }};\n\n"
 }
 
-r += `const devs_builtin_proto_t devs_builtin_protos[] = {\n`
+r += `const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {\n`
 for (const k of Object.keys(byObj)) {
     r += `[DEVS_BUILTIN_OBJECT_${k.toUpperCase()}] = { DEVS_BUILTIN_PROTO_INIT, ${k}_entries },\n`
 }
