@@ -75,29 +75,40 @@ for (const fn of scriptArgs) {
         const argWords = argString.split(/,\s*/).map(s => s.trim())
         if (argWords[0] != "devs_ctx_t *ctx")
             error("first arg should be ctx")
-        if (retTp == "void") {
-            // OK
-        } else {
-            error("only void supported as return")
-        }
+
+        const params = argWords.slice(1)
+        let fld = ".meth"
         if (funProp == "prop") {
             if (numArgsStr != "" && numArgsStr != "0")
                 error("props don't take args")
             flags.push("PROP")
+            if (retTp == "value_t") {
+                // OK
+            } else {
+                error("only value_t supported as return")
+            }
+            if (params.length != 1 || params[0] != "value_t self")
+                error("only a single self param supported in props")
+            fld = ".prop"
+            argmap = null
         } else {
+            if (retTp == "void") {
+                // OK
+            } else {
+                error("only void supported as return")
+            }
             if (numArgsStr == "")
                 error("fun/prop need number of args")
             numArgs = parseInt(numArgsStr)
+            if (params.length)
+                error(`params not supported`)
         }
         if (funProp == 'fun') {
             flags.push("NO_SELF")
         } else {
             objId += "_prototype"
         }
-        const params = argWords.slice(1)
-        if (params.length) {
-            error(`params not supported`)
-        }
+
         maxParms = Math.max(numArgs, maxParms)
 
         const fl = flags.length == 0 ? "0" : flags.join("|")
@@ -106,7 +117,7 @@ for (const fn of scriptArgs) {
             byObj[objId] = []
         byObj[objId].push(`{ N(${methodName.toUpperCase()}), 0x${(firstFun + allfuns.length).toString(16)} }`)
 
-        allfuns.push(`{ N(${methodName.toUpperCase()}), ${numArgs}, ${fl}, ${fnName}  }`)
+        allfuns.push(`{ N(${methodName.toUpperCase()}), ${numArgs}, ${fl}, { ${fld} = ${fnName} } }`)
     }
 
     function error(msg) {
