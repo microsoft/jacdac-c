@@ -106,7 +106,7 @@ for (const fn of scriptArgs) {
             byObj[objId] = []
         byObj[objId].push(`{ N(${methodName.toUpperCase()}), 0x${(firstFun + allfuns.length).toString(16)} }`)
 
-        allfuns.push(`{ N(${methodName.toUpperCase()}), ${params.length}, ${fl}, (void*)${fnName}  }`)
+        allfuns.push(`{ N(${methodName.toUpperCase()}), ${numArgs}, ${fl}, ${fnName}  }`)
     }
 
     function error(msg) {
