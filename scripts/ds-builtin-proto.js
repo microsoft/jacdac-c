@@ -13,8 +13,8 @@ let r = `// auto-generated!
 #include "devs_internal.h"
 
 #define PROP DEVS_BUILTIN_FLAG_IS_PROPERTY
-#define ASYNC DEVS_BUILTIN_FLAG_ASYNC_CALL 0x02
-#define NO_SELF DEVS_BUILTIN_FLAG_NO_SELF 0x04
+#define ASYNC DEVS_BUILTIN_FLAG_ASYNC_CALL
+#define NO_SELF DEVS_BUILTIN_FLAG_NO_SELF
 
 #define N(n) (DEVS_BUILTIN_STRING_ ## n)
 
