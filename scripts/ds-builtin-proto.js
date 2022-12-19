@@ -24,13 +24,50 @@ let maxParms = 0
 for (const fn of scriptArgs) {
     let lineNo = 0
     r += `// ${path.basename(fn)}\n`
+
+    let isMeth = false
+    let argmap = null
     for (const ln of fs.readFileSync(fn, "utf-8").split(/\r?\n/)) {
         ++lineNo
-        const m = /^(\w+) ((fun|prop)_([a-zA-Z0-9]+)_(\w+))\((.*)\)/.exec(ln)
+
+        if (ln[0] == '}') {
+            checkArgmap()
+            continue
+        }
+
+        if (argmap) {
+            ln.replace(/\bdevs_arg(\w*)\(ctx, (\d+)\)/g, (_1, _2, n) => {
+                accessArg(+n)
+            })
+
+
+            ln.replace(/\b(fun|meth)(\d+)_\w/g, (_1, fm, n) => {
+                for (let i = 0; i < +n; ++i) accessArg(i)
+                if (fm == "meth") accessArg(-1)
+            })
+
+            if (/\bdevs_arg_self\(/.test(ln))
+                accessArg(-1)
+        }
+
+        const m = /^(static\s+)?(\w+) ((fun|prop|meth)(\d*)_(\w+))\((.*)\)/.exec(ln)
         if (!m)
             continue
-        const [full, retTp, fnName, funProp, className, methodName, argString] = m
+        const [full, isStatic, retTp, fnName, funProp, numArgsStr, suffName, argString] = m
         const flags = []
+
+
+        checkArgmap()
+        let numArgs = parseInt(numArgsStr || "0")
+        argmap = []
+        argmap[numArgs] = undefined
+        isMeth = funProp != 'fun'
+
+        if (isStatic)
+            continue
+
+        const m2 = /^([a-zA-Z0-9]+)_(\w+)$/.exec(suffName)
+        const [_x, className, methodName] = m2
         let objId = className
 
         r += `${full};\n`
@@ -38,30 +75,30 @@ for (const fn of scriptArgs) {
         const argWords = argString.split(/,\s*/).map(s => s.trim())
         if (argWords[0] != "devs_ctx_t *ctx")
             error("first arg should be ctx")
-        if (retTp == "value_t") {
+        if (retTp == "void") {
             // OK
-        } else if (retTp == "void") {
-            flags.push("ASYNC")
         } else {
-            error("only void and value_t supported as return")
+            error("only void supported as return")
         }
-        if (funProp == "prop")
+        if (funProp == "prop") {
+            if (numArgsStr != "" && numArgsStr != "0")
+                error("props don't take args")
             flags.push("PROP")
-        const params = argWords.slice(1)
-        if (params[0] == "value_t self") {
-            params.shift()
-            objId += "_prototype"
         } else {
+            if (numArgsStr == "")
+                error("fun/prop need number of args")
+            numArgs = parseInt(numArgsStr)
+        }
+        if (funProp == 'fun') {
             flags.push("NO_SELF")
+        } else {
+            objId += "_prototype"
         }
-        for (const p of params) {
-            if (/^value_t\s*\w+$/.test(p)) {
-                // OK
-            } else {
-                error(`invalid param ${p}`)
-            }
+        const params = argWords.slice(1)
+        if (params.length) {
+            error(`params not supported`)
         }
-        maxParms = Math.max(params.length, maxParms)
+        maxParms = Math.max(numArgs, maxParms)
 
         const fl = flags.length == 0 ? "0" : flags.join("|")
 
@@ -75,6 +112,29 @@ for (const fn of scriptArgs) {
     function error(msg) {
         console.error(`${fn}:${lineNo}: ${msg}`)
         numerr++
+    }
+
+    function checkArgmap() {
+        if (!argmap)
+            return
+        if (isMeth && !argmap[0])
+            error("self not accessed")
+        for (let i = 1; i < argmap.length; ++i)
+            if (!argmap[i])
+                error(`arg #${i - 1} not accessed`)
+        argmap = null
+    }
+
+    function accessArg(n) {
+        if (n == -1) {
+            if (!isMeth)
+                error(`accessing self in non-method`)
+        }
+        n++
+        if (argmap.length <= n) {
+            error(`accessing arg #${n - 1} out of ${argmap.length - 1}`)
+        }
+        argmap[n] = true
     }
 }
 
