@@ -50,7 +50,7 @@ for (const fn of scriptArgs) {
                 accessArg(-1)
         }
 
-        const m = /^(static\s+)?(\w+) ((fun|prop|meth)(\d*)_(\w+))\((.*)\)/.exec(ln)
+        const m = /^(static\s+)?(\w+) ((fun|prop|meth)(X|\d*)_(\w+))\((.*)\)/.exec(ln)
         if (!m)
             continue
         const [full, isStatic, retTp, fnName, funProp, numArgsStr, suffName, argString] = m
@@ -58,7 +58,7 @@ for (const fn of scriptArgs) {
 
 
         checkArgmap()
-        let numArgs = parseInt(numArgsStr || "0")
+        let numArgs = parseInt(numArgsStr) || 0
         argmap = []
         argmap[numArgs] = undefined
         isMeth = funProp != 'fun'
@@ -99,7 +99,8 @@ for (const fn of scriptArgs) {
             }
             if (numArgsStr == "")
                 error("fun/prop need number of args")
-            numArgs = parseInt(numArgsStr)
+            else if (numArgsStr == "X")
+                argmap = null
             if (params.length)
                 error(`params not supported`)
         }
