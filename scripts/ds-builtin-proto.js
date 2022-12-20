@@ -46,7 +46,7 @@ for (const fn of scriptArgs) {
                 if (fm == "meth") accessArg(-1)
             })
 
-            if (/\bdevs_arg_self\(/.test(ln))
+            if (/\bdevs_arg_self\w*\(/.test(ln))
                 accessArg(-1)
         }
 
