@@ -7,7 +7,7 @@ let numerr = 0
 const byObj = {}
 const allfuns = []
 
-const firstFun = 0xf000
+const firstFun = 50000
 
 let r = `// auto-generated!
 #include "devs_internal.h"
@@ -116,7 +116,7 @@ for (const fn of scriptArgs) {
 
         if (!byObj[objId])
             byObj[objId] = []
-        byObj[objId].push(`{ N(${methodName.toUpperCase()}), 0x${(firstFun + allfuns.length).toString(16)} }`)
+        byObj[objId].push(`{ N(${methodName.toUpperCase()}), ${firstFun + allfuns.length} }`)
 
         allfuns.push(`{ N(${methodName.toUpperCase()}), ${numArgs}, ${fl}, { ${fld} = ${fnName} } }`)
     }
