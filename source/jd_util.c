@@ -586,6 +586,14 @@ void jd_print_double(char *buf, NUMBER d, int numdigits) {
 
     uint64_t dd;
 
+    if (pw >= numdigits) {
+        // we're going to print out the whole number anyways, so ignore the requested precision if
+        // too small
+        numdigits = pw + 1;
+        if (numdigits > maxdigits)
+            numdigits = maxdigits;
+    }
+
     // normalize number to be integer with exactly numdigits digits
     if (pw >= numdigits) {
         // if the number is larger than numdigits, we need trailing zeroes
