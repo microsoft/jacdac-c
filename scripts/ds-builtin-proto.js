@@ -36,7 +36,7 @@ for (const fn of scriptArgs) {
         }
 
         if (argmap) {
-            ln.replace(/\bdevs_arg(\w*)\(ctx, (\d+)\)/g, (_1, _2, n) => {
+            ln.replace(/\bdevs_arg(\w*)\(ctx, (\d+)[\),]/g, (_1, _2, n) => {
                 accessArg(+n)
             })
 
