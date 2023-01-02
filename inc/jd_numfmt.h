@@ -22,6 +22,7 @@ typedef double jd_float_t;
 #define JD_NUMFMT_F16 0b1001 // not supported
 #define JD_NUMFMT_F32 0b1010
 #define JD_NUMFMT_F64 0b1011
+#define JD_NUMFMT_SPECIAL 0b1100
 
 #define JD_NUMFMT(fmt, shift) (DEVS_NUMFMT_##fmt | ((shift) << 4))
 
@@ -31,6 +32,10 @@ static inline int jd_numfmt_bytes(unsigned numfmt) {
 
 static inline int jd_numfmt_is_plain_int(unsigned numfmt) {
     return (numfmt >> 3) == 0;
+}
+
+static inline int jd_numfmt_special_idx(unsigned fmt) {
+    return (fmt & JD_NUMFMT_SPECIAL) == JD_NUMFMT_SPECIAL ? (fmt >> 4) | ((fmt & 0b11) << 4) : -1;
 }
 
 bool jd_numfmt_is_valid(unsigned fmt0);
