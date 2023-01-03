@@ -20,6 +20,10 @@ let r = `// auto-generated!
 
 `
 
+const bytecodedef = fs.readFileSync(scriptArgs.shift(), "utf-8")
+
+const deriveMap = {}
+
 let maxParms = 0
 for (const fn of scriptArgs) {
     let lineNo = 0
@@ -29,6 +33,13 @@ for (const fn of scriptArgs) {
     let argmap = null
     for (const ln of fs.readFileSync(fn, "utf-8").split(/\r?\n/)) {
         ++lineNo
+
+        ln.replace(/^\s*DEVS_DERIVE\((\w+), (\w+)\)/, (_, cl, base) => {
+            deriveMap[cl] = base
+            if (!byObj[cl])
+                byObj[cl] = []
+            return ""
+        })
 
         if (ln[0] == '}') {
             checkArgmap()
@@ -154,16 +165,33 @@ if (numerr)
     process.exit(1)
 
 r += "\n"
+byObj["empty"] = []
 for (const k of Object.keys(byObj)) {
     r += `static const devs_builtin_proto_entry_t ${k}_entries[] = { //\n`
-    r += byObj[k].join(",\n")
-    r += ",\n{ 0, 0 }};\n\n"
+    r += byObj[k].map(s => s + ", //\n").join("")
+    r += "{ 0, 0 }};\n\n"
 }
+delete byObj["empty"]
 
 r += `const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {\n`
+const filledKeys = {}
 for (const k of Object.keys(byObj)) {
-    r += `[DEVS_BUILTIN_OBJECT_${k.toUpperCase()}] = { DEVS_BUILTIN_PROTO_INIT, ${k}_entries },\n`
+    const base = deriveMap[k] ? `&devs_builtin_protos[DEVS_BUILTIN_OBJECT_${deriveMap[k].toUpperCase()}]` : `NULL`
+    delete deriveMap[k]
+    const key = `DEVS_BUILTIN_OBJECT_${k.toUpperCase()}`
+    filledKeys[key] = 1
+    r += `[${key}] = { DEVS_BUILTIN_PROTO_INIT, ${base}, ${k}_entries },\n`
 }
+
+filledKeys["DEVS_BUILTIN_OBJECT___MAX"] = 1
+filledKeys["DEVS_BUILTIN_OBJECT__VAL"] = 1
+
+bytecodedef.replace(/^#define (DEVS_BUILTIN_OBJECT_\w+)/mg, (_, key) => {
+    if (filledKeys[key])
+        return ""
+    r += `[${key}] = { DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries },\n`
+    return ""
+})
 
 r += "};\n\n"
 
