@@ -1,6 +1,3 @@
 [submodule "jacdac"]
 	path = jacdac
 	url = https://github.com/microsoft/jacdac
-[submodule "network/tiny-AES-c"]
-	path = network/tiny-AES-c
-	url = https://github.com/kokke/tiny-AES-c
