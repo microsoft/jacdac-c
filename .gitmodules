@@ -4,6 +4,3 @@
 [submodule "network/tiny-AES-c"]
 	path = network/tiny-AES-c
 	url = https://github.com/kokke/tiny-AES-c
-[submodule "devicescript/sha-2"]
-	path = devicescript/sha-2
-	url = https://github.com/amosnier/sha-2
