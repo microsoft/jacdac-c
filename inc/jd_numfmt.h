@@ -35,7 +35,8 @@ static inline int jd_numfmt_is_plain_int(unsigned numfmt) {
 }
 
 static inline int jd_numfmt_special_idx(unsigned fmt) {
-    return (fmt & JD_NUMFMT_SPECIAL) == JD_NUMFMT_SPECIAL ? (fmt >> 4) | ((fmt & 0b11) << 4) : -1;
+    return (fmt & JD_NUMFMT_SPECIAL) == JD_NUMFMT_SPECIAL ? (int)((fmt >> 4) | ((fmt & 0b11) << 4))
+                                                          : -1;
 }
 
 bool jd_numfmt_is_valid(unsigned fmt0);
