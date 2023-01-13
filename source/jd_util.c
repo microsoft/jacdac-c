@@ -99,11 +99,7 @@ int jd_shift_frame(jd_frame_t *frame) {
     if (ptr + newsz > psize) {
         return 0;
     }
-    uint32_t *dst = (uint32_t *)frame->data;
-    uint32_t *srcw = (uint32_t *)src;
-    // don't trust memmove()
-    for (int i = 0; i < newsz; i += 4)
-        *dst++ = *srcw++;
+    jd_word_move(frame->data, src, newsz + 3);
     // store ptr
     ptr += ALIGN(newsz);
     frame->data[newsz] = 0xff;
@@ -312,6 +308,18 @@ int jd_atoi(const char *s) {
         return -r;
     else
         return r;
+}
+
+/**
+ * Copy numwords/4*4 bytes to dst from src, left-to-right.
+ * Special case of memmove()
+ */
+void jd_word_move(void *dst, const void *src, unsigned numbytes) {
+    uint32_t *dp = dst;
+    const uint32_t *sp = src;
+    numbytes >>= 2;
+    while (numbytes--)
+        *dp++ = *sp++;
 }
 
 static void writeNum(char *buf, uintptr_t n, bool full) {

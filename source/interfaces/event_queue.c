@@ -38,13 +38,9 @@ static uint16_t next_event_cmd(uint32_t eventid) {
 }
 
 static void ev_shift(void) {
-    int offset = ev_size(info.buffer) >> 2;
-    uint32_t *dst = &info.buffer->timestamp;
-    uint32_t *src = dst + offset;
-    info.qptr -= offset << 2;
-    int words = info.qptr >> 2;
-    while (words--)
-        *dst++ = *src++;
+    int offset = ev_size(info.buffer);
+    info.qptr -= offset;
+    jd_word_move(info.buffer, (uint8_t *)info.buffer + offset, info.qptr);
 }
 
 static void do_process_event_queue(void) {
