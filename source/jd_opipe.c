@@ -161,7 +161,7 @@ int jd_opipe_write(jd_opipe_desc_t *str, const void *data, unsigned len) {
 
 static int jd_opipe_send_close_pkt(jd_opipe_desc_t *str) {
     str->status = ST_OPEN; // avoid error check in jd_opipe_check_space()
-    int r = jd_opipe_write_ex(str, NULL, 0, JD_PIPE_CLOSE_MASK);
+    int r = jd_opipe_write_ex(str, NULL, 0, JD_PIPE_CLOSE_MASK | JD_PIPE_METADATA_MASK);
     if (r == JD_PIPE_OK) {
         str->status = ST_CLOSED_WAITING;
         do_flush(str);
