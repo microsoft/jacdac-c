@@ -8,14 +8,6 @@
 
 #define LOG(fmt, ...) DMESG("fstor: " fmt, ##__VA_ARGS__)
 
-#ifndef JD_FSTOR_TOTAL_SIZE
-#define JD_FSTOR_TOTAL_SIZE (128 * 1024)
-#endif
-
-#ifndef JD_FSTOR_HEADER_PAGES
-#define JD_FSTOR_HEADER_PAGES 1
-#endif
-
 #define FSTOR_PAGES (JD_FSTOR_TOTAL_SIZE / JD_FLASH_PAGE_SIZE)
 #define FSTOR_MAGIC0 0x52545346
 #define FSTOR_MAGIC1 0x5f35460a
@@ -46,10 +38,12 @@ static const jd_fstor_header_t *settings;
 static const uint8_t *fstor_base;
 static entry_t *last_entry;
 static const uint8_t *data_start;
+#if JD_SETTINGS_LARGE
 static uint32_t used_data_pages[(FSTOR_DATA_PAGES + 31) / 32];
+#endif
 
 static void erase_pages(const void *base, unsigned num) {
-    for (unsigned i = 0; i < JD_FSTOR_HEADER_PAGES; ++i)
+    for (unsigned i = 0; i < num; ++i)
         flash_erase((void *)((const uint8_t *)base + i * JD_FLASH_PAGE_SIZE));
 }
 
@@ -59,6 +53,27 @@ static inline unsigned align_core(unsigned size, unsigned sz) {
     return (size + sz - 1) & ~(sz - 1);
 }
 
+static inline unsigned align(unsigned size) {
+    return align_core(size, 8);
+}
+
+static inline bool is_valid(entry_t *e) {
+    return ~e->offset != 0;
+}
+
+static inline bool is_large(entry_t *e) {
+    return e->key[0] == '*';
+}
+
+static bool key_ok(const char *key) {
+    if (!key || strlen(key) > FSTOR_KEYSIZE || key[0] == '*') {
+        LOG("invalid key: '%s'", key);
+        return false;
+    }
+    return true;
+}
+
+#if JD_SETTINGS_LARGE
 static inline bool data_page_used(unsigned off) {
     JD_ASSERT(off < FSTOR_DATA_PAGES);
     return (used_data_pages[off / 32] & (1 << (off & 31))) != 0;
@@ -69,29 +84,13 @@ static void mark_data_page(unsigned off, bool used) {
         used_data_pages[off / 32] ^= 1 << (off & 31);
 }
 
-static inline unsigned align(unsigned size) {
-    return align_core(size, 8);
-}
-
-static inline unsigned align_page(unsigned size) {
-    return align_core(size, JD_FLASH_PAGE_SIZE);
-}
-
 static inline unsigned num_data_pages(unsigned size) {
     return align_core(size, JD_FLASH_PAGE_SIZE) / JD_FLASH_PAGE_SIZE;
 }
 
-static inline bool is_valid(entry_t *e) {
-    return ~e->offset != 0;
-}
-
-static inline bool is_large(entry_t *e) {
-    return e->offset >= 2 * FSTOR_HEADER_SIZE;
-}
-
-static bool key_ok(const char *key) {
-    if (!key || strlen(key) > FSTOR_KEYSIZE) {
-        LOG("invalid key: '%s'", key);
+static bool lkey_ok(const char *key) {
+    if (!key || key[0] != '*' || strlen(key) > FSTOR_KEYSIZE) {
+        LOG("invalid large key: '%s'", key);
         return false;
     }
     return true;
@@ -104,9 +103,13 @@ static void mark_large(entry_t *e, bool used) {
     for (unsigned i = 0; i < cnt; ++i)
         mark_data_page(off + i, used);
 }
+#endif
 
-static int free_space(void) {
-    return data_start - (const uint8_t *)last_entry - sizeof(entry_t) * 2;
+static unsigned free_space(void) {
+    int sz = data_start - (const uint8_t *)last_entry - sizeof(entry_t) * 2;
+    if (sz < 0)
+        return 0;
+    return sz;
 }
 
 static void oops(const char *msg) {
@@ -143,11 +146,13 @@ static void recompute_cache(void) {
         if (*p++ != 0xff)
             return oops("non ff");
 
+#if JD_SETTINGS_LARGE
     memset(used_data_pages, 0, sizeof(used_data_pages));
     for (e = settings->entries; e <= last_entry; ++e) {
         if (is_large(e) && !has_later_copy(e))
             mark_large(e, true);
     }
+#endif
 }
 
 static void write_header(unsigned gen) {
@@ -207,9 +212,11 @@ static void jd_fstor_gc(void) {
         if (has_later_copy(e))
             continue;
         jd_fstor_entry_t tmp = *e;
-        dst_data -= align(tmp.size);
-        flash_program((void *)dst_data, fstor_base + tmp.offset, tmp.size);
-        tmp.offset = dst_data - fstor_base;
+        if (!is_large(&tmp)) {
+            dst_data -= align(tmp.size);
+            flash_program((void *)dst_data, fstor_base + tmp.offset, tmp.size);
+            tmp.offset = dst_data - fstor_base;
+        }
         flash_program((void *)dst_e, &tmp, sizeof(tmp));
         dst_e++;
     }
@@ -220,13 +227,11 @@ static void jd_fstor_gc(void) {
     recompute_cache();
     JD_ASSERT(settings != NULL);
 
-    LOG("gc done, %d free", free_space());
+    LOG("gc done, %d free, %d gen", free_space(), newgen);
 }
 
 static entry_t *find_entry(const char *key) {
     jd_fstor_init();
-    if (!key_ok(key))
-        return NULL;
     for (entry_t *e = last_entry; e >= settings->entries; e--)
         if (strcmp(e->key, key) == 0)
             return e;
@@ -234,10 +239,10 @@ static entry_t *find_entry(const char *key) {
 }
 
 int jd_settings_get_bin(const char *key, void *dst, unsigned space) {
+    if (!key_ok(key))
+        return -1;
     entry_t *e = find_entry(key);
     if (!e)
-        return -1;
-    if (is_large(e))
         return -2;
     if (space >= e->size)
         memcpy(dst, fstor_base + e->offset, space);
@@ -253,11 +258,8 @@ int jd_settings_set_bin(const char *key, const void *val, unsigned size) {
     }
 
     entry_t *e = find_entry(key);
-    if (e && !is_large(e) && e->size == size && memcmp(fstor_base + e->offset, val, size) == 0)
+    if (e && e->size == size && memcmp(fstor_base + e->offset, val, size) == 0)
         return 0;
-
-    if (e && is_large(e))
-        mark_large(e, false);
 
     unsigned sizeoff = align(size);
     if (free_space() < sizeoff + sizeof(entry_t)) {
@@ -285,9 +287,12 @@ int jd_settings_set_bin(const char *key, const void *val, unsigned size) {
     return 0;
 }
 
+#if JD_SETTINGS_LARGE
 const void *jd_settings_get_large(const char *key, unsigned *sizep) {
+    if (!lkey_ok(key))
+        return NULL;
     entry_t *e = find_entry(key);
-    if (!e || !is_large(e))
+    if (!e)
         return NULL;
     if (sizep)
         *sizep = e->size;
@@ -310,11 +315,11 @@ static unsigned find_free_data(unsigned size) {
 }
 
 void *jd_settings_prep_large(const char *key, unsigned size) {
-    if (!key_ok(key))
+    if (!lkey_ok(key))
         return NULL;
 
     entry_t *e = find_entry(key);
-    if (e && is_large(e))
+    if (e)
         mark_large(e, false);
     jd_fstor_entry_t tmp = {
         .size = size,
@@ -323,7 +328,7 @@ void *jd_settings_prep_large(const char *key, unsigned size) {
     if (tmp.offset == 0) {
         LOG("no free pages; sz=%u", size);
         // if we marked previous entry as free, re-mark it a used
-        if (e && is_large(e))
+        if (e)
             mark_large(e, true);
         return NULL;
     }
@@ -343,6 +348,8 @@ void *jd_settings_prep_large(const char *key, unsigned size) {
     flash_program((void *)last_entry, &tmp, sizeof(tmp));
     flash_sync();
 
+    mark_large(&tmp, true);
+
     return (void *)(fstor_base + tmp.offset);
 }
 
@@ -355,12 +362,99 @@ int jd_settings_sync_large() {
     flash_sync();
     return 0;
 }
+#endif
 
-int jd_settings_large_delete(const char *key) {
-    entry_t *e = find_entry(key);
-    if (!e || !is_large(e))
-        return -20;
-    return jd_settings_set_bin(key, NULL, 0);
+#ifdef JD_64
+
+static char *key_name(int no) {
+    return jd_sprintf_a("setting_%d", no);
 }
+
+static unsigned data_size(int no, int off) {
+    return no + 3 * off;
+}
+
+static void gen_data(int no, uint8_t data[], unsigned size, int off) {
+    for (unsigned j = 0; j < size; ++j)
+        data[j] = (7219 * no + 7817 * j + 6581 * off) & 0xff;
+}
+
+static void remount() {
+    settings = NULL;
+    jd_fstor_init();
+}
+
+static void read_test(int max, int off) {
+    uint8_t tmp[128];
+    uint8_t tmp2[128];
+    for (int i = 0; i < max; ++i) {
+        char *k = key_name(i);
+        JD_ASSERT(data_size(i, off) <= sizeof(tmp));
+        int size = jd_settings_get_bin(k, tmp, sizeof(tmp));
+        JD_ASSERT(size == (int)data_size(i, off));
+        gen_data(i, tmp2, size, off);
+        for (int j = 0; j < size; ++j)
+            JD_ASSERT(tmp[j] == tmp2[j]);
+        jd_free(k);
+    }
+}
+
+static void write_test(int max, int off) {
+    uint8_t tmp[128];
+    for (int i = 0; i < max; ++i) {
+        char *k = key_name(i);
+        int size = data_size(i, off);
+        JD_ASSERT(size <= (int)sizeof(tmp));
+        gen_data(i, tmp, size, off);
+        int r = jd_settings_set_bin(k, tmp, size);
+        JD_ASSERT(r == 0);
+        jd_free(k);
+    }
+}
+
+#define NLARGE 2
+#define LARGE_MAX_SIZE (16 * 1024)
+
+static void test_large(int rd, int iter) {
+    static uint8_t data[LARGE_MAX_SIZE];
+    char key[32];
+
+    for (int i = 0; i < NLARGE; ++i) {
+        int size = (((i + iter) % NLARGE + 3) * LARGE_MAX_SIZE) / (NLARGE + 4) + iter;
+        JD_ASSERT(size < LARGE_MAX_SIZE);
+        gen_data(i, data, size, iter);
+        jd_sprintf(key, sizeof(key), "*lrg__%d", i);
+        if (rd) {
+            unsigned sz;
+            const void *p = jd_settings_get_large(key, &sz);
+            JD_ASSERT((int)sz == size);
+            JD_ASSERT(memcmp(p, data, size) == 0);
+        } else {
+            void *p = jd_settings_prep_large(key, size);
+            JD_ASSERT(p != NULL);
+            jd_settings_write_large(p, data, size);
+            JD_ASSERT(memcmp(p, data, size) == 0);
+        }
+    }
+}
+
+void jd_settings_test(void) {
+    for (int i = 20; i >= 0; i--) {
+        LOG("iter %d", i);
+        write_test(30, i);
+        if (i % 3)
+            test_large(0, i);
+        if (i & 1)
+            remount();
+        if (!(i % 3))
+            test_large(0, i);
+        read_test(30, i);
+        test_large(1, i);
+    }
+
+    LOG("test OK");
+}
+
+#endif
 
 #endif

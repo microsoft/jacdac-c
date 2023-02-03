@@ -34,4 +34,6 @@ int jd_settings_sync_large(void);
 int jd_settings_large_delete(const char *key);
 #endif
 
+void jd_settings_test(void);
+
 #endif

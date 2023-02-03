@@ -274,4 +274,21 @@ int jd_net_send_frame(void *frame);
 
 #define JD_THR_ANY (JD_THR_PTHREAD || JD_THR_AZURE_RTOS || JD_THR_FREE_RTOS)
 
+// settings stuff
+#ifndef JD_SETTINGS_LARGE
+#define JD_SETTINGS_LARGE 0
+#endif
+
+#ifndef JD_FSTOR_HEADER_PAGES
+#define JD_FSTOR_HEADER_PAGES 1
+#endif
+
+#ifndef JD_FSTOR_TOTAL_SIZE
+#if JD_SETTINGS_LARGE
+#define JD_FSTOR_TOTAL_SIZE (128 * 1024)
+#else
+#define JD_FSTOR_TOTAL_SIZE (JD_FSTOR_HEADER_PAGES * 2 * JD_FLASH_PAGE_SIZE)
+#endif
+#endif
+
 #endif
