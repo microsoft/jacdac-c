@@ -7,6 +7,7 @@
 #ifdef JD_FSTOR_BASE_ADDR
 
 #define LOG(fmt, ...) DMESG("fstor: " fmt, ##__VA_ARGS__)
+#define VLOG JD_NOLOG
 
 #define FSTOR_PAGES (JD_FSTOR_TOTAL_SIZE / JD_FLASH_PAGE_SIZE)
 #define FSTOR_MAGIC0 0x52545346
@@ -100,6 +101,7 @@ static void mark_large(entry_t *e, bool used) {
     JD_ASSERT(is_large(e));
     unsigned off = (e->offset / JD_FLASH_PAGE_SIZE) - FSTOR_DATA_PAGE_OFF;
     unsigned cnt = num_data_pages(e->size);
+    VLOG("mark off=%u cnt=%u %d %s", off, cnt, used ? 1 : 0, e->key);
     for (unsigned i = 0; i < cnt; ++i)
         mark_data_page(off + i, used);
 }
@@ -308,7 +310,10 @@ static unsigned find_free_data(unsigned size) {
                 off += i + 1;
                 break;
             }
-            return (FSTOR_DATA_PAGE_OFF + off) * JD_FLASH_PAGE_SIZE;
+            if (i == pages - 1) {
+                VLOG("fr sz=%u off=%u", size, off);
+                return (FSTOR_DATA_PAGE_OFF + off) * JD_FLASH_PAGE_SIZE;
+            }
         }
     }
     return 0;
@@ -427,10 +432,12 @@ static void test_large(int rd, int iter) {
         if (rd) {
             unsigned sz;
             const void *p = jd_settings_get_large(key, &sz);
+            VLOG("%s -> %p", key, p);
             JD_ASSERT((int)sz == size);
             JD_ASSERT(memcmp(p, data, size) == 0);
         } else {
             void *p = jd_settings_prep_large(key, size);
+            VLOG("%s -> W %p sz=%d", key, p, size);
             JD_ASSERT(p != NULL);
             jd_settings_write_large(p, data, size);
             JD_ASSERT(memcmp(p, data, size) == 0);
