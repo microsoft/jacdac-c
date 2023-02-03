@@ -13,10 +13,25 @@ void flash_sync(void);
 char *jd_settings_get(const char *key);
 int jd_settings_set(const char *key, const char *val);
 
+// key is limited to 15 characters
+
 // returns the size of the item, or -1 when not found
 // if space < return value, the dst might or might not have been modified
 int jd_settings_get_bin(const char *key, void *dst, unsigned space);
 // returns 0 on success
 int jd_settings_set_bin(const char *key, const void *val, unsigned size);
+
+#if JD_SETTINGS_LARGE
+// Large settings take at least JD_FLASH_PAGE_SIZE of storage
+// NULL when not found
+const void *jd_settings_get_large(const char *key, unsigned *sizep);
+// NULL on error
+void *jd_settings_prep_large(const char *key, unsigned size);
+// 0 on success; dst is jd_settings_prep_large(..., N) + off where 0 <= off < N
+int jd_settings_write_large(void *dst, const void *src, unsigned size);
+// flushes all pending jd_settings_write_large()
+int jd_settings_sync_large(void);
+int jd_settings_large_delete(const char *key);
+#endif
 
 #endif
