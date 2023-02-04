@@ -310,9 +310,10 @@ int jd_status_handle_packet(jd_packet_t *pkt) {
 
 #ifdef PIN_LED_R
 static const uint8_t pins[] = {PIN_LED_R, PIN_LED_G, PIN_LED_B};
+#endif
+
 #ifdef LED_R_MULT
 static const uint8_t mults[] = {LED_R_MULT, LED_G_MULT, LED_B_MULT};
-#endif
 #endif
 
 void jd_status_init() {
