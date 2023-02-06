@@ -64,7 +64,7 @@ unsigned jd_dmesg_read(void *dst, unsigned space, uint32_t *state) {
 
     int towrite = curr_ptr - *state;
     if (towrite > 0) {
-        if (towrite > space)
+        if (towrite > (int)space)
             towrite = space;
         memcpy(dst, codalLogStore.buffer + *state, towrite);
         *state += towrite;
