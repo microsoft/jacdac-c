@@ -8,14 +8,17 @@ struct jd_bqueue {
     uint8_t data[0];
 };
 
+JD_FAST
 unsigned jd_bqueue_occupied_bytes(jd_bqueue_t q) {
     return q->filled;
 }
 
+JD_FAST
 unsigned jd_bqueue_free_bytes(jd_bqueue_t q) {
     return q->size - q->filled - 1;
 }
 
+JD_FAST
 static void validate(jd_bqueue_t q) {
     if (q->back >= q->front)
         JD_ASSERT(q->filled == q->back - q->front);
@@ -26,6 +29,7 @@ static void validate(jd_bqueue_t q) {
     JD_ASSERT(q->filled < q->size);
 }
 
+JD_FAST
 int jd_bqueue_push(jd_bqueue_t q, const void *data, unsigned len) {
     if (len == 0)
         return 0;
@@ -56,6 +60,7 @@ int jd_bqueue_push(jd_bqueue_t q, const void *data, unsigned len) {
     return ret;
 }
 
+JD_FAST
 unsigned jd_bqueue_available_cont_data(jd_bqueue_t q) {
     unsigned ret;
     if (q->front <= q->back)
@@ -66,10 +71,12 @@ unsigned jd_bqueue_available_cont_data(jd_bqueue_t q) {
     return ret;
 }
 
+JD_FAST
 uint8_t *jd_bqueue_cont_data_ptr(jd_bqueue_t q) {
     return q->data + q->front;
 }
 
+JD_FAST
 void jd_bqueue_cont_data_advance(jd_bqueue_t q, unsigned sz) {
     q->front += sz;
     q->filled -= sz;
@@ -78,6 +85,7 @@ void jd_bqueue_cont_data_advance(jd_bqueue_t q, unsigned sz) {
     validate(q);
 }
 
+JD_FAST
 unsigned jd_bqueue_pop_at_most(jd_bqueue_t q, void *dst, unsigned maxsize) {
     unsigned sz;
     target_disable_irq();
@@ -99,6 +107,7 @@ unsigned jd_bqueue_pop_at_most(jd_bqueue_t q, void *dst, unsigned maxsize) {
     return sz;
 }
 
+JD_FAST
 int jd_bqueue_pop_atomic(jd_bqueue_t q, void *dst, unsigned size) {
     int r;
     target_disable_irq();
@@ -113,6 +122,7 @@ int jd_bqueue_pop_atomic(jd_bqueue_t q, void *dst, unsigned size) {
     return r;
 }
 
+JD_FAST
 int jd_bqueue_pop_byte(jd_bqueue_t q) {
     int r;
     target_disable_irq();
@@ -126,6 +136,7 @@ int jd_bqueue_pop_byte(jd_bqueue_t q) {
     return r;
 }
 
+JD_FAST
 jd_bqueue_t jd_bqueue_alloc(unsigned size) {
     jd_bqueue_t q = jd_alloc(sizeof(*q) + size);
     q->size = size;

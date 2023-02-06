@@ -367,6 +367,7 @@ void jd_services_tick() {
 #endif
 
 #if JD_USB_BRIDGE
+    jd_usb_proto_process();
     jd_usb_process();
 #endif
 

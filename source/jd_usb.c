@@ -20,6 +20,7 @@ static jd_frame_t usb_rx_buf;
 
 #define USB_ERROR(msg, ...) ERROR("USB: " msg, ##__VA_ARGS__)
 
+JD_FAST
 unsigned jd_usb_serial_space(void) {
     int fr = jd_bqueue_free_bytes(usb_serial_queue);
     if (usb_serial_gap == 1)
@@ -29,6 +30,7 @@ unsigned jd_usb_serial_space(void) {
     return fr;
 }
 
+JD_FAST
 int jd_usb_write_serial(const void *data, unsigned len) {
     if (len == 0 || !usb_serial_en)
         return 0;
@@ -337,6 +339,38 @@ void jd_usb_panic_enter(void) {
     jd_usb_enable_serial(); // in case it wasn't there
     jd_usb_panic_flush();
 }
+
+#if JD_DMESG_BUFFER_SIZE > 0
+static bool usb_is_connected;
+static uint32_t dmesg_timer;
+static uint32_t dmesg_ptr;
+
+void jd_usb_proto_process(void) {
+    if (!usb_is_connected && jd_usb_looks_connected()) {
+        usb_is_connected = 1;
+        DMESG("usb: connected");
+        dmesg_timer = now + (128 << 10);
+        if (!dmesg_timer)
+            dmesg_timer = 1;
+    }
+
+    if (dmesg_timer && in_past(dmesg_timer))
+        dmesg_timer = 0;
+
+    if (dmesg_timer)
+        return;
+
+    int space = jd_usb_serial_space();
+    if (space > 64) {
+        uint8_t buf[64];
+        space = jd_dmesg_read(buf, sizeof(buf), &dmesg_ptr);
+        if (space > 0)
+            jd_usb_write_serial(buf, space);
+    }
+}
+#else
+void jd_usb_proto_process(void) {}
+#endif
 
 __attribute__((weak)) void jd_usb_process(void) {}
 

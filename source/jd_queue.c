@@ -60,6 +60,7 @@ int jd_queue_push(jd_queue_t q, jd_frame_t *pkt) {
     return ret;
 }
 
+JD_FAST
 jd_frame_t *jd_queue_front(jd_queue_t q) {
     if (q->front != q->back) {
         if (q->front >= q->curr_size)
@@ -70,6 +71,7 @@ jd_frame_t *jd_queue_front(jd_queue_t q) {
         return NULL;
 }
 
+JD_FAST
 void jd_queue_shift(jd_queue_t q) {
     target_disable_irq();
     jd_frame_t *pkt = jd_queue_front(q);
