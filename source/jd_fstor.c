@@ -384,7 +384,7 @@ static void gen_data(int no, uint8_t data[], unsigned size, int off) {
         data[j] = (7219 * no + 7817 * j + 6581 * off) & 0xff;
 }
 
-static void remount() {
+static void remount(void) {
     settings = NULL;
     jd_fstor_init();
 }
