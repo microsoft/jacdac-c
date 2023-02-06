@@ -370,6 +370,11 @@ void jd_services_tick() {
     jd_usb_process();
 #endif
 
+#if JD_WIFI
+    void jd_wifi_process(void);
+    jd_wifi_process();
+#endif
+
     jd_tx_flush();
 }
 

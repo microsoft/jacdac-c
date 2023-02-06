@@ -291,4 +291,8 @@ int jd_net_send_frame(void *frame);
 #endif
 #endif
 
+#ifndef JD_WIFI
+#define JD_WIFI 0
+#endif
+
 #endif
