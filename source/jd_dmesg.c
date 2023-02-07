@@ -27,7 +27,7 @@ static void logwriten(const char *msg, int l) {
 }
 
 void jd_vdmesg(const char *format, va_list ap) {
-    char tmp[160];
+    char tmp[JD_DMESG_LINE_BUFFER];
     jd_vsprintf(tmp, sizeof(tmp) - 1, format, ap);
     int len = strlen(tmp);
 #if JD_LORA || JD_ADVANCED_STRING
@@ -44,6 +44,10 @@ void jd_dmesg(const char *format, ...) {
     va_start(arg, format);
     jd_vdmesg(format, arg);
     va_end(arg);
+}
+
+void jd_dmesg_write(const void *data, unsigned len) {
+    logwriten(data, len);
 }
 
 JD_FAST

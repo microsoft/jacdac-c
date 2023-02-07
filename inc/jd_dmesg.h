@@ -16,6 +16,7 @@ extern struct CodalLogStore codalLogStore;
 
 __attribute__((format(printf, 1, 2))) void jd_dmesg(const char *format, ...);
 void jd_vdmesg(const char *format, va_list ap);
+void jd_dmesg_write(const void *data, unsigned len);
 
 // read-out data from dmesg buffer
 unsigned jd_dmesg_read(void *dst, unsigned space, uint32_t *state);
