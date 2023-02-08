@@ -323,4 +323,9 @@ int jd_net_send_frame(void *frame);
 #define JD_MAX_SERVICES 32
 #endif
 
+// hosted means running on a desktop-like machine (either native or with WASM)
+#ifndef JD_HOSTED
+#define JD_HOSTED (!JD_PHYSICAL)
+#endif
+
 #endif

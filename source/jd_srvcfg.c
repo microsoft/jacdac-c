@@ -47,9 +47,11 @@ void button_config(void);
 void relay_config(void);
 
 static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
+#if !JD_HOSTED
     {"rotary", rotaryencoder_config},
     {"button", button_config},
     {"relay", relay_config},
+#endif
     {NULL, NULL}};
 
 uint8_t _jd_services_curr_idx(void);

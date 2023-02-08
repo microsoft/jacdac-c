@@ -158,6 +158,8 @@ static void update(srv_t *state) {
         if ((uint8_t)++history[history_ptr + 1] == 0)
             history[history_ptr + 1] = 0xff;
     }
+#else
+    (void)mask;
 #endif
 }
 
