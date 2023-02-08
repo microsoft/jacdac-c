@@ -61,3 +61,17 @@ void relay_service_init(const relay_params_t *params) {
     state->intensity = (params->initial_state) ? 1 : 0;
     reflect_register_state(state);
 }
+
+#if JD_DCFG
+void relay_config(void) {
+    relay_params_t *cfg = jd_alloc(sizeof(relay_params_t));
+    cfg->max_switching_current = jd_srvcfg_i32("maxCurrent", 0);
+    cfg->pin_relay_drive = jd_srvcfg_pin("pin");
+    cfg->pin_relay_feedback = jd_srvcfg_pin("pinFeedback");
+    cfg->pin_relay_led = jd_srvcfg_pin("pinLed");
+    cfg->drive_active_lo = jd_srvcfg_has_flag("pinActiveLow");
+    cfg->led_active_lo = jd_srvcfg_has_flag("ledActiveLow");
+    cfg->initial_state = jd_srvcfg_has_flag("initialActive");
+    relay_service_init(cfg);
+}
+#endif

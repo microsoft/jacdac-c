@@ -9,8 +9,6 @@
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
 
-#define MAX_SERV 32
-
 #define IN_SERV_INIT 0xff
 #define IN_SERV_SLEEP 0xfe
 
@@ -170,7 +168,7 @@ void jd_services_process_frame(jd_frame_t *frame) {
 
 srv_t *jd_allocate_service(const srv_vt_t *vt) {
     // always allocate instances idx - it should be stable when we disable some services
-    if (num_services >= MAX_SERV)
+    if (num_services >= JD_MAX_SERVICES)
         JD_PANIC();
     srv_t *r = jd_alloc(vt->state_size);
     r->vt = vt;
@@ -182,9 +180,13 @@ srv_t *jd_allocate_service(const srv_vt_t *vt) {
     return r;
 }
 
+uint8_t _jd_services_curr_idx(void) {
+    return num_services;
+}
+
 void jd_services_init() {
     num_services = 0;
-    srv_t *tmp[MAX_SERV];
+    srv_t *tmp[JD_MAX_SERVICES];
     services = tmp;
 
     jd_refresh_now();
@@ -194,6 +196,11 @@ void jd_services_init() {
     jdcon_init();
 #endif
     app_init_services();
+
+#if JD_DCFG
+    jd_srvcfg_run();
+#endif
+
     curr_service_process = 0;
     services = jd_alloc(sizeof(void *) * num_services);
     memcpy(services, tmp, sizeof(void *) * num_services);
@@ -301,9 +308,14 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
     if (pkt->device_identifier == jd_device_id()) {
         jd_app_handle_command(pkt);
         if (pkt->service_index < num_services) {
-#if JD_INSTANCE_NAME
+            srv_t *s = services[pkt->service_index];
+#if JD_INSTANCE_NAME || JD_DCFG
             if (pkt->service_command == JD_GET(JD_REG_INSTANCE_NAME)) {
                 const char *name = app_get_instance_name(pkt->service_index);
+#if JD_DCFG
+                if (name == NULL)
+                    name = jd_srvcfg_instance_name(s);
+#endif
                 if (name == NULL)
                     jd_send_not_implemented(pkt);
                 else
@@ -311,7 +323,16 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
                 return;
             }
 #endif
-            srv_t *s = services[pkt->service_index];
+
+#if JD_DCFG
+            if (pkt->service_command == JD_GET(JD_REG_VARIANT)) {
+                int v = jd_srvcfg_variant(s);
+                if (v != -1) {
+                    jd_respond_u8(pkt, v);
+                    return;
+                }
+            }
+#endif
             s->vt->handle_pkt(s, pkt);
         }
     } else if (pkt->flags & JD_FRAME_FLAG_IDENTIFIER_IS_SERVICE_CLASS) {

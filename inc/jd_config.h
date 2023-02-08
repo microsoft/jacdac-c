@@ -311,4 +311,16 @@ int jd_net_send_frame(void *frame);
 #define JD_FAST /* */
 #endif
 
+#ifndef JD_DCFG
+#ifdef JD_DCFG_BASE_ADDR
+#define JD_DCFG 1
+#else
+#define JD_DCFG 0
+#endif
+#endif
+
+#ifndef JD_MAX_SERVICES
+#define JD_MAX_SERVICES 32
+#endif
+
 #endif

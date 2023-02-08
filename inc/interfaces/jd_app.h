@@ -20,11 +20,9 @@ void app_init_services(void);
  */
 void app_process(void);
 
-#if JD_INSTANCE_NAME
 /**
  * Define in application to specify instance names for services.
  */
 const char *app_get_instance_name(int service_idx);
-#endif
 
 #endif

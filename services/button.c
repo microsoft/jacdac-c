@@ -79,3 +79,10 @@ void button_init_fn(intfn_t is_active, void *is_active_arg) {
     state->backlight_pin = NO_PIN;
     update(state);
 }
+
+#if JD_DCFG
+void button_config(void) {
+    button_init(jd_srvcfg_pin("pin"), jd_srvcfg_has_flag("activeHigh"),
+                jd_srvcfg_pin("pinBacklight"));
+}
+#endif

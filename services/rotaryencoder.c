@@ -118,3 +118,15 @@ void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn, ui
     tim_max_sleep = PROBE_SLOW;
 #endif
 }
+
+#if JD_DCFG
+void rotaryencoder_config(void) {
+    uint32_t flags = 0;
+    if (jd_srvcfg_has_flag("dense"))
+        flags |= ROTARY_ENC_FLAG_DENSE;
+    if (jd_srvcfg_has_flag("inverted"))
+        flags |= ROTARY_ENC_FLAG_INVERTED;
+    rotaryencoder_init(jd_srvcfg_pin("pin0"), jd_srvcfg_pin("pin1"),
+                       jd_srvcfg_i32("clicksPerTurn", 12), flags);
+}
+#endif

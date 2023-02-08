@@ -7,6 +7,7 @@
 #include "jd_control.h"
 #include "jd_physical.h"
 #include "jd_service_framework.h"
+#include "jd_srvcfg.h"
 #include "jd_util.h"
 #include "jd_io.h"
 #include "jd_dmesg.h"

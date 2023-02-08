@@ -5,6 +5,7 @@
 #define JD_DRIVERS_H
 
 #include "jd_service_framework.h"
+#include "jd_srvcfg.h"
 #include "interfaces/jd_hw.h"
 #include "services/interfaces/jd_sensor_api.h"
 #include "services/interfaces/jd_pins.h"
