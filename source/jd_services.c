@@ -488,13 +488,26 @@ __attribute__((weak)) const char *app_get_instance_name(int service_idx) {
     return NULL;
 }
 
-extern const char app_fw_version[];
-extern const char app_dev_class_name[];
-
-__attribute__((weak)) const char *app_get_fw_version(void) {
-    return app_fw_version;
+#if JD_DCFG
+__attribute__((weak)) const char *app_get_dev_class_name(void) {
+    const char *r = dcfg_get_string("devName", NULL);
+    if (!r)
+        r = "DCFG missing";
+    return r;
 }
+
+__attribute__((weak)) uint32_t app_get_device_class(void) {
+    return dcfg_get_u32("devClass", 0x3ffffff1);
+}
+#else
+extern const char app_dev_class_name[];
 
 __attribute__((weak)) const char *app_get_dev_class_name(void) {
     return app_dev_class_name;
+}
+#endif
+
+extern const char app_fw_version[];
+__attribute__((weak)) const char *app_get_fw_version(void) {
+    return app_fw_version;
 }

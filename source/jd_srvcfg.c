@@ -62,8 +62,14 @@ void jd_srvcfg_run() {
 
     for (;;) {
         const char *srv = dcfg_get_string(jd_srvcfg_key("service"), NULL);
-        if (!srv)
-            break;
+        if (!srv) {
+            if (jd_srvcfg_idx < 0x40) {
+                // user config starts at 0x40
+                jd_srvcfg_idx = 0x40;
+                continue;
+            } else
+                break;
+        }
         unsigned i;
         for (i = 0; jd_srvcfg_entries[i].name; ++i) {
             if (strcmp(srv, jd_srvcfg_entries[i].name) == 0) {

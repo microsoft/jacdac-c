@@ -54,9 +54,7 @@ typedef struct {
 } dcfg_header_t;
 
 #if JD_DCFG
-void dcfg_validate(void);
-unsigned dcfg_num_entries(void);
-const dcfg_entry_t *dcfg_get_nth_entry(unsigned idx);
+int dcfg_validate(const dcfg_header_t *hd);
 const dcfg_entry_t *dcfg_get_entry(const char *key);
 int32_t dcfg_get_i32(const char *key, int32_t defl);
 uint32_t dcfg_get_u32(const char *key, uint32_t defl);
