@@ -1,0 +1,188 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "ButtonConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "activeHigh": {
+                    "description": "Button is normally active-low and pulled high.\nThis makes it active-high and pulled low.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pinBacklight": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "This pin is set high when the button is pressed."
+                },
+                "service": {
+                    "enum": [
+                        "button"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "HexInt": {
+            "type": [
+                "string",
+                "number"
+            ]
+        },
+        "Pin": {
+            "type": [
+                "string",
+                "number"
+            ]
+        },
+        "RelayConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "initalActive": {
+                    "description": "Whether to activate the relay upon boot.",
+                    "type": "boolean"
+                },
+                "ledActiveLow": {
+                    "description": "Which way to drive the `pinLed`",
+                    "type": "boolean"
+                },
+                "maxCurrent": {
+                    "description": "Maximum switching current in mA.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The driving pin."
+                },
+                "pinActiveLow": {
+                    "description": "When set, the relay is considered 'active' when `pin` is low.",
+                    "type": "boolean"
+                },
+                "pinFeedback": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Active-high pin that indicates the actual state of the relay."
+                },
+                "pinLed": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "This pin will be driven when relay is active."
+                },
+                "service": {
+                    "enum": [
+                        "relay"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "RotaryEncoderConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "clicksPerTurn": {
+                    "default": 12,
+                    "description": "How many clicks for full 360 turn.",
+                    "type": "integer"
+                },
+                "dense": {
+                    "description": "Encoder supports \"half-clicks\".",
+                    "type": "boolean"
+                },
+                "inverted": {
+                    "description": "Invert direction.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "type": "string"
+                },
+                "pin0": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pin1": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "service": {
+                    "enum": [
+                        "rotary"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "pin0",
+                "pin1",
+                "service"
+            ],
+            "type": "object"
+        },
+        "ServiceConfig": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/RotaryEncoderConfig"
+                },
+                {
+                    "$ref": "#/definitions/ButtonConfig"
+                },
+                {
+                    "$ref": "#/definitions/RelayConfig"
+                }
+            ]
+        }
+    },
+    "properties": {
+        "$schema": {
+            "type": "string"
+        },
+        "_": {
+            "description": "Services to mount.",
+            "items": {
+                "$ref": "#/definitions/ServiceConfig"
+            },
+            "type": "array"
+        },
+        "devClass": {
+            "$ref": "#/definitions/HexInt",
+            "description": "Device class code, typically given as a hex number starting with 0x3."
+        },
+        "devName": {
+            "description": "Name of the device.",
+            "type": "string"
+        }
+    },
+    "required": [
+        "devClass",
+        "devName"
+    ],
+    "type": "object"
+}
+

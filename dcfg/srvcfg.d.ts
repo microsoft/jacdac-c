@@ -1,8 +1,32 @@
 declare module "@devicescript/srvcfg" {
     type integer = number
     type Pin = integer | string
+    type HexInt = integer | string
 
     type ServiceConfig = RotaryEncoderConfig | ButtonConfig | RelayConfig
+
+    interface DeviceConfig {
+        "$schema"?: string
+        
+        /**
+         * Name of the device.
+         * 
+         * @example "Acme Corp. SuperIoT v1.3"
+         */
+        devName: string
+
+        /**
+         * Device class code, typically given as a hex number starting with 0x3.
+         * 
+         * @example "0x379ea214"
+         */
+        devClass: HexInt
+
+        /**
+         * Services to mount.
+         */
+        _?: ServiceConfig[]
+    }
 
     interface BaseConfig {
         service: string
