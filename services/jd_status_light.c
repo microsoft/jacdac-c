@@ -19,6 +19,12 @@
 
 #define FRAME_US 65536
 
+#if JD_DCFG
+void jd_rgb_set(uint8_t r, uint8_t g, uint8_t b);
+void jd_rgb_init(void);
+#define LED_SET_RGB jd_rgb_set
+#endif
+
 // assume a non-RGB LED is connected like this: MCU -|>- GND
 #ifndef PIN_LED_R
 #ifndef PIN_LED_ACTIVE_LO
@@ -41,6 +47,9 @@ typedef struct {
     uint8_t pin;
     uint8_t pwm;
     uint8_t mult;
+#ifdef LED_SET_RGB
+    uint8_t prev;
+#endif
 } channel_t;
 
 typedef struct {
@@ -105,9 +114,9 @@ static void rgbled_show(status_ctx_t *state) {
         c = (c * ch->mult) >> (8 + 8);
         if (c > 0xff)
             c = 0xff;
-        if (ch->pwm != c) {
+        if (ch->prev != c) {
             chg = 1;
-            ch->pwm = c;
+            ch->prev = c;
         }
     }
     if (chg)
@@ -307,7 +316,6 @@ int jd_status_handle_packet(jd_packet_t *pkt) {
     return 0;
 }
 
-
 #ifdef PIN_LED_R
 static const uint8_t pins[] = {PIN_LED_R, PIN_LED_G, PIN_LED_B};
 #endif
@@ -318,6 +326,10 @@ static const uint8_t mults[] = {LED_R_MULT, LED_G_MULT, LED_B_MULT};
 
 void jd_status_init() {
     status_ctx_t *state = &status_ctx;
+
+#if JD_DCFG
+    jd_rgb_init();
+#else
 
 #if defined(PIN_LED_R) || defined(LED_SET_RGB)
     for (int i = 0; i < 3; ++i) {
@@ -340,6 +352,7 @@ void jd_status_init() {
         ch->pin = PIN_LED;
         ch->mult = 100;
     }
+#endif
 #endif
 
     rgbled_show(state);
@@ -391,5 +404,117 @@ void jd_glow(uint32_t glow) {
     state->glow_ch[ch] = v;
     re_glow(state);
 }
+
+#ifdef JD_DCFG
+static uint16_t led_period;
+static bool led_active_high;
+static bool has_led;
+static bool is_mono;
+static bool is_rgbext;
+
+__attribute__((weak)) void jd_rgbext_init(int type, uint8_t pin) {}
+__attribute__((weak)) void jd_rgbext_set(uint8_t r, uint8_t g, uint8_t b) {}
+
+void jd_rgb_init(void) {
+    status_ctx_t *state = &status_ctx;
+
+    has_led = true;
+    is_mono = dcfg_get_bool("led.isMono");
+
+    led_period = 256;
+
+    uint8_t pin = dcfg_get_pin("led.pin");
+
+    int ledType = dcfg_get_i32("led.type", 0);
+    if (ledType) {
+        for (int i = 0; i < 3; ++i) {
+            channel_t *ch = &state->channels[i];
+            ch->mult = 255;
+        }
+        jd_rgbext_init(ledType, pin);
+        return;
+    }
+
+    uint8_t pin_r = dcfg_get_pin(dcfg_idx_key("led.rgb", 0, "pin"));
+
+    if (pin_r == NO_PIN) {
+        is_mono = true;
+        if (pin == NO_PIN)
+            has_led = false;
+    }
+
+    led_active_high = dcfg_get_bool("led.activeHigh");
+
+    if (is_mono)
+        for (int i = 0; i < 3; ++i) {
+            channel_t *ch = &state->channels[i];
+            ch->pin = pin;
+            ch->mult = 255;
+        }
+    else
+        for (int i = 0; i < 3; ++i) {
+            channel_t *ch = &state->channels[i];
+            ch->pin = dcfg_get_pin(dcfg_idx_key("led.rgb", i, "pin"));
+            ch->pwm = jd_pwm_init(ch->pin, led_period, 0, 1);
+            ch->mult = dcfg_get_i32(dcfg_idx_key("led.rgb", i, "mult"), 255);
+        }
+}
+
+void jd_rgb_set(uint8_t r, uint8_t g, uint8_t b) {
+    status_ctx_t *state = &status_ctx;
+
+    if (is_rgbext) {
+        jd_rgbext_set(r, g, b);
+    } else if (!is_mono) {
+        uint8_t v[] = {r, g, b};
+        int sum = 0;
+        for (int i = 0; i < 3; ++i) {
+            channel_t *ch = &state->channels[i];
+            int32_t c = v[i];
+            sum += c;
+            if (led_active_high) {
+                if (c >= led_period)
+                    c = led_period - 1;
+            } else {
+                c = led_period - c;
+                if (c < 0)
+                    c = 0;
+            }
+
+            // set duty first, in case jd_pwm_enable() is not impl.
+            jd_pwm_set_duty(ch->pwm, c);
+            if (c == 0) {
+                pin_set(ch->pin, !led_active_high);
+                jd_pwm_enable(ch->pwm, 0);
+            } else {
+                jd_pwm_enable(ch->pwm, 1);
+            }
+        }
+
+        if (sum == 0 && state->in_tim) {
+            pwr_leave_tim();
+            state->in_tim = 0;
+        } else if (sum != 0 && !state->in_tim) {
+            pwr_enter_tim();
+            state->in_tim = 1;
+        }
+    } else {
+        int fl = r + g + b;
+        channel_t *ch = &state->channels[0];
+        if (fl) {
+            state->in_tim = 1;
+            pin_set(ch->pin, led_active_high);
+        } else {
+            state->in_tim = 0;
+            pin_set(ch->pin, !led_active_high);
+        }
+    }
+}
+
+bool jd_status_has_color(void) {
+    return has_led && !is_mono;
+}
+
+#endif
 
 #endif

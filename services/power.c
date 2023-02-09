@@ -15,6 +15,11 @@
 
 #if JD_RAW_FRAME
 
+#if JD_DCFG
+#define PIN_PWR_LED_PULSE state->led_pulse_pin
+#define PIN_PWR_DET state->det_pin
+#endif
+
 static uint8_t shutdown_frame[16] = {0x15, 0x59, 0x04, 0x05, 0x5A, 0xC9, 0xA4, 0x1F,
                                      0xAA, 0xAA, 0xAA, 0xAA, 0x00, 0x3D, 0x80, 0x00};
 
@@ -29,6 +34,8 @@ struct srv_state {
     const power_config_t *cfg;
     uint8_t prev_power_status;
     uint8_t hw_watchdog_pulse_status;
+    uint8_t led_pulse_pin;
+    uint8_t det_pin;
 
     // timers
     uint32_t next_shutdown;
@@ -38,10 +45,8 @@ struct srv_state {
     uint32_t power_on_complete;
     uint32_t re_enable;
     uint32_t hw_watchdog_pulse;
-#ifdef PIN_PWR_LED_PULSE
     uint32_t led_pulse_on;
     uint32_t led_pulse_off;
-#endif
 };
 
 REG_DEFINITION(                                   //
@@ -103,7 +108,7 @@ static void send_shutdown(srv_t *state) {
     jd_packet_ready();
 }
 
-static int has_power(void) {
+static int has_power(srv_t *state) {
 #ifdef PIN_PWR_DET
     pin_setup_input(PIN_PWR_DET, PIN_PULL_NONE);
     return pin_get(PIN_PWR_DET);
@@ -113,7 +118,7 @@ static int has_power(void) {
 }
 
 void power_process(srv_t *state) {
-    if (!has_power()) {
+    if (!has_power(state)) {
         if (state->power_status == JD_POWER_POWER_STATUS_POWERING) {
             LOG("no power");
             state->power_status = JD_POWER_POWER_STATUS_DISALLOWED; // TODO - use some other state
@@ -292,6 +297,9 @@ void power_init(const power_config_t *cfg) {
     state->allowed = 1;
     state->max_power = 900;
 
+    state->led_pulse_pin = NO_PIN;
+    state->det_pin = NO_PIN;
+
     // These should be reasonable defaults.
     // Only 1 out of 14 batteries tested wouldn't work with these settings.
     // 0.6/20s is 7mA (at 22R), so ~6 weeks on 10000mAh battery (mAh are quoted for 3.7V not 5V).
@@ -306,5 +314,19 @@ void power_init(const power_config_t *cfg) {
     if (cfg->en_active_high < 2)
         tim_max_sleep = 1000; // wakeup at 1ms not usual 10ms to get faster over-current reaction
 }
+
+#if JD_DCFG
+void power_config(void) {
+    power_config_t *cfg = jd_alloc(sizeof(power_config_t));
+    cfg->pin_fault = jd_srvcfg_pin("pinFault");
+    cfg->pin_en = jd_srvcfg_pin("pinEn");
+    cfg->pin_pulse = jd_srvcfg_pin("pinPulse");
+    cfg->en_active_high = jd_srvcfg_i32("mode", 0);
+    cfg->fault_ignore_ms = jd_srvcfg_i32("faultIgnoreMs", 16);
+    power_init(cfg);
+    jd_srvcfg_last_service()->led_pulse_pin = jd_srvcfg_pin("pinLedPulse");
+    jd_srvcfg_last_service()->det_pin = jd_srvcfg_pin("pinUsbDetect");
+}
+#endif
 
 #endif

@@ -12,6 +12,18 @@ void jd_power_enable(int en);
 void jd_status_init(void);
 void jd_status_process(void);
 int jd_status_handle_packet(jd_packet_t *pkt);
+
+#if JD_DCFG
+bool jd_status_has_color(void);
+#else
+static inline bool jd_status_has_color(void) {
+#if defined(PIN_LED_R) || defined(LED_SET_RGB)
+    return true;
+#else
+    return false
+#endif
+}
+#endif
 #endif
 
 /*

@@ -166,6 +166,10 @@ void jd_services_process_frame(jd_frame_t *frame) {
     }
 }
 
+srv_t *jd_srvcfg_last_service(void) {
+    return services[num_services - 1];
+}
+
 srv_t *jd_allocate_service(const srv_vt_t *vt) {
     // always allocate instances idx - it should be stable when we disable some services
     if (num_services >= JD_MAX_SERVICES)
@@ -232,11 +236,8 @@ void jd_services_announce() {
 
     uint16_t adflags = reset_counter;
 #if JD_CONFIG_STATUS == 1
-#ifdef PIN_LED_R
-    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_STATUS_LIGHT_RGB_FADE;
-#else
-    adflags |= JD_CONTROL_ANNOUNCE_FLAGS_STATUS_LIGHT_MONO;
-#endif
+    adflags |= jd_status_has_color() ? JD_CONTROL_ANNOUNCE_FLAGS_STATUS_LIGHT_RGB_FADE
+                                     : JD_CONTROL_ANNOUNCE_FLAGS_STATUS_LIGHT_MONO;
 #endif
 
 #if JD_CLIENT

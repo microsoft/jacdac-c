@@ -3,29 +3,79 @@ declare module "@devicescript/srvcfg" {
     type Pin = integer | string
     type HexInt = integer | string
 
-    type ServiceConfig = RotaryEncoderConfig | ButtonConfig | RelayConfig
+    type ServiceConfig =
+        | RotaryEncoderConfig
+        | ButtonConfig
+        | RelayConfig
+        | PowerConfig
 
     interface DeviceConfig {
-        "$schema"?: string
-        
+        $schema?: string
+
         /**
          * Name of the device.
-         * 
+         *
          * @example "Acme Corp. SuperIoT v1.3"
          */
         devName: string
 
         /**
          * Device class code, typically given as a hex number starting with 0x3.
-         * 
+         *
          * @example "0x379ea214"
          */
         devClass: HexInt
+
+        pinJacdac?: Pin
+
+        led?: LedConfig
 
         /**
          * Services to mount.
          */
         _?: ServiceConfig[]
+    }
+
+    interface LedConfig {
+        /**
+         * If a single mono LED.
+         */
+        pin?: Pin
+
+        /**
+         * RGB LED driven by PWM.
+         */
+        rgb?: LedChannel[]
+
+        /**
+         * Applies to all LED channels/pins.
+         */
+        activeHigh?: boolean
+
+        /**
+         * Defaults to `true` if `pin` is set and `type` is 0.
+         * Otherwise `false`.
+         */
+        isMono?: boolean
+
+        /**
+         * 0 - use `pin` or `rgb` as regular pins
+         * 1 - use `pin` as WS2812B (supported only on some boards)
+         * Other options (in range 100+) are also possible on some boards.
+         * 
+         * @default 0
+         */
+        type?: number
+    }
+
+    interface LedChannel {
+        pin: Pin
+        /**
+         * Multiplier to compensate for different LED strengths.
+         * @minimum 0
+         * @maximum 255
+         */
+        mult?: integer
     }
 
     interface BaseConfig {
@@ -113,5 +163,44 @@ declare module "@devicescript/srvcfg" {
          * Maximum switching current in mA.
          */
         maxCurrent?: integer
+    }
+
+    interface PowerConfig extends BaseConfig {
+        service: "power"
+
+        /**
+         * Always active low.
+         */
+        pinFault: Pin
+        pinEn: Pin
+        /**
+         * Active-low pin for pulsing battery banks.
+         */
+        pinPulse?: Pin
+        /**
+         * Operation mode of pinEn
+         * 0 - `pinEn` is active high
+         * 1 - `pinEn` is active low
+         * 2 - transistor-on-EN setup, where flt and en are connected at limiter
+         * 3 - EN should be pulsed at 50Hz (10ms on, 10ms off) to enable the limiter
+         */
+        mode: integer
+
+        /**
+         * How long (in milliseconds) to ignore the `pinFault` after enabling.
+         *
+         * @default 16
+         */
+        faultIgnoreMs: integer
+
+        /**
+         * Additional power LED to pulse.
+         */
+        pinLedPulse?: Pin
+
+        /**
+         * Pin that is high when we are connected to USB or similar power source.
+         */
+        pinUsbDetect?: Pin
     }
 }
