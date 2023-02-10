@@ -1,6 +1,6 @@
 declare module "@devicescript/srvcfg" {
     type integer = number
-    type Pin = integer | string
+    type Pin = integer
     type HexInt = integer | string
 
     type ServiceConfig =
@@ -8,6 +8,12 @@ declare module "@devicescript/srvcfg" {
         | ButtonConfig
         | RelayConfig
         | PowerConfig
+        | LightLevelConfig
+        | ReflectedLightConfig
+        | WaterLevelConfig
+        | SoundLevelConfig
+        | SoilMoistureConfig
+        | PotentiometerConfig
 
     interface DeviceConfig {
         $schema?: string
@@ -125,7 +131,7 @@ declare module "@devicescript/srvcfg" {
     }
 
     interface RotaryEncoderConfig extends BaseConfig {
-        service: "rotary"
+        service: "rotaryEncoder"
         pin0: Pin
         pin1: Pin
         /**
@@ -233,5 +239,81 @@ declare module "@devicescript/srvcfg" {
          * Pin that is high when we are connected to USB or similar power source.
          */
         pinUsbDetect?: Pin
+    }
+
+    interface AnalogConfig extends BaseConfig {
+        /**
+         * Pin to analog read.
+         */
+        pin: Pin
+
+        /**
+         * Pin to pull low before analog read and release afterwards.
+         */
+        pinLow?: Pin
+
+        /**
+         * Pin to pull high before analog read and release afterwards.
+         */
+        pinHigh?: Pin
+
+        /**
+         * Reading is `offset + (raw_reading * scale) / 1024`
+         *
+         * @default 1024
+         */
+        offset?: integer
+
+        /**
+         * Reading is `offset + (raw_reading * scale) / 1024`
+         *
+         * @default 0
+         */
+        scale?: integer
+
+        /**
+         * Interval in milliseconds between samplings of the sensor.
+         *
+         * @default 9
+         */
+        samplingItv?: integer
+
+        /**
+         * How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.
+         *
+         * @default 0
+         */
+        samplingDelay?: integer
+
+        /**
+         * Default interval in milliseconds between streaming samples.
+         *
+         * @default 100
+         */
+        streamingItv?: integer
+    }
+
+    interface LightLevelConfig extends AnalogConfig {
+        service: "analog:lightLevel"
+    }
+
+    interface ReflectedLightConfig extends AnalogConfig {
+        service: "analog:reflectedLight"
+    }
+
+    interface WaterLevelConfig extends AnalogConfig {
+        service: "analog:waterLevel"
+    }
+
+    interface SoundLevelConfig extends AnalogConfig {
+        service: "analog:soundLevel"
+    }
+
+    interface SoilMoistureConfig extends AnalogConfig {
+        service: "analog:soilMoisture"
+    }
+
+    interface PotentiometerConfig extends AnalogConfig {
+        service: "analog:potentiometer"
     }
 }

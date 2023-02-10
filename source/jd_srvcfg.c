@@ -33,6 +33,10 @@ int32_t jd_srvcfg_i32(const char *key, int32_t defl) {
     return dcfg_get_i32(jd_srvcfg_key(key), defl);
 }
 
+int32_t jd_srvcfg_u32(const char *key, int32_t defl) {
+    return dcfg_get_u32(jd_srvcfg_key(key), defl);
+}
+
 bool jd_srvcfg_has_flag(const char *key) {
     return jd_srvcfg_i32(key, 0) != 0;
 }
@@ -45,12 +49,14 @@ typedef struct {
 void rotaryencoder_config(void);
 void button_config(void);
 void relay_config(void);
+void analog_config(void);
 
 static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 #if !JD_HOSTED
-    {"rotary", rotaryencoder_config},
+    {"rotaryEncoder", rotaryencoder_config},
     {"button", button_config},
     {"relay", relay_config},
+    {"analog", analog_config},
 #endif
     {NULL, NULL}};
 
@@ -70,10 +76,15 @@ void jd_srvcfg_run() {
             } else
                 break;
         }
+        unsigned namelen = strlen(srv);
+        const char *colon = strchr(srv, ':');
+        if (colon)
+            namelen = colon - srv;
         unsigned i;
         for (i = 0; jd_srvcfg_entries[i].name; ++i) {
-            if (strcmp(srv, jd_srvcfg_entries[i].name) == 0) {
-                DMESG("initialize %s:%d", srv, jd_srvcfg_idx);
+            if (memcmp(srv, jd_srvcfg_entries[i].name, namelen) == 0 &&
+                jd_srvcfg_entries[i].name[namelen] == 0) {
+                DMESG("initialize %s @ %d", srv, jd_srvcfg_idx);
                 jd_srvcfg_idx_map[_jd_services_curr_idx()] = jd_srvcfg_idx;
                 jd_srvcfg_entries[i].cfgfn();
                 break;
