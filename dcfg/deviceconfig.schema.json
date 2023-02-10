@@ -18,11 +18,11 @@
                     "type": "string"
                 },
                 "pin": {
-                    "$ref": "#/definitions/Pin"
+                    "type": "integer"
                 },
                 "pinBacklight": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "This pin is set high when the button is pressed."
+                    "description": "This pin is set high when the button is pressed.",
+                    "type": "integer"
                 },
                 "service": {
                     "enum": [
@@ -36,6 +36,7 @@
                 }
             },
             "required": [
+                "name",
                 "pin",
                 "service"
             ],
@@ -57,7 +58,7 @@
                     "type": "integer"
                 },
                 "pin": {
-                    "$ref": "#/definitions/Pin"
+                    "type": "integer"
                 }
             },
             "required": [
@@ -77,8 +78,8 @@
                     "type": "boolean"
                 },
                 "pin": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "If a single mono LED."
+                    "description": "If a single mono LED.",
+                    "type": "integer"
                 },
                 "rgb": {
                     "description": "RGB LED driven by PWM.",
@@ -97,11 +98,137 @@
             },
             "type": "object"
         },
-        "Pin": {
-            "type": [
-                "string",
-                "integer"
-            ]
+        "LightLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:lightLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "PotentiometerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:potentiometer"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
         },
         "PowerConfig": {
             "additionalProperties": false,
@@ -124,23 +251,23 @@
                     "type": "string"
                 },
                 "pinEn": {
-                    "$ref": "#/definitions/Pin"
+                    "type": "integer"
                 },
                 "pinFault": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "Always active low."
+                    "description": "Always active low.",
+                    "type": "integer"
                 },
                 "pinLedPulse": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "Additional power LED to pulse."
+                    "description": "Additional power LED to pulse.",
+                    "type": "integer"
                 },
                 "pinPulse": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "Active-low pin for pulsing battery banks."
+                    "description": "Active-low pin for pulsing battery banks.",
+                    "type": "integer"
                 },
                 "pinUsbDetect": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "Pin that is high when we are connected to USB or similar power source."
+                    "description": "Pin that is high when we are connected to USB or similar power source.",
+                    "type": "integer"
                 },
                 "service": {
                     "enum": [
@@ -156,8 +283,75 @@
             "required": [
                 "faultIgnoreMs",
                 "mode",
+                "name",
                 "pinEn",
                 "pinFault",
+                "service"
+            ],
+            "type": "object"
+        },
+        "ReflectedLightConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:reflectedLight"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
                 "service"
             ],
             "type": "object"
@@ -186,20 +380,20 @@
                     "type": "string"
                 },
                 "pin": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "The driving pin."
+                    "description": "The driving pin.",
+                    "type": "integer"
                 },
                 "pinActiveLow": {
                     "description": "When set, the relay is considered 'active' when `pin` is low.",
                     "type": "boolean"
                 },
                 "pinFeedback": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "Active-high pin that indicates the actual state of the relay."
+                    "description": "Active-high pin that indicates the actual state of the relay.",
+                    "type": "integer"
                 },
                 "pinLed": {
-                    "$ref": "#/definitions/Pin",
-                    "description": "This pin will be driven when relay is active."
+                    "description": "This pin will be driven when relay is active.",
+                    "type": "integer"
                 },
                 "service": {
                     "enum": [
@@ -213,6 +407,7 @@
                 }
             },
             "required": [
+                "name",
                 "pin",
                 "service"
             ],
@@ -243,14 +438,14 @@
                     "type": "string"
                 },
                 "pin0": {
-                    "$ref": "#/definitions/Pin"
+                    "type": "integer"
                 },
                 "pin1": {
-                    "$ref": "#/definitions/Pin"
+                    "type": "integer"
                 },
                 "service": {
                     "enum": [
-                        "rotary"
+                        "rotaryEncoder"
                     ],
                     "type": "string"
                 },
@@ -260,6 +455,7 @@
                 }
             },
             "required": [
+                "name",
                 "pin0",
                 "pin1",
                 "service"
@@ -279,8 +475,224 @@
                 },
                 {
                     "$ref": "#/definitions/PowerConfig"
+                },
+                {
+                    "$ref": "#/definitions/LightLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/ReflectedLightConfig"
+                },
+                {
+                    "$ref": "#/definitions/WaterLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/SoundLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/SoilMoistureConfig"
+                },
+                {
+                    "$ref": "#/definitions/PotentiometerConfig"
                 }
             ]
+        },
+        "SoilMoistureConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:soilMoisture"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "SoundLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:soundLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "WaterLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:waterLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
         }
     },
     "properties": {
@@ -312,7 +724,7 @@
             "$ref": "#/definitions/LedConfig"
         },
         "pinJacdac": {
-            "$ref": "#/definitions/Pin"
+            "type": "integer"
         }
     },
     "required": [

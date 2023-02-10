@@ -107,7 +107,7 @@ int dcfg_validate(const dcfg_header_t *hd) {
             CHECK(2010, e->value >= data_start);
             CHECK(2011, e->value < total_bytes);
             CHECK(2012, e->value + size < total_bytes);
-            CHECK(2013, data_base[size] == 0x00);
+            CHECK(2013, data_base[e->value + size] == 0x00);
             break;
         }
     }

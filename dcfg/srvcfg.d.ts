@@ -115,14 +115,14 @@ declare module "@devicescript/srvcfg" {
         mult?: integer
     }
 
-    interface BaseConfig {
+    interface BaseServiceConfig {
         service: string
 
         /**
          * Instance/role name to be assigned to service.
          * @examples ["buttonA", "activityLed"]
          */
-        name?: string
+        name: string
 
         /**
          * Service variant (see service definition for possible values).
@@ -130,7 +130,7 @@ declare module "@devicescript/srvcfg" {
         variant?: integer
     }
 
-    interface RotaryEncoderConfig extends BaseConfig {
+    interface RotaryEncoderConfig extends BaseServiceConfig {
         service: "rotaryEncoder"
         pin0: Pin
         pin1: Pin
@@ -149,7 +149,7 @@ declare module "@devicescript/srvcfg" {
         inverted?: boolean
     }
 
-    interface ButtonConfig extends BaseConfig {
+    interface ButtonConfig extends BaseServiceConfig {
         service: "button"
         pin: Pin
         /**
@@ -163,7 +163,7 @@ declare module "@devicescript/srvcfg" {
         activeHigh?: boolean
     }
 
-    interface RelayConfig extends BaseConfig {
+    interface RelayConfig extends BaseServiceConfig {
         service: "relay"
 
         /**
@@ -202,7 +202,7 @@ declare module "@devicescript/srvcfg" {
         maxCurrent?: integer
     }
 
-    interface PowerConfig extends BaseConfig {
+    interface PowerConfig extends BaseServiceConfig {
         service: "power"
 
         /**
@@ -241,7 +241,7 @@ declare module "@devicescript/srvcfg" {
         pinUsbDetect?: Pin
     }
 
-    interface AnalogConfig extends BaseConfig {
+    interface AnalogConfig extends BaseServiceConfig {
         /**
          * Pin to analog read.
          */
