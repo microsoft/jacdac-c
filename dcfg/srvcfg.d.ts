@@ -15,14 +15,14 @@ declare module "@devicescript/srvcfg" {
         /**
          * Name of the device.
          *
-         * @example "Acme Corp. SuperIoT v1.3"
+         * @examples ["Acme Corp. SuperIoT v1.3"]
          */
         devName: string
 
         /**
          * Device class code, typically given as a hex number starting with 0x3.
          *
-         * @example "0x379ea214"
+         * @examples ["0x379ea214"]
          */
         devClass: HexInt
 
@@ -36,6 +36,34 @@ declare module "@devicescript/srvcfg" {
         _?: ServiceConfig[]
     }
 
+    interface ArchConfig {
+        $schema?: string
+
+        /**
+         * Short identification of architecture.
+         *
+         * @examples ["rp2040", "rp2040w", "esp32c3"]
+         */
+        id: string
+
+        /**
+         * Full name of architecture.
+         *
+         * @examples ["RP2040 + CYW43 WiFi", "ESP32-C3"]
+         */
+        name: string
+
+        /**
+         * Where to find a generic (without DCFG) UF2 or BIN file.
+         */
+        genericUrl?: string
+
+        /**
+         * Where should DCFG be embedded in generic file.
+         */
+        dcfgOffset: HexInt
+    }
+
     interface LedConfig {
         /**
          * If a single mono LED.
@@ -44,6 +72,9 @@ declare module "@devicescript/srvcfg" {
 
         /**
          * RGB LED driven by PWM.
+         *
+         * @minItems 3
+         * @maxItems 3
          */
         rgb?: LedChannel[]
 
@@ -62,7 +93,7 @@ declare module "@devicescript/srvcfg" {
          * 0 - use `pin` or `rgb` as regular pins
          * 1 - use `pin` as WS2812B (supported only on some boards)
          * Other options (in range 100+) are also possible on some boards.
-         * 
+         *
          * @default 0
          */
         type?: number
@@ -83,7 +114,7 @@ declare module "@devicescript/srvcfg" {
 
         /**
          * Instance/role name to be assigned to service.
-         * @example "buttonA"
+         * @examples ["buttonA", "activityLed"]
          */
         name?: string
 

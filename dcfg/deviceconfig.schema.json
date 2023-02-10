@@ -11,6 +11,10 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
                     "type": "string"
                 },
                 "pin": {
@@ -40,14 +44,123 @@
         "HexInt": {
             "type": [
                 "string",
-                "number"
+                "integer"
             ]
+        },
+        "LedChannel": {
+            "additionalProperties": false,
+            "properties": {
+                "mult": {
+                    "description": "Multiplier to compensate for different LED strengths.",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin"
+                }
+            },
+            "required": [
+                "pin"
+            ],
+            "type": "object"
+        },
+        "LedConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "activeHigh": {
+                    "description": "Applies to all LED channels/pins.",
+                    "type": "boolean"
+                },
+                "isMono": {
+                    "description": "Defaults to `true` if `pin` is set and `type` is 0.\nOtherwise `false`.",
+                    "type": "boolean"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "If a single mono LED."
+                },
+                "rgb": {
+                    "description": "RGB LED driven by PWM.",
+                    "items": {
+                        "$ref": "#/definitions/LedChannel"
+                    },
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "type": "array"
+                },
+                "type": {
+                    "default": 0,
+                    "description": "0 - use `pin` or `rgb` as regular pins\n1 - use `pin` as WS2812B (supported only on some boards)\nOther options (in range 100+) are also possible on some boards.",
+                    "type": "integer"
+                }
+            },
+            "type": "object"
         },
         "Pin": {
             "type": [
                 "string",
-                "number"
+                "integer"
             ]
+        },
+        "PowerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "faultIgnoreMs": {
+                    "default": 16,
+                    "description": "How long (in milliseconds) to ignore the `pinFault` after enabling.",
+                    "type": "integer"
+                },
+                "mode": {
+                    "description": "Operation mode of pinEn\n0 - `pinEn` is active high\n1 - `pinEn` is active low\n2 - transistor-on-EN setup, where flt and en are connected at limiter\n3 - EN should be pulsed at 50Hz (10ms on, 10ms off) to enable the limiter",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pinEn": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pinFault": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Always active low."
+                },
+                "pinLedPulse": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Additional power LED to pulse."
+                },
+                "pinPulse": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Active-low pin for pulsing battery banks."
+                },
+                "pinUsbDetect": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin that is high when we are connected to USB or similar power source."
+                },
+                "service": {
+                    "enum": [
+                        "power"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "faultIgnoreMs",
+                "mode",
+                "pinEn",
+                "pinFault",
+                "service"
+            ],
+            "type": "object"
         },
         "RelayConfig": {
             "additionalProperties": false,
@@ -66,6 +179,10 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
                     "type": "string"
                 },
                 "pin": {
@@ -119,6 +236,10 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
                     "type": "string"
                 },
                 "pin0": {
@@ -155,6 +276,9 @@
                 },
                 {
                     "$ref": "#/definitions/RelayConfig"
+                },
+                {
+                    "$ref": "#/definitions/PowerConfig"
                 }
             ]
         }
@@ -172,11 +296,23 @@
         },
         "devClass": {
             "$ref": "#/definitions/HexInt",
-            "description": "Device class code, typically given as a hex number starting with 0x3."
+            "description": "Device class code, typically given as a hex number starting with 0x3.",
+            "examples": [
+                "0x379ea214"
+            ]
         },
         "devName": {
             "description": "Name of the device.",
+            "examples": [
+                "Acme Corp. SuperIoT v1.3"
+            ],
             "type": "string"
+        },
+        "led": {
+            "$ref": "#/definitions/LedConfig"
+        },
+        "pinJacdac": {
+            "$ref": "#/definitions/Pin"
         }
     },
     "required": [
