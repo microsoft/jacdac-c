@@ -50,6 +50,7 @@ void rotaryencoder_config(void);
 void button_config(void);
 void relay_config(void);
 void analog_config(void);
+void accelerometer_config(void);
 
 static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 #if !JD_HOSTED
@@ -57,6 +58,7 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
     {"button", button_config},
     {"relay", relay_config},
     {"analog", analog_config},
+    {"accelerometer", accelerometer_config},
 #endif
     {NULL, NULL}};
 

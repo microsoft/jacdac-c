@@ -14,6 +14,7 @@ declare module "@devicescript/srvcfg" {
         | SoundLevelConfig
         | SoilMoistureConfig
         | PotentiometerConfig
+        | AccelerometerConfig
 
     interface DeviceConfig {
         $schema?: string
@@ -36,10 +37,29 @@ declare module "@devicescript/srvcfg" {
 
         led?: LedConfig
 
+        i2c?: I2CConfig
+
         /**
          * Services to mount.
          */
         _?: ServiceConfig[]
+    }
+
+    interface I2CConfig {
+        sda: Pin
+        scl: Pin
+
+        /**
+         * Hardware instance index.
+         */
+        inst?: integer
+
+        /**
+         * How fast to run the I2C, typically either 100 or 400.
+         *
+         * @default 100
+         */
+        khz?: integer
     }
 
     interface ArchConfig {
@@ -239,6 +259,34 @@ declare module "@devicescript/srvcfg" {
          * Pin that is high when we are connected to USB or similar power source.
          */
         pinUsbDetect?: Pin
+    }
+
+    interface AccelerometerConfig extends BaseServiceConfig {
+        service: "accelerometer"
+
+        /**
+         * Transform for X axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).
+         * Values -1, -2, -3 will do likewise but will negate the axis.
+         *
+         * @default 1
+         */
+        trX?: integer
+
+        /**
+         * Transform for Y axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).
+         * Values -1, -2, -3 will do likewise but will negate the axis.
+         *
+         * @default 2
+         */
+        trY?: integer
+
+        /**
+         * Transform for Z axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).
+         * Values -1, -2, -3 will do likewise but will negate the axis.
+         *
+         * @default 3
+         */
+        trZ?: integer
     }
 
     interface AnalogConfig extends BaseServiceConfig {

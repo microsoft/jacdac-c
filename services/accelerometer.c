@@ -249,3 +249,31 @@ void accelerometer_init(const accelerometer_api_t *api) {
     exti_set_callback(PIN_ACC_INT, accelerometer_int, EXTI_RISING);
 #endif
 }
+
+#ifdef JD_DCFG
+static int8_t acc_idx[3] = {1, 2, 3};
+__attribute__((weak)) void accelerometer_data_transform(int32_t data[3]) {
+    int32_t tmp[3];
+    memcpy(tmp, data, sizeof(tmp));
+    for (int i = 0; i < 3; ++i) {
+        int idx = acc_idx[i];
+        int m = 1;
+        if (idx < 0) {
+            m = -1;
+            idx = -idx;
+        }
+        idx--;
+        if (idx < 0 || idx > 2) {
+            idx = i;
+            m = 1;
+        }
+        data[i] = tmp[idx] * m;
+    }
+}
+void accelerometer_config(void) {
+    acc_idx[0] = jd_srvcfg_i32("trX", 1);
+    acc_idx[1] = jd_srvcfg_i32("trY", 2);
+    acc_idx[2] = jd_srvcfg_i32("trZ", 3);
+    // service will be started by auto-scan
+}
+#endif
