@@ -328,4 +328,8 @@ int jd_net_send_frame(void *frame);
 #define JD_HOSTED (!JD_PHYSICAL)
 #endif
 
+#ifndef JD_I2C_HELPERS
+#define JD_I2C_HELPERS 0
+#endif
+
 #endif

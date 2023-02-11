@@ -62,10 +62,8 @@ uint16_t adc_read_temp(void);
 
 // i2c.c
 // addr are always 7bit
-int i2c_init(void);
-int i2c_setup_write(uint8_t addr, unsigned len, bool repeated);
-int i2c_write(uint8_t c);
-int i2c_finish_write(bool repeated);
+int i2c_init_(void);
+#define i2c_init i2c_init_
 
 // utilities, 8-bit register addresses
 int i2c_write_reg_buf(uint8_t addr, uint8_t reg, const void *src, unsigned len);
@@ -81,8 +79,10 @@ int i2c_write_reg16(uint8_t addr, uint16_t reg, uint8_t val);
 int i2c_read_reg16(uint8_t addr, uint16_t reg);
 
 // mbed-style
-int i2c_write_ex(uint8_t addr, const void *src, unsigned len, bool repeated);
+int i2c_write_ex2(uint8_t device_address, const void *src, unsigned len, const void *src2,
+                  unsigned len2, bool repeated);
 int i2c_read_ex(uint8_t addr, void *dst, unsigned len);
+int i2c_write_ex(uint8_t addr, const void *src, unsigned len, bool repeated);
 
 // bitbang_spi.c
 void bspi_send(const void *src, uint32_t len);
