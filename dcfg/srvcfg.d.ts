@@ -48,6 +48,8 @@ declare module "@devicescript/srvcfg" {
 
         led?: LedConfig
 
+        log?: LogConfig
+
         i2c?: I2CConfig
     }
 
@@ -104,6 +106,20 @@ declare module "@devicescript/srvcfg" {
          * Set to 4096 on RP2040 because wof RP2040-E14.
          */
         uf2Align: HexInt
+    }
+
+    interface LogConfig {
+        /**
+         * Where to send logs.
+         */
+        pinTX: Pin
+        
+        /**
+         * Speed to use.
+         * 
+         * @default 115200
+         */
+        baud?: integer
     }
 
     interface LedConfig {
