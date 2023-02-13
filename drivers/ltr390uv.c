@@ -49,7 +49,7 @@ static void ltr390uv_init(void) {
     ctx->inited = 1;
     i2c_init();
 
-    DMESG("pres %d", ltr390uv_is_present());
+    ltr390uv_is_present();
 
     int id = i2c_read_reg(LTR390UV_ADDR, LTR390UV_PART_ID);
     DMESG("LTR390UV part=%x", id);

@@ -62,7 +62,7 @@ static void shtc3_init(void) {
 
     ctx->inited = 1;
     i2c_init();
-    DMESG("pres %d", shtc3_is_present());
+    shtc3_is_present();
     wake();
     DMESG("SHTC3 id=%x", jd_sgp_read_u16(SHTC3_ADDR, SHTC3_ID, 0));
     send_cmd(SHTC3_SLEEP);

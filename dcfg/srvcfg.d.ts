@@ -1,5 +1,9 @@
 declare module "@devicescript/srvcfg" {
     type integer = number
+    /**
+     * Hardware pin number. In future we may allow labels.
+     * Naming convention - fields with `Pin` type start with `pin*`
+     */
     type Pin = integer
     type HexInt = integer | string
 
@@ -16,9 +20,16 @@ declare module "@devicescript/srvcfg" {
         | PotentiometerConfig
         | AccelerometerConfig
 
-    interface DeviceConfig {
+    interface DeviceConfig extends DeviceHardwareInfo {
         $schema?: string
 
+        /**
+         * Services to mount.
+         */
+        _?: ServiceConfig[]
+    }
+
+    interface DeviceHardwareInfo {
         /**
          * Name of the device.
          *
@@ -33,21 +44,20 @@ declare module "@devicescript/srvcfg" {
          */
         devClass: HexInt
 
-        pinJacdac?: Pin
+        jacdac?: JacdacConfig
 
         led?: LedConfig
 
         i2c?: I2CConfig
+    }
 
-        /**
-         * Services to mount.
-         */
-        _?: ServiceConfig[]
+    interface JacdacConfig {
+        pin: Pin
     }
 
     interface I2CConfig {
-        sda: Pin
-        scl: Pin
+        pinSDA: Pin
+        pinSCL: Pin
 
         /**
          * Hardware instance index.
@@ -59,7 +69,7 @@ declare module "@devicescript/srvcfg" {
          *
          * @default 100
          */
-        khz?: integer
+        kHz?: integer
     }
 
     interface ArchConfig {
@@ -88,6 +98,12 @@ declare module "@devicescript/srvcfg" {
          * Where should DCFG be embedded in generic file.
          */
         dcfgOffset: HexInt
+
+        /**
+         * Force alignment of the last page in the patched UF2 file.
+         * Set to 4096 on RP2040 because wof RP2040-E14.
+         */
+        uf2Align: HexInt
     }
 
     interface LedConfig {
