@@ -80,6 +80,7 @@ void cap1298_init(void) {
 }
 
 const captouch_api_t captouch_cap1298 = {
+    .name = "cap1293",
     .init = cap1298_init,
     .get_reading = cap1298_read,
     .is_present = cap1298_is_present,

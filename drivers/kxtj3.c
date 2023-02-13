@@ -108,6 +108,7 @@ static void kxtj3_init(void) {
 }
 
 const accelerometer_api_t accelerometer_kxtj3 = {
+    .name = "kxtj3",
     .init = kxtj3_init,
     .get_reading = kxtj3_get_sample,
     .sleep = kxtj3_sleep,

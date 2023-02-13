@@ -111,6 +111,7 @@ static void *th02_humidity(void) {
 }
 
 const env_sensor_api_t temperature_th02 = {
+    .name = "th02",
     .init = th02_init,
     .process = th02_process,
     .get_reading = th02_temperature,
@@ -118,6 +119,7 @@ const env_sensor_api_t temperature_th02 = {
 };
 
 const env_sensor_api_t humidity_th02 = {
+    .name = "th02",
     .init = th02_init,
     .process = th02_process,
     .get_reading = th02_humidity,

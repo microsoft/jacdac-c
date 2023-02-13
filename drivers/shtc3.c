@@ -109,6 +109,7 @@ static void *shtc3_humidity(void) {
 }
 
 const env_sensor_api_t temperature_shtc3 = {
+    .name = "shtc3",
     .init = shtc3_init,
     .process = shtc3_process,
     .get_reading = shtc3_temperature,
@@ -116,6 +117,7 @@ const env_sensor_api_t temperature_shtc3 = {
 };
 
 const env_sensor_api_t humidity_shtc3 = {
+    .name = "shtc3",
     .init = shtc3_init,
     .process = shtc3_process,
     .get_reading = shtc3_humidity,

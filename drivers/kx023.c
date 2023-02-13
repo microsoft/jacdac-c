@@ -130,6 +130,7 @@ static void kx023_init(void) {
 }
 
 const accelerometer_api_t accelerometer_kx023 = {
+    .name = "kx023",
     .init = kx023_init,
     .get_reading = kx023_get_sample,
     .sleep = kx023_sleep,

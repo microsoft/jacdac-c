@@ -159,6 +159,7 @@ static void lsm6ds_init(void) {
 }
 
 const accelerometer_api_t accelerometer_lsm6ds = {
+    .name = "lsm6ds",
     .init = lsm6ds_init,
     .get_reading = lsm6ds_get_sample,
     .sleep = lsm6ds_sleep,
@@ -169,6 +170,7 @@ const accelerometer_api_t accelerometer_lsm6ds = {
 };
 
 const gyroscope_api_t gyroscope_lsm6ds = {
+    .name = "lsm6ds",
     .init = lsm6ds_init,
     .get_reading = lsm6ds_get_sample_gyro,
     .sleep = lsm6ds_sleep,

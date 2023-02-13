@@ -73,7 +73,7 @@ static int scd_read_serial(void) {
         jd_services_sleep_us(500 * 1000);
 
     if (i2c_write_reg16_buf(SCD40_ADDR, SCD40_SERIAL_NUMBER, NULL, 0)) {
-        DMESG("SCD40 not present");
+        // DMESG("SCD40 not present");
         return -1;
     }
     jd_services_sleep_us(1000);

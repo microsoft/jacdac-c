@@ -123,6 +123,7 @@ static void *ltr390uv_uvi(void) {
 }
 
 const env_sensor_api_t illuminance_ltr390uv = {
+    .name = "ltr390uv",
     .init = ltr390uv_init,
     .process = ltr390uv_process,
     .get_reading = ltr390uv_ambient,
@@ -130,6 +131,7 @@ const env_sensor_api_t illuminance_ltr390uv = {
 };
 
 const env_sensor_api_t uvindex_ltr390uv = {
+    .name = "ltr390uv",
     .init = ltr390uv_init,
     .process = ltr390uv_process,
     .get_reading = ltr390uv_uvi,

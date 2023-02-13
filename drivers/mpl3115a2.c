@@ -143,6 +143,7 @@ static void *mpl3115a2_pressure(void) {
 }
 
 const env_sensor_api_t temperature_mpl3115a2 = {
+    .name = "mpl3115a2",
     .init = mpl3115a2_init,
     .process = mpl3115a2_process,
     .get_reading = mpl3115a2_temperature,
@@ -150,6 +151,7 @@ const env_sensor_api_t temperature_mpl3115a2 = {
 };
 
 const env_sensor_api_t pressure_mpl3115a2 = {
+    .name = "mpl3115a2",
     .init = mpl3115a2_init,
     .process = mpl3115a2_process,
     .get_reading = mpl3115a2_pressure,

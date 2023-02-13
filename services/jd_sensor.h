@@ -19,6 +19,7 @@ typedef struct {
     int32_t (*set_range)(int32_t range); // returns the range after setting
     const struct sensor_range *ranges;
     bool (*is_present)(void);
+    const char *name;
 } sensor_api_t;
 
 // make sure 'api' is at 8 byte boundary to avoid alignment issues on 64 bit arch

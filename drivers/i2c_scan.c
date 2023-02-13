@@ -72,11 +72,12 @@ int jd_scan_i2c(const char *label, const sensor_api_t **apis, void (*init)(const
         unsigned i;
         for (i = 0; apis[i] != NULL; ++i) {
             if (apis[i]->is_present()) {
+                DMESG("I2C found '%s' %s", apis[i]->name, label);
                 init(apis[i]);
                 num++;
             }
         }
-        DMESG("I2C scanned %d %s, found %d", i, label, num);
+        // DMESG("I2C scanned %d %s, found %d", i, label, num);
     }
     return num;
 }
@@ -119,6 +120,7 @@ int jd_scan_illuminance(void) {
 
 int jd_scan_all(void) {
     int r = 0;
+    DMESG("start I2C scan");
     r += jd_scan_accelerometers();
     r += jd_scan_gyroscopes();
     r += jd_scan_temperature();
@@ -128,5 +130,6 @@ int jd_scan_all(void) {
     r += jd_scan_tvoc();
     r += jd_scan_uvindex();
     r += jd_scan_illuminance();
+    DMESG("stop I2C scan; %d device(s)", r);
     return r;
 }

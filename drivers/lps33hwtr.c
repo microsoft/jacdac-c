@@ -214,6 +214,7 @@ static void *lps33hwtr_temperature(void) {
 }
 
 const env_sensor_api_t temperature_lps33hwtr = {
+    .name = "lps33hwtr",
     .init = lps33hwtr_init,
     .process = lps33hwtr_process,
     .get_reading = lps33hwtr_temperature,
@@ -221,6 +222,7 @@ const env_sensor_api_t temperature_lps33hwtr = {
 };
 
 const env_sensor_api_t pressure_lps33hwtr = {
+    .name = "lps33hwtr",
     .init = lps33hwtr_init,
     .process = lps33hwtr_process,
     .get_reading = lps33hwtr_pressure,

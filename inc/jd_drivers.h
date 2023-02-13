@@ -49,7 +49,7 @@
     }
 
 #define ENV_GETTER(scd, val, idx)                                                                  \
-    .process = scd##_process, .get_reading = scd##_##val, ENV_INIT_PTRS(idx)
+    .name = #scd, .process = scd##_process, .get_reading = scd##_##val, ENV_INIT_PTRS(idx)
 
 // Used by various Sensirion sensors
 uint8_t jd_sgp_crc8(const uint8_t *data, int len);
