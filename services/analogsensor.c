@@ -114,9 +114,16 @@ void analog_config(void) {
         return;
     }
 
+    uint8_t pin = jd_srvcfg_pin("pin");
+
+    if (!adc_can_read_pin(pin)) {
+        DMESG("! can't ADC %d", pin);
+        return;
+    }
+
     analog_config_t *cfg = jd_alloc(sizeof(analog_config_t));
 
-    cfg->pinM = jd_srvcfg_pin("pin");
+    cfg->pinM = pin;
     cfg->pinL = jd_srvcfg_pin("pinLow");
     cfg->pinH = jd_srvcfg_pin("pinHigh");
     cfg->offset = jd_srvcfg_i32("offset", 0);
