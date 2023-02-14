@@ -120,6 +120,8 @@ void spiflash_erase_chip(void);
 void spi_bb_init(void);
 void spi_bb_rx(void *data, unsigned len);
 void spi_bb_tx(const void *data, unsigned len);
+void spi_bb_set_cs(int val);
+int spi_bb_get_miso(void);
 static inline uint8_t spi_bb_byte(void) {
     uint8_t b;
     spi_bb_rx(&b, 1);

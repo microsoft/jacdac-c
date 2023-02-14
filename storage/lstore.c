@@ -6,12 +6,6 @@
 #include "ff/diskio.h"
 #include "services/interfaces/jd_pins.h"
 
-#ifdef PIN_SD_CS
-#define JD_SD_PANIC 1
-#else
-#define JD_SD_PANIC 0
-#endif
-
 #ifndef JD_LSTORE_FF
 #define JD_LSTORE_FF 1
 #endif
@@ -664,18 +658,11 @@ static int sd_write_data(const void *data, unsigned size) {
 }
 
 static void cs_low(void) {
-#ifdef JD_SD_CS_PULL_UP
-    pin_setup_output(PIN_SD_CS);
-#endif
-    pin_set(PIN_SD_CS, 0);
+    spi_bb_set_cs(0);
 }
 
 static void cs_high(void) {
-    pin_set(PIN_SD_CS, 1);
-#ifdef JD_SD_CS_PULL_UP
-    target_wait_us(5);
-    pin_setup_input(PIN_SD_CS, PIN_PULL_UP);
-#endif
+    spi_bb_set_cs(1);
 }
 
 static int sd_check(void) {
@@ -747,12 +734,12 @@ void jd_lstore_panic_print_char(char ch) {
         // switch SPI to bit-bang mode
         spi_bb_init();
 
-        pin_set(PIN_SD_CS, 1);
+        cs_high();
         target_wait_us(1 << 10);
 
         cs_low();
         int busy_cycles = 100;
-        while (busy_cycles-- > 0 && pin_get(PIN_SD_MISO) == 0) {
+        while (busy_cycles-- > 0 && spi_bb_get_miso() == 0) {
             spi_bb_byte();
             target_wait_us(1 << 10);
         }

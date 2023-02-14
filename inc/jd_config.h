@@ -332,4 +332,8 @@ int jd_net_send_frame(void *frame);
 #define JD_I2C_HELPERS 0
 #endif
 
+#ifndef JD_SD_PANIC
+#define JD_SD_PANIC (JD_LSTORE && !JD_HOSTED)
+#endif
+
 #endif
