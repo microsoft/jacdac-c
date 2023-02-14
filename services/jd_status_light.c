@@ -120,7 +120,7 @@ static void rgbled_show(status_ctx_t *state) {
         }
     }
     if (chg)
-        LED_SET_RGB(state->channels[0].pwm, state->channels[1].pwm, state->channels[2].pwm);
+        LED_SET_RGB(state->channels[0].prev, state->channels[1].prev, state->channels[2].prev);
 #elif defined(PIN_LED_R)
     int sum = 0;
     for (int i = 0; i < 3; ++i) {
@@ -478,7 +478,7 @@ void jd_rgb_set(uint8_t r, uint8_t g, uint8_t b) {
                 if (c >= led_period)
                     c = led_period - 1;
             } else {
-                c = led_period - c;
+                c = (int)led_period - c;
                 if (c < 0)
                     c = 0;
             }
