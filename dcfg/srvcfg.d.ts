@@ -114,12 +114,17 @@ declare module "@devicescript/srvcfg" {
          * Force alignment of the last page in the patched UF2 file.
          * Set to 4096 on RP2040 because wof RP2040-E14.
          */
-        uf2Align: HexInt
+        uf2Align?: HexInt
 
         /**
          * If specified, will be used as part of output file name.
          */
         binFlashOffset?: HexInt
+
+        /**
+         * If specified, this shows where the generic part of BIN file starts.
+         */
+        binGenericFlashOffset?: HexInt
     }
 
     interface LogConfig extends JsonComment {
