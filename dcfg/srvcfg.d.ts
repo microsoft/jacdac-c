@@ -51,6 +51,8 @@ declare module "@devicescript/srvcfg" {
         log?: LogConfig
 
         i2c?: I2CConfig
+
+        pins?: PinLabels
     }
 
     interface JsonComment {
@@ -113,6 +115,11 @@ declare module "@devicescript/srvcfg" {
          * Set to 4096 on RP2040 because wof RP2040-E14.
          */
         uf2Align: HexInt
+
+        /**
+         * If specified, will be used as part of output file name.
+         */
+        binFlashOffset?: HexInt
     }
 
     interface LogConfig extends JsonComment {
@@ -172,6 +179,120 @@ declare module "@devicescript/srvcfg" {
          * @maximum 255
          */
         mult?: integer
+    }
+
+    interface PinLabels extends JsonComment {
+        TX?: Pin
+        RX?: Pin
+
+        SDA?: Pin
+        SCL?: Pin
+
+        MISO?: Pin
+        MOSI?: Pin
+        SCK?: Pin
+        CS?: Pin
+
+        LED?: Pin
+
+        A0?: Pin
+        A1?: Pin
+        A2?: Pin
+        A3?: Pin
+        A4?: Pin
+        A5?: Pin
+        A6?: Pin
+        A7?: Pin
+        A8?: Pin
+        A9?: Pin
+        A10?: Pin
+        A11?: Pin
+        A12?: Pin
+        A13?: Pin
+        A14?: Pin
+        A15?: Pin
+
+        D0?: Pin
+        D1?: Pin
+        D2?: Pin
+        D3?: Pin
+        D4?: Pin
+        D5?: Pin
+        D6?: Pin
+        D7?: Pin
+        D8?: Pin
+        D9?: Pin
+        D10?: Pin
+        D11?: Pin
+        D12?: Pin
+        D13?: Pin
+        D14?: Pin
+        D15?: Pin
+
+        P0?: Pin
+        P1?: Pin
+        P2?: Pin
+        P3?: Pin
+        P4?: Pin
+        P5?: Pin
+        P6?: Pin
+        P7?: Pin
+        P8?: Pin
+        P9?: Pin
+        P10?: Pin
+        P11?: Pin
+        P12?: Pin
+        P13?: Pin
+        P14?: Pin
+        P15?: Pin
+        P16?: Pin
+        P17?: Pin
+        P18?: Pin
+        P19?: Pin
+        P20?: Pin
+        P21?: Pin
+        P22?: Pin
+        P23?: Pin
+        P24?: Pin
+        P25?: Pin
+        P26?: Pin
+        P27?: Pin
+        P28?: Pin
+        P29?: Pin
+        P30?: Pin
+        P31?: Pin
+        P32?: Pin
+        P33?: Pin
+        P34?: Pin
+        P35?: Pin
+        P36?: Pin
+        P37?: Pin
+        P38?: Pin
+        P39?: Pin
+        P40?: Pin
+        P41?: Pin
+        P42?: Pin
+        P43?: Pin
+        P44?: Pin
+        P45?: Pin
+        P46?: Pin
+        P47?: Pin
+        P48?: Pin
+        P49?: Pin
+        P50?: Pin
+        P51?: Pin
+        P52?: Pin
+        P53?: Pin
+        P54?: Pin
+        P55?: Pin
+        P56?: Pin
+        P57?: Pin
+        P58?: Pin
+        P59?: Pin
+        P60?: Pin
+        P61?: Pin
+        P62?: Pin
+        P63?: Pin
     }
 
     interface BaseServiceConfig extends JsonComment {
