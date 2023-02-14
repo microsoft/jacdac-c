@@ -34,6 +34,7 @@ static void dcfg_init(void) {
         mfr_config = hd;
     } else {
         DMESG("! can't validate mfr config at %p, error %d", hd, err);
+        return;
     }
 
     LOG("inited, %d entries, %u bytes", hd->num_entries, hd->total_bytes);

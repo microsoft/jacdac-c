@@ -14,6 +14,8 @@ void jd_status_process(void);
 int jd_status_handle_packet(jd_packet_t *pkt);
 
 #if JD_DCFG
+void jd_rgbext_init(int type, uint8_t pin);
+void jd_rgbext_set(uint8_t r, uint8_t g, uint8_t b);
 bool jd_status_has_color(void);
 #else
 static inline bool jd_status_has_color(void) {

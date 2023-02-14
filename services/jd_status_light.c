@@ -431,7 +431,9 @@ void jd_rgb_init(void) {
             channel_t *ch = &state->channels[i];
             ch->mult = 255;
         }
+        is_rgbext = true;
         jd_rgbext_init(ledType, pin);
+        jd_rgb_set(0, 0, 0);
         return;
     }
 

@@ -20,7 +20,7 @@ declare module "@devicescript/srvcfg" {
         | PotentiometerConfig
         | AccelerometerConfig
 
-    interface DeviceConfig extends DeviceHardwareInfo {
+    interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
         $schema?: string
 
         /**
@@ -53,11 +53,18 @@ declare module "@devicescript/srvcfg" {
         i2c?: I2CConfig
     }
 
-    interface JacdacConfig {
+    interface JsonComment {
+        /**
+         * All fields starting with '#' arg ignored
+         */
+        "#"?: string
+    }
+
+    interface JacdacConfig extends JsonComment {
         pin: Pin
     }
 
-    interface I2CConfig {
+    interface I2CConfig extends JsonComment {
         pinSDA: Pin
         pinSCL: Pin
 
@@ -74,7 +81,7 @@ declare module "@devicescript/srvcfg" {
         kHz?: integer
     }
 
-    interface ArchConfig {
+    interface ArchConfig extends JsonComment {
         $schema?: string
 
         /**
@@ -108,21 +115,21 @@ declare module "@devicescript/srvcfg" {
         uf2Align: HexInt
     }
 
-    interface LogConfig {
+    interface LogConfig extends JsonComment {
         /**
          * Where to send logs.
          */
         pinTX: Pin
-        
+
         /**
          * Speed to use.
-         * 
+         *
          * @default 115200
          */
         baud?: integer
     }
 
-    interface LedConfig {
+    interface LedConfig extends JsonComment {
         /**
          * If a single mono LED.
          */
@@ -157,7 +164,7 @@ declare module "@devicescript/srvcfg" {
         type?: number
     }
 
-    interface LedChannel {
+    interface LedChannel extends JsonComment {
         pin: Pin
         /**
          * Multiplier to compensate for different LED strengths.
@@ -167,7 +174,7 @@ declare module "@devicescript/srvcfg" {
         mult?: integer
     }
 
-    interface BaseServiceConfig {
+    interface BaseServiceConfig extends JsonComment {
         service: string
 
         /**
