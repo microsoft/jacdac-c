@@ -55,7 +55,7 @@ int uart_wait_high(void);
 void uart_flush_rx(void);
 
 #if JD_CONFIG_TEMPERATURE == 1
-uint16_t adc_read_temp(void);
+int32_t adc_read_temp(void);
 #endif
 
 // Things below are only required by drivers/*.c
