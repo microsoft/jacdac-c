@@ -1,5 +1,6 @@
 #include "interfaces/jd_usb.h"
 #include "jacdac/dist/c/usbbridge.h"
+#include "storage/jd_storage.h"
 
 #if JD_USB_BRIDGE
 
@@ -364,8 +365,10 @@ void jd_usb_proto_process(void) {
     if (space > 64) {
         uint8_t buf[64];
         space = jd_dmesg_read(buf, sizeof(buf), &dmesg_ptr);
-        if (space > 0)
+        if (space > 0) {
             jd_usb_write_serial(buf, space);
+            jd_lstore_append_frag(0, JD_LSTORE_TYPE_DMESG, buf, space);
+        }
     }
 }
 #else
