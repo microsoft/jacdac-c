@@ -166,15 +166,8 @@ declare module "@devicescript/srvcfg" {
     }
 
     interface RepoInfo {
-        /**
-         * Maps `id` to DeviceConfig
-         */
-        boards: Record<string, DeviceConfig>
-
-        /**
-         * Maps `id` to ArchConfig.
-         */
-        archs: Record<string, ArchConfig>
+        boards: { [id: string]: DeviceConfig }
+        archs: { [id: string]: ArchConfig }
 
         /**
          * @example "https://github.com/microsoft/devicescript-esp32"
