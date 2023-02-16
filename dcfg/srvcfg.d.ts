@@ -24,6 +24,38 @@ declare module "@devicescript/srvcfg" {
         $schema?: string
 
         /**
+         * A short ID of the board.
+         * This is auto-populated from file name.
+         *
+         * @examples ["adafruit_qt_py_c3", "esp32_devkit_c"]
+         */
+        id?: string
+
+        /**
+         * Architecture for the board.
+         * This is auto-populated from arch.json file.
+         *
+         * @examples ["esp32c3", "rp2040w"]
+         */
+        archId?: string
+
+        /**
+         * Where to download BIN/UF2 file.
+         * Auto-populated.
+         */
+        $fwUrl?: string
+
+        /**
+         * Short description of the board.
+         */
+        $description?: string
+
+        /**
+         * Where to buy/read more.
+         */
+        url?: string
+
+        /**
          * Services to mount.
          */
         _?: ServiceConfig[]
@@ -63,12 +95,18 @@ declare module "@devicescript/srvcfg" {
     }
 
     interface JacdacConfig extends JsonComment {
+        $connector?: "Jacdac" | "Header"
         pin: Pin
     }
 
     interface I2CConfig extends JsonComment {
         pinSDA: Pin
         pinSCL: Pin
+
+        /**
+         * How I2C devices are attached.
+         */
+        $connector?: "Qwiic" | "Grove" | "Header"
 
         /**
          * Hardware instance index.
@@ -125,6 +163,23 @@ declare module "@devicescript/srvcfg" {
          * If specified, this shows where the generic part of BIN file starts.
          */
         binGenericFlashOffset?: HexInt
+    }
+
+    interface RepoInfo {
+        /**
+         * Maps `id` to DeviceConfig
+         */
+        boards: Record<string, DeviceConfig>
+
+        /**
+         * Maps `id` to ArchConfig.
+         */
+        archs: Record<string, ArchConfig>
+
+        /**
+         * @example "https://github.com/microsoft/devicescript-esp32"
+         */
+        repoUrl?: string
     }
 
     interface LogConfig extends JsonComment {

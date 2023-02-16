@@ -174,6 +174,7 @@ static void jd_usb_handle_processing_packet(jd_packet_t *pkt) {
         usb_fwd_en = cmd & 1;
         if (usb_fwd_en)
             jd_net_disable_fwd();
+        DMESG("usb: packets %d", usb_fwd_en);
         jd_usb_respond_to_processing_packet(cmd);
         break;
 
