@@ -396,19 +396,28 @@ void jd_usb_proto_process(void) {
     if (dmesg_timer)
         return;
 
-    int space = jd_usb_serial_space();
-    if (space > 64) {
+    while (jd_usb_serial_space() > 64) {
         uint8_t buf[64];
-        space = jd_dmesg_read(buf, sizeof(buf), &dmesg_ptr);
-        if (space > 0) {
-            jd_usb_write_serial(buf, space);
-            jd_lstore_append_frag(0, JD_LSTORE_TYPE_DMESG, buf, space);
+        uint32_t dmesg_ptr0 = dmesg_ptr;
+        int n = jd_dmesg_read(buf, sizeof(buf), &dmesg_ptr);
+        if (n > 0) {
+            jd_usb_flush_stdout();
+            if (jd_usb_serial_space() < n) {
+                dmesg_ptr = dmesg_ptr0; // roll back
+                break;                  // and stop
+            }
+            jd_usb_write_serial(buf, n);
+            jd_lstore_append_frag(0, JD_LSTORE_TYPE_DMESG, buf, n);
+        } else {
+            break;
         }
     }
 }
 #else
 void jd_usb_proto_process(void) {}
 #endif
+
+__attribute__((weak)) void jd_usb_flush_stdout(void) {}
 
 __attribute__((weak)) void jd_usb_process(void) {}
 

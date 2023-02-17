@@ -28,6 +28,8 @@ void jd_usb_pull_ready(void);
 bool jd_usb_looks_connected(void);
 // can be re-defined by the USB stack, called from jd_process_everything()
 void jd_usb_process(void);
+// can be re-defined by the USB stack, called before sending dmesg to USB
+void jd_usb_flush_stdout(void);
 
 // Called by the USB stack, returns number of bytes to send over USB (placed in dst[])
 int jd_usb_pull(uint8_t dst[64]);
