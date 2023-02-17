@@ -8,7 +8,10 @@ static uint8_t usb_fwd_en;
 static uint8_t usb_serial_en;
 static uint8_t usb_frame_ptr;
 static uint8_t usb_frame_gap;
-static uint8_t usb_panic_disconnected;
+
+static uint8_t usb_panic_mode;
+static uint8_t usb_panic_ptr;
+static uint8_t usb_panic_buffer[64];
 
 static jd_queue_t usb_queue;
 static uint8_t usb_serial_gap;
@@ -59,6 +62,15 @@ int jd_usb_write_serial(const void *data, unsigned len) {
 
 #define SPACE() (64 - dp)
 int jd_usb_pull(uint8_t dst[64]) {
+    if (usb_panic_mode) {
+        if (usb_panic_mode > 1)
+            return 0;
+        int len = usb_panic_ptr;
+        usb_panic_ptr = 0;
+        memcpy(dst, usb_panic_buffer, len);
+        return len;
+    }
+
     if (!usb_queue)
         return 0;
 
@@ -316,30 +328,52 @@ void jd_usb_enable_serial(void) {
     usb_serial_en = 1;
 }
 
-void jd_usb_panic_flush(void) {
-    if (usb_panic_disconnected)
+void jd_usb_panic_print_char(char c) {
+    if (usb_panic_mode > 1)
         return;
-    usb_fwd_en = 0;
-    jd_queue_clear(usb_queue);
-    unsigned bytes = jd_bqueue_occupied_bytes(usb_serial_queue);
+
+    if (usb_panic_mode == 0) {
+        usb_fwd_en = 0;
+        usb_serial_en = 0;
+
+        // just to be sure
+        usb_panic_buffer[0] = JD_USB_BRIDGE_QBYTE_MAGIC;
+        usb_panic_buffer[1] = JD_USB_BRIDGE_QBYTE_FRAME_END;
+        usb_panic_ptr = 2;
+        usb_panic_mode = 1;
+    }
+
+    usb_panic_buffer[usb_panic_ptr++] = c;
+    if (usb_panic_ptr < sizeof(usb_panic_buffer) && c != '\n')
+        return;
+
     unsigned num_pull = 0;
-    while (bytes > 0) {
+    while (usb_panic_ptr > 0) {
         jd_usb_pull_ready();
-        unsigned nbytes = jd_bqueue_occupied_bytes(usb_serial_queue);
-        if (nbytes != bytes) {
-            num_pull = 0;
-            bytes = nbytes;
-        }
         if (num_pull++ > 50000) {
-            usb_panic_disconnected = 1;
+            usb_panic_ptr = 0;
+            usb_panic_mode = 2;
             break;
         }
     }
 }
 
-void jd_usb_panic_enter(void) {
-    jd_usb_enable_serial(); // in case it wasn't there
-    jd_usb_panic_flush();
+void jd_usb_panic_print_str(const char *s) {
+    if (!s)
+        s = "(null)";
+    while (*s)
+        jd_usb_panic_print_char(*s++);
+}
+
+void jd_usb_panic_start(void) {
+    if (usb_panic_mode > 1)
+        return;
+    jd_usb_panic_print_char('\n');
+    if (usb_serial_queue) {
+        jd_bqueue_print(usb_serial_queue, jd_usb_panic_print_char);
+        jd_bqueue_clear(usb_serial_queue);
+    }
+    jd_usb_panic_print_char('\n');
 }
 
 #if JD_DMESG_BUFFER_SIZE > 0

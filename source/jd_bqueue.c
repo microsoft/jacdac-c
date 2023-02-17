@@ -86,6 +86,22 @@ void jd_bqueue_cont_data_advance(jd_bqueue_t q, unsigned sz) {
 }
 
 JD_FAST
+void jd_bqueue_print(jd_bqueue_t q, void (*print_fn)(char ch)) {
+    // we are lenient here, since this is a function used from a crash handler
+    if (q == NULL || print_fn == NULL)
+        return;
+
+    unsigned ptr = q->front;
+    unsigned len = q->filled;
+
+    while (len--) {
+        print_fn((char)q->data[ptr++]);
+        if (ptr >= q->size)
+            ptr = 0;
+    }
+}
+
+JD_FAST
 unsigned jd_bqueue_pop_at_most(jd_bqueue_t q, void *dst, unsigned maxsize) {
     unsigned sz;
     target_disable_irq();
@@ -137,10 +153,14 @@ int jd_bqueue_pop_byte(jd_bqueue_t q) {
 }
 
 JD_FAST
+void jd_bqueue_clear(jd_bqueue_t q) {
+    q->front = q->back = q->filled = 0;
+}
+
+JD_FAST
 jd_bqueue_t jd_bqueue_alloc(unsigned size) {
     jd_bqueue_t q = jd_alloc(sizeof(*q) + size);
     q->size = size;
-    q->front = q->back = q->filled = 0;
     return q;
 }
 

@@ -149,6 +149,8 @@ int jd_bqueue_pop_byte(jd_bqueue_t q);
 unsigned jd_bqueue_available_cont_data(jd_bqueue_t q);
 uint8_t *jd_bqueue_cont_data_ptr(jd_bqueue_t q);
 void jd_bqueue_cont_data_advance(jd_bqueue_t q, unsigned sz);
+void jd_bqueue_print(jd_bqueue_t q, void (*print_fn)(char ch));
+void jd_bqueue_clear(jd_bqueue_t q);
 
 void jd_utoa(unsigned k, char *s);
 void jd_itoa(int n, char *s);
