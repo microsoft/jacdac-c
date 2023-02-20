@@ -29,11 +29,11 @@ declare module "@devicescript/srvcfg" {
         devName: string
 
         /**
-         * Device class code, typically given as a hex number starting with 0x3.
+         * Identifier for a particular firmware running on a particular device, typically given as a hex number starting with 0x3.
          *
          * @examples ["0x379ea214"]
          */
-        devClass: HexInt
+        productId: HexInt
 
         jacdac?: JacdacConfig
 

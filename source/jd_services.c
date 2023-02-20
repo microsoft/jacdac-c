@@ -498,7 +498,7 @@ __attribute__((weak)) const char *app_get_dev_class_name(void) {
 }
 
 __attribute__((weak)) uint32_t app_get_device_class(void) {
-    return dcfg_get_u32("devClass", 0x3ffffff1);
+    return dcfg_get_u32("productId", 0x3ffffff1);
 }
 #else
 extern const char app_dev_class_name[];
