@@ -143,6 +143,13 @@ declare module "@devicescript/srvcfg" {
     interface PinLabels extends JsonComment {
         TX?: Pin
         RX?: Pin
+        VP?: Pin
+        VN?: Pin
+        BOOT?: Pin
+        LED0: Pin
+        LED1: Pin
+        LED2: Pin
+        LED3: Pin
 
         SDA?: Pin
         SCL?: Pin
