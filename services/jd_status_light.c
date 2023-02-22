@@ -411,9 +411,26 @@ static bool led_active_high;
 static bool has_led;
 static bool is_mono;
 static bool is_rgbext;
+static uint8_t apa_type, pin_apa_data, pin_apa_clk;
 
 __attribute__((weak)) void jd_rgbext_init(int type, uint8_t pin) {}
 __attribute__((weak)) void jd_rgbext_set(uint8_t r, uint8_t g, uint8_t b) {}
+
+static void apa_set(uint8_t r, uint8_t g, uint8_t b) {
+    uint8_t buf[4 * 3];
+    memset(buf, 0, sizeof(buf));
+    buf[4] = 0xff;
+    buf[5] = b;
+    buf[6] = g;
+    buf[7] = r;
+    for (unsigned i = 0; i < sizeof(buf); ++i) {
+        for (int j = 7; j >= 0; j--) {
+            pin_set(pin_apa_data, (buf[i] & (1 << j)) != 0);
+            pin_set(pin_apa_clk, 1);
+            pin_set(pin_apa_clk, 0);
+        }
+    }
+}
 
 void jd_rgb_init(void) {
     status_ctx_t *state = &status_ctx;
@@ -425,15 +442,31 @@ void jd_rgb_init(void) {
 
     uint8_t pin = dcfg_get_pin("led.pin");
 
-    int ledType = dcfg_get_i32("led.type", 0);
-    if (ledType) {
+    int led_type = dcfg_get_i32("led.type", 0);
+    if (led_type) {
         for (int i = 0; i < 3; ++i) {
             channel_t *ch = &state->channels[i];
             ch->mult = 255;
         }
-        is_rgbext = true;
-        jd_rgbext_init(ledType, pin);
-        jd_rgb_set(0, 0, 0);
+
+        if (led_type == 2 || led_type == 3) {
+            pin_setup_output(21);
+            pin_set(21, 1);
+
+            apa_type = led_type;
+            pin_apa_data = pin;
+            pin_apa_clk = dcfg_get_pin("led.pinCLK");
+            DMESG("APA/SK on D=%d CK=%d", pin_apa_data, pin_apa_clk);
+            pin_set(pin_apa_data, 0);
+            pin_set(pin_apa_clk, 0);
+            pin_setup_output(pin_apa_data);
+            pin_setup_output(pin_apa_clk);
+            apa_set(0, 0, 0);
+        } else {
+            is_rgbext = true;
+            jd_rgbext_init(led_type, pin);
+            jd_rgb_set(0, 0, 0);
+        }
         return;
     }
 
@@ -465,7 +498,9 @@ void jd_rgb_init(void) {
 void jd_rgb_set(uint8_t r, uint8_t g, uint8_t b) {
     status_ctx_t *state = &status_ctx;
 
-    if (is_rgbext) {
+    if (apa_type) {
+        apa_set(r, g, b);
+    } else if (is_rgbext) {
         jd_rgbext_set(r, g, b);
     } else if (!is_mono) {
         uint8_t v[] = {r, g, b};

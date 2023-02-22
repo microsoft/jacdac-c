@@ -30,11 +30,14 @@ bool jd_usb_looks_connected(void);
 void jd_usb_process(void);
 // can be re-defined by the USB stack, called before sending dmesg to USB
 void jd_usb_flush_stdout(void);
+// can be re-defined in the application
+void jd_usb_write_serial_cb(const void *data, unsigned len);
 
 // Called by the USB stack, returns number of bytes to send over USB (placed in dst[])
 int jd_usb_pull(uint8_t dst[64]);
 // called by USB stack to process incoming USB data
 void jd_usb_push(const uint8_t *buf, unsigned len);
+
 
 
 #endif

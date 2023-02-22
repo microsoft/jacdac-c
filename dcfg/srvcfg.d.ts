@@ -97,9 +97,14 @@ declare module "@devicescript/srvcfg" {
 
     interface LedConfig extends JsonComment {
         /**
-         * If a single mono LED.
+         * If a single mono LED, or programmable RGB LED.
          */
         pin?: Pin
+
+        /**
+         * Clock pin, if any.
+         */
+        pinCLK?: Pin
 
         /**
          * RGB LED driven by PWM.
@@ -123,6 +128,8 @@ declare module "@devicescript/srvcfg" {
         /**
          * 0 - use `pin` or `rgb` as regular pins
          * 1 - use `pin` as WS2812B (supported only on some boards)
+         * 2 - use `pin` as APA102 DATA, and `pinCLK` as CLOCK
+         * 3 - use `pin` as SK9822 DATA, and `pinCLK` as CLOCK
          * Other options (in range 100+) are also possible on some boards.
          *
          * @default 0
@@ -146,10 +153,11 @@ declare module "@devicescript/srvcfg" {
         VP?: Pin
         VN?: Pin
         BOOT?: Pin
-        LED0: Pin
-        LED1: Pin
-        LED2: Pin
-        LED3: Pin
+        LED?: Pin
+        LED0?: Pin
+        LED1?: Pin
+        LED2?: Pin
+        LED3?: Pin
 
         SDA?: Pin
         SCL?: Pin
@@ -158,8 +166,6 @@ declare module "@devicescript/srvcfg" {
         MOSI?: Pin
         SCK?: Pin
         CS?: Pin
-
-        LED?: Pin
 
         A0?: Pin
         A1?: Pin
