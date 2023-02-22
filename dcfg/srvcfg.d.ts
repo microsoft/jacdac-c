@@ -44,6 +44,13 @@ declare module "@devicescript/srvcfg" {
         i2c?: I2CConfig
 
         pins?: PinLabels
+
+        setupPins?: SetupPin[]
+    }
+
+    interface SetupPin {
+        pin: Pin
+        out?: integer
     }
 
     interface JsonComment {

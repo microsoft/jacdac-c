@@ -450,9 +450,6 @@ void jd_rgb_init(void) {
         }
 
         if (led_type == 2 || led_type == 3) {
-            pin_setup_output(21);
-            pin_set(21, 1);
-
             apa_type = led_type;
             pin_apa_data = pin;
             pin_apa_clk = dcfg_get_pin("led.pinCLK");
