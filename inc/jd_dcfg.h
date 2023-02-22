@@ -44,7 +44,7 @@ static inline unsigned dcfg_entry_size(const dcfg_entry_t *e) {
 typedef struct {
     uint32_t magic0;
     uint32_t magic1;
-    uint32_t total_bytes; // including the header the data after entries[]
+    uint32_t total_bytes; // including the header and any data after entries[]
     uint16_t num_entries;
     uint16_t reserved[5];
     // entries are ordered by hash

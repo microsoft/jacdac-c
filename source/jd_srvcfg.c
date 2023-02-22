@@ -99,6 +99,7 @@ void jd_srvcfg_run() {
 
     jd_srvcfg_idx = 0xff;
 
+#if !JD_HOSTED
     for (unsigned i = 0; i < 0x80; ++i) {
         uint8_t pin = dcfg_get_pin(dcfg_idx_key("setupPins", i, "pin"));
         if (pin == NO_PIN)
@@ -110,6 +111,7 @@ void jd_srvcfg_run() {
             pin_setup_output(pin);
         }
     }
+#endif
 }
 
 struct srv_state {
