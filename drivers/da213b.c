@@ -79,6 +79,10 @@ static int32_t da213b_set_range(int32_t range) {
     return r_accel->range;
 }
 
+static bool da213b_is_present(void) {
+    return readReg(REG_CHIP_ID) == 0x13;
+}
+
 static void da213b_init(void) {
     r_accel = sensor_lookup_range(accel_ranges, 8 << 20);
     i2c_init();
@@ -102,4 +106,5 @@ const accelerometer_api_t accelerometer_da213b = {
     .get_range = da213b_get_range,
     .set_range = da213b_set_range,
     .sleep = da213b_sleep,
+    .is_present = da213b_is_present,
 };

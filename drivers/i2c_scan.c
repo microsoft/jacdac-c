@@ -5,6 +5,7 @@ const accelerometer_api_t *i2c_accelerometers[] = {
     &accelerometer_lsm6ds, // STMicro LSM6DSxx
     &accelerometer_kxtj3,  // Kionix KXTJ3-1057
     &accelerometer_kx023,  // Kionix KX023-1025
+    &accelerometer_da213b, // Dialog DA213B
     NULL,
 };
 
