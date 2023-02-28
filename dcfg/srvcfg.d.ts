@@ -5,6 +5,10 @@ declare module "@devicescript/srvcfg" {
      * Naming convention - fields with `Pin` type start with `pin*`
      */
     type Pin = integer
+    type IOPin = Pin
+    type InputPin = Pin
+    type OutputPin = Pin
+    type AnalogInPin = Pin
     type HexInt = integer | string
 
     type ServiceConfig =
@@ -49,7 +53,7 @@ declare module "@devicescript/srvcfg" {
     }
 
     interface SetupPin {
-        pin: Pin
+        pin: OutputPin
         out?: integer
     }
 
@@ -62,12 +66,12 @@ declare module "@devicescript/srvcfg" {
 
     interface JacdacConfig extends JsonComment {
         $connector?: "Jacdac" | "Header"
-        pin: Pin
+        pin: IOPin
     }
 
     interface I2CConfig extends JsonComment {
-        pinSDA: Pin
-        pinSCL: Pin
+        pinSDA: IOPin
+        pinSCL: OutputPin
 
         /**
          * How I2C devices are attached.
@@ -92,7 +96,7 @@ declare module "@devicescript/srvcfg" {
         /**
          * Where to send logs.
          */
-        pinTX: Pin
+        pinTX: OutputPin
 
         /**
          * Speed to use.
@@ -106,12 +110,12 @@ declare module "@devicescript/srvcfg" {
         /**
          * If a single mono LED, or programmable RGB LED.
          */
-        pin?: Pin
+        pin?: OutputPin
 
         /**
          * Clock pin, if any.
          */
-        pinCLK?: Pin
+        pinCLK?: OutputPin
 
         /**
          * RGB LED driven by PWM.
@@ -145,7 +149,7 @@ declare module "@devicescript/srvcfg" {
     }
 
     interface LedChannel extends JsonComment {
-        pin: Pin
+        pin: OutputPin
         /**
          * Multiplier to compensate for different LED strengths.
          * @minimum 0
@@ -291,8 +295,8 @@ declare module "@devicescript/srvcfg" {
 
     interface RotaryEncoderConfig extends BaseServiceConfig {
         service: "rotaryEncoder"
-        pin0: Pin
-        pin1: Pin
+        pin0: InputPin
+        pin1: InputPin
         /**
          * How many clicks for full 360 turn.
          * @default 12
@@ -310,11 +314,11 @@ declare module "@devicescript/srvcfg" {
 
     interface ButtonConfig extends BaseServiceConfig {
         service: "button"
-        pin: Pin
+        pin: InputPin
         /**
          * This pin is set high when the button is pressed.
          */
-        pinBacklight?: Pin
+        pinBacklight?: OutputPin
         /**
          * Button is normally active-low and pulled high.
          * This makes it active-high and pulled low.
@@ -328,22 +332,22 @@ declare module "@devicescript/srvcfg" {
         /**
          * The driving pin.
          */
-        pin: Pin
+        pin: OutputPin
 
         /**
          * When set, the relay is considered 'active' when `pin` is low.
          */
-        pinActiveLow?: boolean
+        activeLow?: boolean
 
         /**
          * Active-high pin that indicates the actual state of the relay.
          */
-        pinFeedback?: Pin
+        pinFeedback?: InputPin
 
         /**
          * This pin will be driven when relay is active.
          */
-        pinLed?: Pin
+        pinLed?: OutputPin
 
         /**
          * Which way to drive the `pinLed`
@@ -367,12 +371,12 @@ declare module "@devicescript/srvcfg" {
         /**
          * Always active low.
          */
-        pinFault: Pin
-        pinEn: Pin
+        pinFault: InputPin
+        pinEn: OutputPin
         /**
          * Active-low pin for pulsing battery banks.
          */
-        pinPulse?: Pin
+        pinPulse?: OutputPin
         /**
          * Operation mode of pinEn
          * 0 - `pinEn` is active high
@@ -392,12 +396,12 @@ declare module "@devicescript/srvcfg" {
         /**
          * Additional power LED to pulse.
          */
-        pinLedPulse?: Pin
+        pinLedPulse?: OutputPin
 
         /**
          * Pin that is high when we are connected to USB or similar power source.
          */
-        pinUsbDetect?: Pin
+        pinUsbDetect?: InputPin
     }
 
     interface AccelerometerConfig extends BaseServiceConfig {
@@ -432,17 +436,17 @@ declare module "@devicescript/srvcfg" {
         /**
          * Pin to analog read.
          */
-        pin: Pin
+        pin: AnalogInPin
 
         /**
          * Pin to pull low before analog read and release afterwards.
          */
-        pinLow?: Pin
+        pinLow?: OutputPin
 
         /**
          * Pin to pull high before analog read and release afterwards.
          */
-        pinHigh?: Pin
+        pinHigh?: OutputPin
 
         /**
          * Reading is `offset + (raw_reading * scale) / 1024`

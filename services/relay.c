@@ -69,7 +69,7 @@ void relay_config(void) {
     cfg->pin_relay_drive = jd_srvcfg_pin("pin");
     cfg->pin_relay_feedback = jd_srvcfg_pin("pinFeedback");
     cfg->pin_relay_led = jd_srvcfg_pin("pinLed");
-    cfg->drive_active_lo = jd_srvcfg_has_flag("pinActiveLow");
+    cfg->drive_active_lo = jd_srvcfg_has_flag("activeLow");
     cfg->led_active_lo = jd_srvcfg_has_flag("ledActiveLow");
     cfg->initial_state = jd_srvcfg_has_flag("initialActive");
     relay_service_init(cfg);
