@@ -16,10 +16,14 @@ extern struct CodalLogStore codalLogStore;
 
 __attribute__((format(printf, 1, 2))) void jd_dmesg(const char *format, ...);
 void jd_vdmesg(const char *format, va_list ap);
-void jd_dmesg_write(const void *data, unsigned len);
+void jd_dmesg_write(const char *data, unsigned len);
 
 // read-out data from dmesg buffer
 unsigned jd_dmesg_read(void *dst, unsigned space, uint32_t *state);
+// similar, but at most until next '\n'
+unsigned jd_dmesg_read_line(void *dst, unsigned space, uint32_t *state);
+// get the oldest possible starting point (for *state above)
+uint32_t jd_dmesg_startptr(void);
 
 #ifndef DMESG
 #define DMESG jd_dmesg

@@ -10,18 +10,19 @@
 struct CodalLogStore codalLogStore;
 
 JD_FAST
-static void logwriten(const char *msg, int l) {
+void jd_dmesg_write(const char *msg, unsigned len) {
     target_disable_irq();
-    if (codalLogStore.ptr + l >= sizeof(codalLogStore.buffer)) {
-        codalLogStore.buffer[0] = '.';
-        codalLogStore.buffer[1] = '.';
-        codalLogStore.buffer[2] = '.';
-        codalLogStore.ptr = 3;
+    unsigned space = sizeof(codalLogStore.buffer) - codalLogStore.ptr;
+    if (space < len + 1) {
+        memcpy(codalLogStore.buffer + codalLogStore.ptr, msg, space);
+        len -= space;
+        msg += space;
+        if (len + 2 > sizeof(codalLogStore.buffer))
+            len = 1; // shouldn't happen
+        codalLogStore.ptr = 0;
     }
-    if (l + codalLogStore.ptr >= sizeof(codalLogStore.buffer))
-        return; // shouldn't happen
-    memcpy(codalLogStore.buffer + codalLogStore.ptr, msg, l);
-    codalLogStore.ptr += l;
+    memcpy(codalLogStore.buffer + codalLogStore.ptr, msg, len);
+    codalLogStore.ptr += len;
     codalLogStore.buffer[codalLogStore.ptr] = 0;
     target_enable_irq();
 }
@@ -34,9 +35,8 @@ void jd_vdmesg(const char *format, va_list ap) {
     while (len && (tmp[len - 1] == '\r' || tmp[len - 1] == '\n'))
         len--;
 #endif
-    tmp[len] = '\n';
-    tmp[len + 1] = 0;
-    logwriten(tmp, len + 1);
+    tmp[len++] = '\n';
+    jd_dmesg_write(tmp, len);
 }
 
 void jd_dmesg(const char *format, ...) {
@@ -46,38 +46,65 @@ void jd_dmesg(const char *format, ...) {
     va_end(arg);
 }
 
-void jd_dmesg_write(const void *data, unsigned len) {
-    logwriten(data, len);
+JD_FAST
+uint32_t jd_dmesg_startptr() {
+    target_disable_irq();
+    // if we wrapped around already, we start at ptr+1 (buf[ptr] is always '\0')
+    uint32_t curr_ptr = codalLogStore.ptr + 1;
+    // if we find '\0' at ptr+1, it means we didn't wrap around yet - start at 0
+    if (curr_ptr >= sizeof(codalLogStore.buffer) || codalLogStore.buffer[curr_ptr] == 0)
+        curr_ptr = 0;
+    target_enable_irq();
+    return curr_ptr;
 }
 
 JD_FAST
 unsigned jd_dmesg_read(void *dst, unsigned space, uint32_t *state) {
     target_disable_irq();
+    if (*state >= sizeof(codalLogStore.buffer))
+        *state = 0;
     uint32_t curr_ptr = codalLogStore.ptr;
-    if (curr_ptr < *state) {
-        // the dmesg buffer wrapped-around
-        curr_ptr = *state;
-        while (curr_ptr < sizeof(codalLogStore.buffer) && codalLogStore.buffer[curr_ptr] != 0)
-            curr_ptr++;
-        if (curr_ptr == *state) {
-            // nothing more to write
-            *state = 0;
-            curr_ptr = codalLogStore.ptr;
-        }
-    }
-
-    int towrite = curr_ptr - *state;
+    if (curr_ptr < *state)
+        curr_ptr = sizeof(codalLogStore.buffer);
+    unsigned towrite = curr_ptr - *state;
     if (towrite > 0) {
-        if (towrite > (int)space)
+        if (towrite > space)
             towrite = space;
         memcpy(dst, codalLogStore.buffer + *state, towrite);
         *state += towrite;
-    } else {
-        towrite = 0;
     }
     target_enable_irq();
 
     return towrite;
+}
+
+unsigned jd_dmesg_read_line(void *dst, unsigned space, uint32_t *state) {
+    target_disable_irq();
+    if (*state >= sizeof(codalLogStore.buffer))
+        *state = 0;
+    uint32_t curr_ptr = codalLogStore.ptr;
+    uint32_t sp = *state;
+    unsigned len = 0;
+    if (sp != curr_ptr) {
+        char *dp = dst;
+        char *endp = dp + space - 1;
+        while (dp < endp) {
+            char c = codalLogStore.buffer[sp++];
+            if (c == 0 || c == '\n')
+                break;
+            *dp++ = c;
+            if (sp == sizeof(codalLogStore.buffer))
+                sp = 0;
+            if (sp == curr_ptr)
+                break;
+        }
+        *state = sp;
+        len = dp - (char *)dst;
+        *dp = 0;
+    }
+    target_enable_irq();
+
+    return len;
 }
 
 #endif
