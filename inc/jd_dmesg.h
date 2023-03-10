@@ -24,6 +24,9 @@ unsigned jd_dmesg_read(void *dst, unsigned space, uint32_t *state);
 unsigned jd_dmesg_read_line(void *dst, unsigned space, uint32_t *state);
 // get the oldest possible starting point (for *state above)
 uint32_t jd_dmesg_startptr(void);
+static inline uint32_t jd_dmesg_currptr(void) {
+    return codalLogStore.ptr;
+}
 
 #ifndef DMESG
 #define DMESG jd_dmesg
