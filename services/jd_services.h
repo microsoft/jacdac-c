@@ -335,4 +335,7 @@ void hidjoystick_init(void);
 void hidmouse_init(void);
 void hidkeyboard_init(void);
 
+// raw access to I2C
+void i2cserv_init(void);
+
 #endif
