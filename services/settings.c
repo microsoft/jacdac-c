@@ -60,6 +60,8 @@ void settings_handle_packet(srv_t *state, jd_packet_t *pkt) {
             jd_settings_set_bin(key, pkt->data + ksz + 1, size);
             break;
         }
+
+        break;
     }
 
     default:
