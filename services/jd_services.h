@@ -338,4 +338,6 @@ void hidkeyboard_init(void);
 // raw access to I2C
 void i2cserv_init(void);
 
+void settings_init(void);
+
 #endif

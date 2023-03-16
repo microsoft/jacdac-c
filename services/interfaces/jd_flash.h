@@ -10,16 +10,17 @@ void flash_program(void *dst, const void *src, uint32_t len);
 void flash_erase(void *page_addr);
 void flash_sync(void);
 
+// key is limited to 15 characters
+
 char *jd_settings_get(const char *key);
 int jd_settings_set(const char *key, const char *val);
-
-// key is limited to 15 characters
 
 // returns the size of the item, or -1 when not found
 // if space < return value, the dst might or might not have been modified
 int jd_settings_get_bin(const char *key, void *dst, unsigned space);
 // returns 0 on success
 int jd_settings_set_bin(const char *key, const void *val, unsigned size);
+uint8_t *jd_settings_get_bin_a(const char *key, unsigned *sizep);
 
 #if JD_SETTINGS_LARGE
 // Large settings take at least JD_FLASH_PAGE_SIZE of storage

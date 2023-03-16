@@ -295,6 +295,10 @@ int jd_net_send_frame(void *frame);
 #define JD_WIFI 0
 #endif
 
+#ifndef JD_NETWORK
+#define JD_NETWORK JD_WIFI
+#endif
+
 #ifndef JD_DMESG_BUFFER_SIZE
 #ifdef DEVICE_DMESG_BUFFER_SIZE
 #define JD_DMESG_BUFFER_SIZE DEVICE_DMESG_BUFFER_SIZE

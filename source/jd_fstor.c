@@ -273,7 +273,17 @@ int jd_settings_set_bin(const char *key, const void *val, unsigned size) {
     }
 
     data_start -= sizeoff;
-    flash_program((void *)data_start, val, size);
+
+    if (size == 0)
+        val = NULL;
+    if ((uintptr_t)val & 3) {
+        // if unaligned, align
+        uint8_t *d = jd_memdup(val, size);
+        flash_program((void *)data_start, d, size);
+        jd_free(d);
+    } else {
+        flash_program((void *)data_start, val, size);
+    }
 
     jd_fstor_entry_t tmp = {
         .size = size,
