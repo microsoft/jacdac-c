@@ -23,6 +23,9 @@ declare module "@devicescript/srvcfg" {
         | SoilMoistureConfig
         | PotentiometerConfig
         | AccelerometerConfig
+        | HidJoystickConfig
+        | HidKeyboardConfig
+        | HidMouseConfig
 
     interface DeviceHardwareInfo {
         /**
