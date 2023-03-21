@@ -5,6 +5,8 @@
 #include "interfaces/jd_hid.h"
 #include "jacdac/dist/c/hidkeyboard.h"
 
+#if JD_HID
+
 #define STEP_MS 20
 
 struct srv_state {
@@ -103,3 +105,5 @@ void hidkeyboard_init() {
     SRV_ALLOC(hidkeyboard);
     state->num_skips = 0xffff; // force send
 }
+
+#endif

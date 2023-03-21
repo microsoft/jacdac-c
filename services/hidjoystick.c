@@ -5,6 +5,8 @@
 #include "interfaces/jd_hid.h"
 #include "jacdac/dist/c/hidjoystick.h"
 
+#if JD_HID
+
 #define STEP_MS 20
 
 #define NUM_BUTTONS (16)
@@ -85,3 +87,5 @@ void hidjoystick_init() {
     state->axis_count = NUM_AXIS;
     state->num_skips = 0xffff; // force send
 }
+
+#endif

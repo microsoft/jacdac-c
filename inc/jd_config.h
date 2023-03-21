@@ -340,4 +340,8 @@ int jd_net_send_frame(void *frame);
 #define JD_SD_PANIC (JD_LSTORE && !JD_HOSTED)
 #endif
 
+#ifndef JD_HID
+#define JD_HID 0
+#endif
+
 #endif

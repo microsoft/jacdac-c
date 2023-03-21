@@ -5,6 +5,8 @@
 #include "interfaces/jd_hid.h"
 #include "jacdac/dist/c/hidmouse.h"
 
+#if JD_HID
+
 #define STEP_MS 20
 #define NUM_BUTTONS 3
 #define NUM_AXIS 4
@@ -166,3 +168,5 @@ SRV_DEF(hidmouse, JD_SERVICE_CLASS_HID_MOUSE);
 void hidmouse_init() {
     SRV_ALLOC(hidmouse);
 }
+
+#endif

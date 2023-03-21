@@ -91,7 +91,6 @@ declare module "@devicescript/srvcfg" {
         kHz?: integer
     }
 
-
     interface LogConfig extends JsonComment {
         /**
          * Where to send logs.
@@ -506,5 +505,15 @@ declare module "@devicescript/srvcfg" {
 
     interface PotentiometerConfig extends AnalogConfig {
         service: "analog:potentiometer"
+    }
+
+    interface HidMouseConfig extends BaseServiceConfig {
+        service: "hidMouse"
+    }
+    interface HidKeyboardConfig extends BaseServiceConfig {
+        service: "hidKeyboard"
+    }
+    interface HidJoystickConfig extends BaseServiceConfig {
+        service: "hidJoystick"
     }
 }

@@ -59,6 +59,11 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
     {"relay", relay_config},
     {"analog", analog_config},
     {"accelerometer", accelerometer_config},
+#if JD_HID
+    {"hidMouse", hidmouse_init},
+    {"hidKeyboard", hidkeyboard_init},
+    {"hidJoystick", hidjoystick_init},
+#endif
 #endif
     {NULL, NULL}};
 
