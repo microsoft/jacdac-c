@@ -453,14 +453,14 @@ declare module "@devicescript/srvcfg" {
         /**
          * Reading is `offset + (raw_reading * scale) / 1024`
          *
-         * @default 1024
+         * @default 0
          */
         offset?: integer
 
         /**
          * Reading is `offset + (raw_reading * scale) / 1024`
          *
-         * @default 0
+         * @default 1024
          */
         scale?: integer
 

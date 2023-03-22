@@ -128,9 +128,9 @@ void analog_config(void) {
     cfg->pinH = jd_srvcfg_pin("pinHigh");
     cfg->offset = jd_srvcfg_i32("offset", 0);
     cfg->scale = jd_srvcfg_i32("offset", 1024);
-    cfg->sampling_ms = jd_srvcfg_u32("samplingItv", 1024);
-    cfg->sampling_delay = jd_srvcfg_u32("samplingDelay", 1024);
-    cfg->streaming_interval = jd_srvcfg_u32("streamingItv", 1024);
+    cfg->sampling_ms = jd_srvcfg_u32("samplingItv", 9);
+    cfg->sampling_delay = jd_srvcfg_u32("samplingDelay", 0);
+    cfg->streaming_interval = jd_srvcfg_u32("streamingItv", 100);
 
     srv_vt_t *vt = jd_alloc(sizeof(srv_vt_t));
     vt->service_class = service_class;
