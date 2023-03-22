@@ -4,6 +4,7 @@
 #include "jd_protocol.h"
 #include "jd_srvcfg.h"
 #include "jd_drivers.h"
+#include "services/jd_services.h"
 
 #define LOG(fmt, ...) DMESG("srvcfg: " fmt, ##__VA_ARGS__)
 #define VLOG JD_NOLOG
@@ -51,6 +52,7 @@ void button_config(void);
 void relay_config(void);
 void analog_config(void);
 void accelerometer_config(void);
+void power_config(void);
 
 static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 #if !JD_HOSTED
@@ -59,6 +61,7 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
     {"relay", relay_config},
     {"analog", analog_config},
     {"accelerometer", accelerometer_config},
+    {"power", power_config},
 #if JD_HID
     {"hidMouse", hidmouse_init},
     {"hidKeyboard", hidkeyboard_init},
