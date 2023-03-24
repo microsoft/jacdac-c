@@ -7,6 +7,7 @@ struct srv_state {
     uint16_t intensity;
     uint8_t dimmable;
     uint8_t pin;
+    uint8_t active_lo;
 };
 
 REG_DEFINITION(                            //
@@ -20,11 +21,11 @@ static void reflect_register_state(srv_t *state) {
     // active
     if (state->intensity) {
         pin_setup_output(state->pin);
-        pin_set(state->pin, 1);
+        pin_set(state->pin, state->active_lo ? 0 : 1);
     }
     // inactive
     else
-        pin_setup_input(state->pin, PIN_PULL_DOWN);
+        pin_setup_input(state->pin, state->active_lo ? PIN_PULL_UP : PIN_PULL_DOWN);
 }
 
 void bulb_process(srv_t *state) {
@@ -43,3 +44,12 @@ void lightbulb_init(const uint8_t pin) {
     pin_setup_input(state->pin, PIN_PULL_DOWN);
     state->dimmable = 0;
 }
+
+#if JD_DCFG
+void lightbulb_config(void) {
+    lightbulb_init(jd_srvcfg_pin("pin"));
+    srv_t *state = jd_srvcfg_last_service();
+    state->active_lo = jd_srvcfg_has_flag("activeLow");
+    reflect_register_state(state);
+}
+#endif

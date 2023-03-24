@@ -53,6 +53,7 @@ void relay_config(void);
 void analog_config(void);
 void accelerometer_config(void);
 void power_config(void);
+void lightbulb_config(void);
 
 static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 #if !JD_HOSTED
@@ -62,6 +63,7 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
     {"analog", analog_config},
     {"accelerometer", accelerometer_config},
     {"power", power_config},
+    {"lightBulb", lightbulb_config},
 #if JD_HID
     {"hidMouse", hidmouse_init},
     {"hidKeyboard", hidkeyboard_init},

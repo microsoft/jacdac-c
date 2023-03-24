@@ -16,6 +16,7 @@ declare module "@devicescript/srvcfg" {
         | ButtonConfig
         | RelayConfig
         | PowerConfig
+        | LightBulbConfig
         | LightLevelConfig
         | ReflectedLightConfig
         | WaterLevelConfig
@@ -365,6 +366,20 @@ declare module "@devicescript/srvcfg" {
          * Maximum switching current in mA.
          */
         maxCurrent?: integer
+    }
+
+    interface LightBulbConfig extends BaseServiceConfig {
+        service: "lightBulb"
+
+        /**
+         * The driving pin.
+         */
+        pin: OutputPin
+
+        /**
+         * When set, the relay is considered 'active' when `pin` is low.
+         */
+        activeLow?: boolean
     }
 
     interface PowerConfig extends BaseServiceConfig {
