@@ -17,6 +17,7 @@ declare module "@devicescript/srvcfg" {
         | RelayConfig
         | PowerConfig
         | LightBulbConfig
+        | BuzzerConfig
         | LightLevelConfig
         | ReflectedLightConfig
         | WaterLevelConfig
@@ -378,6 +379,27 @@ declare module "@devicescript/srvcfg" {
 
         /**
          * When set, the relay is considered 'active' when `pin` is low.
+         */
+        activeLow?: boolean
+
+        /**
+         * When set, the pin will be operated with PWM at a few kHz.
+         */
+        dimmable?: boolean
+    }
+
+    interface BuzzerConfig extends BaseServiceConfig {
+        service: "buzzer"
+
+        /**
+         * The driving pin.
+         */
+        pin: OutputPin
+
+        /**
+         * When set, the `pin` will be set to `1` when no sound is playing
+         * (because power flows through speaker when `pin` is set to `0`).
+         * When unset, the `pin` will be set to `0` when no sound is playing.
          */
         activeLow?: boolean
     }

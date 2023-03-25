@@ -17,6 +17,7 @@ struct srv_state {
     uint8_t pwm_pin;
     uint8_t is_on;
     uint8_t pin;
+    uint8_t buzzer_off_state;
     uint32_t end_tone_time;
     uint16_t period;
 };
@@ -27,14 +28,18 @@ REG_DEFINITION(               //
     REG_U8(JD_REG_INTENSITY), //
 )
 
+static void turn_off(srv_t *state) {
+    pin_set(state->pin, state->buzzer_off_state);
+    pin_setup_output(state->pin);
+}
+
 static void set_pwr(srv_t *state, int on) {
     if (state->is_on == on)
         return;
     if (on) {
         pwr_enter_tim();
     } else {
-        pin_set(state->pin, BUZZER_OFF);
-        jd_pwm_enable(state->pwm_pin, 0);
+        turn_off(state);
         pwr_leave_tim();
     }
     state->is_on = on;
@@ -82,6 +87,16 @@ void buzzer_init(uint8_t pin) {
     SRV_ALLOC(buzzer);
     state->pin = pin;
     state->volume = 255;
-    pin_set(state->pin, BUZZER_OFF);
-    pin_setup_output(state->pin);
+    state->buzzer_off_state = BUZZER_OFF;
+    turn_off(state);
 }
+
+#if JD_DCFG
+void buzzer_config(void) {
+    buzzer_init(jd_srvcfg_pin("pin"));
+    srv_t *state = jd_srvcfg_last_service();
+    if (jd_srvcfg_has_flag("activeLow"))
+        state->buzzer_off_state = 1;
+    turn_off(state);
+}
+#endif
