@@ -46,8 +46,8 @@ typedef struct {
     uint32_t magic1;
     uint32_t total_bytes; // including the header and any data after entries[]
     uint16_t num_entries;
-    uint16_t reserved[5];
-    // entries are ordered by hash
+    uint16_t reserved16;
+    uint64_t restart_hash; // hash of config entries that are only applied on restart
     // hash_jump[x] points to first entry where (entry.hash >> DCFG_HASH_SHIFT) >= x
     uint16_t hash_jump[DCFG_HASH_JUMP_ENTRIES];
     dcfg_entry_t entries[];
