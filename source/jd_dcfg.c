@@ -37,7 +37,7 @@ static void dcfg_init(void) {
         return;
     }
 
-    LOG("inited, %d entries, %u bytes", hd->num_entries, hd->total_bytes);
+    LOG("inited, %d entries, %u bytes", hd->num_entries, (unsigned)hd->total_bytes);
 }
 
 static uint16_t keyhash(const void *key, unsigned klen) {
