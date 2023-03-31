@@ -379,7 +379,7 @@ int jd_settings_sync_large() {
 }
 #endif
 
-#ifdef JD_64
+#if JD_64
 
 static char *key_name(int no) {
     return jd_sprintf_a("setting_%d", no);

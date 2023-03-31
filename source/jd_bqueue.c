@@ -164,6 +164,7 @@ jd_bqueue_t jd_bqueue_alloc(unsigned size) {
     return q;
 }
 
+#if JD_64
 #define TEST_SIZE 512
 void jd_bqueue_test(void) {
     jd_bqueue_t q = jd_bqueue_alloc(TEST_SIZE);
@@ -211,3 +212,4 @@ void jd_bqueue_test(void) {
 
     DMESG("q-test OK %d full", numfull);
 }
+#endif
