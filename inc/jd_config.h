@@ -344,4 +344,8 @@ int jd_net_send_frame(void *frame);
 #define JD_HID 0
 #endif
 
+#ifndef JD_ANALOG
+#define JD_ANALOG 1
+#endif
+
 #endif

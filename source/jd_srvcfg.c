@@ -61,7 +61,9 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
     {"rotaryEncoder", rotaryencoder_config},
     {"button", button_config},
     {"relay", relay_config},
+#if JD_ANALOG
     {"analog", analog_config},
+#endif
     {"accelerometer", accelerometer_config},
     {"power", power_config},
     {"lightBulb", lightbulb_config},
