@@ -4,6 +4,7 @@ let inprog = false
 let inram = false
 let indata = false
 let fun = ""
+let dofile = process.argv[3] == "-file" 
 let dofun = process.argv[3] == "-fun"
 for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
   if (/\*fill\*/.test(line)) continue
@@ -36,8 +37,8 @@ for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
   if (/load address/.test(name)) continue
   if (name == "xr" || name == "xrw") continue
   name = name.replace(/.*\/lib/, "lib")
-    .replace(/\(.*/, "") // can remove
-
+  if(!dofile)
+    name=name.replace(/\(.*/, "")
   if (dofun) name += fun
 
   function doSum(pref) {
