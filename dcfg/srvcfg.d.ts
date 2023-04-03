@@ -339,9 +339,9 @@ declare module "@devicescript/srvcfg" {
 
     interface FlexConfig extends BaseServiceConfig {
         service: "flex"
-        pinL: InputPin
-        pinM: InputPin
-        pinH: InputPin
+        pinL: OutputPin
+        pinM: AnalogInPin
+        pinH: OutputPin
     }
 
     interface RelayConfig extends BaseServiceConfig {
