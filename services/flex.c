@@ -52,3 +52,9 @@ void flex_init(uint8_t pinL, uint8_t pinM, uint8_t pinH) {
     state->pinM = pinM;
     state->pinH = pinH;
 }
+
+#if JD_DCFG
+void flex_config(void) {
+    flex_init(jd_srvcfg_pin("pinL"), jd_srvcfg_pin("pinM"), jd_srvcfg_pin("pinH"));
+}
+#endif

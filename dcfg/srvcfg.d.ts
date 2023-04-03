@@ -14,6 +14,8 @@ declare module "@devicescript/srvcfg" {
     type ServiceConfig =
         | RotaryEncoderConfig
         | ButtonConfig
+        | SwitchConfig
+        | FlexConfig
         | RelayConfig
         | PowerConfig
         | LightBulbConfig
@@ -328,6 +330,18 @@ declare module "@devicescript/srvcfg" {
          * This makes it active-high and pulled low.
          */
         activeHigh?: boolean
+    }
+
+    interface SwitchConfig extends BaseServiceConfig {
+        service: "switch"
+        pin: InputPin
+    }
+
+    interface FlexConfig extends BaseServiceConfig {
+        service: "flex"
+        pinL: OutputPin
+        pinM: AnalogInPin
+        pinH: OutputPin
     }
 
     interface RelayConfig extends BaseServiceConfig {

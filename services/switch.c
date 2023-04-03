@@ -46,3 +46,9 @@ void switch_init(active_cb_t is_active, uint8_t variant) {
     state->is_active = is_active;
     update(state);
 }
+
+#if JD_DCFG
+void switch_config(void) {
+    switch_init(jd_srvcfg_pin("pin"), 0);
+}
+#endif

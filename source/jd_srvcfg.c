@@ -49,6 +49,8 @@ typedef struct {
 
 void rotaryencoder_config(void);
 void button_config(void);
+void switch_config(void);
+void flex_config(void);
 void relay_config(void);
 void analog_config(void);
 void accelerometer_config(void);
@@ -60,6 +62,8 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 #if !JD_HOSTED
     {"rotaryEncoder", rotaryencoder_config},
     {"button", button_config},
+    {"flex", flex_config},
+    {"switch", switch_config},
     {"relay", relay_config},
 #if JD_ANALOG
     {"analog", analog_config},
