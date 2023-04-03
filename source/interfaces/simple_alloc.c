@@ -8,10 +8,12 @@ static uintptr_t *aptr;
 #endif
 
 #if JD_HW_ALLOC
-#define STACK_SIZE 512
+#ifndef JD_STACK_SIZE
+#define JD_STACK_SIZE 512
+#endif
 #define STACK_BASE ((uintptr_t)&_estack)
 #define HEAP_BASE ((uintptr_t)&_end)
-#define HEAP_END (STACK_BASE - STACK_SIZE)
+#define HEAP_END (STACK_BASE - JD_STACK_SIZE)
 #define HEAP_SIZE (HEAP_END - HEAP_BASE)
 
 extern uintptr_t _end;
@@ -20,7 +22,7 @@ extern uintptr_t _estack;
 static uint16_t maxStack;
 
 void jd_alloc_stack_check(void) {
-    uintptr_t *ptr = (uintptr_t *)(STACK_BASE - STACK_SIZE);
+    uintptr_t *ptr = (uintptr_t *)(STACK_BASE - JD_STACK_SIZE);
     while (ptr < (uintptr_t *)STACK_BASE) {
         if (*ptr != 0x33333333)
             break;
