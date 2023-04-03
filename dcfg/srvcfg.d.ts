@@ -15,6 +15,7 @@ declare module "@devicescript/srvcfg" {
         | RotaryEncoderConfig
         | ButtonConfig
         | SwitchConfig
+        | FlexConfig
         | RelayConfig
         | PowerConfig
         | LightBulbConfig
@@ -334,6 +335,13 @@ declare module "@devicescript/srvcfg" {
     interface SwitchConfig extends BaseServiceConfig {
         service: "switch"
         pin: InputPin
+    }
+
+    interface FlexConfig extends BaseServiceConfig {
+        service: "flex"
+        pinL: InputPin
+        pinM: InputPin
+        pinH: InputPin
     }
 
     interface RelayConfig extends BaseServiceConfig {
