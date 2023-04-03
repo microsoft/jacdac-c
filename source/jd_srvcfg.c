@@ -50,6 +50,7 @@ typedef struct {
 void rotaryencoder_config(void);
 void button_config(void);
 void switch_config(void);
+void flex_config(void);
 void relay_config(void);
 void analog_config(void);
 void accelerometer_config(void);
