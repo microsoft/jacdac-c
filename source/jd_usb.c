@@ -402,7 +402,7 @@ void jd_usb_proto_process(void) {
         int n = jd_dmesg_read(buf, sizeof(buf), &dmesg_ptr);
         if (n > 0) {
             jd_usb_flush_stdout();
-            if (jd_usb_serial_space() < n) {
+            if ((int)jd_usb_serial_space() < n) {
                 dmesg_ptr = dmesg_ptr0; // roll back
                 break;                  // and stop
             }
