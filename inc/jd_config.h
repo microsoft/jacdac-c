@@ -212,7 +212,7 @@ int jd_net_send_frame(void *frame);
 #endif
 
 #ifndef JD_HANDLE_ALL_PACKETS
-#define JD_HANDLE_ALL_PACKETS 0
+#define JD_HANDLE_ALL_PACKETS JD_DEVICESCRIPT
 #endif
 
 #define ERROR(msg, ...)                                                                            \
