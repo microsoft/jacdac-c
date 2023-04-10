@@ -7,6 +7,7 @@
 
 struct srv_state {
     SENSOR_COMMON;
+    uint8_t pin;
     uint8_t pressed;
     uint8_t prev_pressed;
     uint8_t variant;
@@ -15,7 +16,8 @@ struct srv_state {
 };
 
 static void update(srv_t *state) {
-    state->pressed = state->is_active(&state->active_state);
+    state->pressed =
+        state->is_active ? state->is_active(&state->active_state) : pin_get(state->pin);
     if (state->pressed != state->prev_pressed) {
         state->prev_pressed = state->pressed;
         if (state->pressed) {
@@ -49,6 +51,7 @@ void switch_init(active_cb_t is_active, uint8_t variant) {
 
 #if JD_DCFG
 void switch_config(void) {
-    switch_init(jd_srvcfg_pin("pin"), 0);
+    switch_init(NULL, 0);
+    jd_srvcfg_last_service()->pin = jd_srvcfg_pin("pin");
 }
 #endif
