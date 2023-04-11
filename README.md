@@ -6,7 +6,7 @@ It's meant to be included as submodule, and use the build system of the parent r
 
 It's currently used in the following projects:
 * https://github.com/microsoft/jacdac-stm32x0 (which has some better docs on building)
-* https://github.com/microsoft/jacdac-esp32 (which is quite experimental)
+* https://github.com/microsoft/devicescript-esp32 (which is quite experimental)
 
 This library is part of [Jacdac Device Development Kit](https://github.com/microsoft/jacdac-ddk).
 
