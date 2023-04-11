@@ -37,6 +37,7 @@ int jd_bqueue_push(jd_bqueue_t q, const void *data, unsigned len) {
     int ret = -1;
 
     target_disable_irq();
+    validate(q);
     if (len <= jd_bqueue_free_bytes(q)) {
         ret = 0;
         unsigned n = q->size - q->back;

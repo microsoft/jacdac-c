@@ -18,7 +18,7 @@ uint32_t jd_hash_fnv1a(const void *data, unsigned len) {
 
 #ifndef JD_PANIC
 __attribute__((weak)) void JD_PANIC(void) {
-    JD_PANIC();
+    hw_panic();
 }
 #endif
 

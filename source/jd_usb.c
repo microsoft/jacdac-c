@@ -74,7 +74,7 @@ int jd_usb_pull(uint8_t dst[64]) {
     if (!usb_queue)
         return 0;
 
-    jd_frame_t *f;
+    const jd_frame_t *f;
     int dp = 0;
 
     for (;;) {
@@ -99,7 +99,7 @@ int jd_usb_pull(uint8_t dst[64]) {
         }
 
         while (usb_frame_ptr < frame_size) {
-            uint8_t b = ((uint8_t *)f)[usb_frame_ptr];
+            uint8_t b = ((const uint8_t *)f)[usb_frame_ptr];
             if (b == JD_USB_BRIDGE_QBYTE_MAGIC) {
                 if (SPACE() < 2)
                     break;
