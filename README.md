@@ -5,6 +5,7 @@ This library implements platform-agnostic aspects of the  [Jacdac](https://aka.m
 It's meant to be included as submodule, and use the build system of the parent repository.
 
 It's currently used in the following projects:
+* https://github.com/microsoft/devicescript
 * https://github.com/microsoft/jacdac-stm32x0 (which has some better docs on building)
 * https://github.com/microsoft/devicescript-esp32
 * https://github.com/microsoft/devicescript-pico
