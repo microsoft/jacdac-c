@@ -71,6 +71,7 @@ int jd_from_hex(void *dst, const char *src);
 #if JD_ADVANCED_STRING
 // buf is 64 bytes long
 void jd_print_double(char *buf, double d, int numdigits);
+int jd_vsprintf_ext(char *dst, unsigned dstsize, const char *format, unsigned *ulen, va_list ap);
 #endif
 
 // These allocate the resulting string

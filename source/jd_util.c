@@ -335,22 +335,41 @@ static void writeNum(char *buf, uintptr_t n, bool full) {
     buf[i] = 0;
 }
 
-static int write_n(char *dst, char *dstend, const char *src, int srclen) {
-    int left = dstend - dst;
-    if (left <= 0)
-        return srclen;
-    int srctrimmed = srclen >= left ? left - 1 : srclen;
-    memcpy(dst, src, srctrimmed);
-    dst[srctrimmed] = 0;
-    return srclen;
+typedef struct {
+    char *dst;
+    char *dstend;
+#if JD_ADVANCED_STRING
+    unsigned ulen;
+#endif
+} printf_ctx_t;
+
+static void write_n(printf_ctx_t *ctx, const char *src, int srclen) {
+    int left = ctx->dstend - ctx->dst;
+#if JD_ADVANCED_STRING
+    for (int i = 0; i < srclen; ++i)
+        if ((src[i] & 0xC0) != 0x80)
+            ctx->ulen++;
+#endif
+    if (left > 0) {
+        int srctrimmed = srclen >= left ? left - 1 : srclen;
+        memcpy(ctx->dst, src, srctrimmed);
+        ctx->dst[srctrimmed] = 0;
+    }
+    ctx->dst += srclen;
 }
 
-#define WRITEN(p, sz) dst += write_n(dst, dstend, p, sz)
+#define WRITEN(p, sz) write_n(&ctx, p, sz)
 
-int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
+#if !JD_ADVANCED_STRING
+static
+#endif
+    int
+    jd_vsprintf_ext(char *dst, unsigned dstsize, const char *format, unsigned *ulen, va_list ap) {
     const char *end = format;
-    char *dst0 = dst;
-    char *dstend = dst + dstsize;
+    printf_ctx_t ctx = {
+        .dst = dst,
+        .dstend = dst + dstsize,
+    };
 #if JD_ADVANCED_STRING
     char buf[64];
 #else
@@ -375,7 +394,7 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
 #if JD_FREE_SUPPORTED
             int do_free = 0;
             if (end[0] == '-' && end[1] == 's') {
-                if (dst0)
+                if (dst)
                     do_free = 1;
                 end++;
             }
@@ -414,6 +433,25 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
             case 'f': {
                 double f = va_arg(ap, double);
                 jd_print_double(buf, f, 8);
+                break;
+            }
+            case '*': {
+                int len = va_arg(ap, int);
+                uint8_t *d = va_arg(ap, void *);
+                if (*end++ == 'p') {
+                    while (len > 0) {
+                        int ch = sizeof(buf) / 2 - 1;
+                        if (len < ch)
+                            ch = len;
+                        jd_to_hex(buf, d, ch);
+                        WRITEN(buf, ch * 2);
+                        d += ch;
+                        len -= ch;
+                    }
+                    buf[0] = 0;
+                } else {
+                    buf[0] = '?';
+                }
                 break;
             }
             case 's': {
@@ -473,7 +511,16 @@ int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
         }
     }
 
-    return dst - dst0 + 1;
+#if JD_ADVANCED_STRING
+    if (ulen)
+        *ulen = ctx.ulen + 1;
+#endif
+
+    return ctx.dst - dst + 1;
+}
+
+int jd_vsprintf(char *dst, unsigned dstsize, const char *format, va_list ap) {
+    return jd_vsprintf_ext(dst, dstsize, format, NULL, ap);
 }
 
 int jd_sprintf(char *dst, unsigned dstsize, const char *format, ...) {
@@ -744,7 +791,6 @@ char *jd_concat2(const char *a, const char *b) {
 char *jd_strdup(const char *a) {
     return jd_concat3(a, NULL, NULL);
 }
-
 
 jd_frame_t *jd_dup_frame(const jd_frame_t *frame) {
     int sz = JD_FRAME_SIZE(frame);
