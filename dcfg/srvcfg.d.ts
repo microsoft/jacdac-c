@@ -54,6 +54,12 @@ declare module "@devicescript/srvcfg" {
 
         i2c?: I2CConfig
 
+        /**
+         * When set to true, disables automatic I2C bus scanning at startup.
+         * Set if you want to use your own I2C drivers.
+         */
+        noScanI2C?: boolean
+
         pins?: PinLabels
 
         setupPins?: SetupPin[]

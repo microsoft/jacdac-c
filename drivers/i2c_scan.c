@@ -119,6 +119,10 @@ int jd_scan_illuminance(void) {
 }
 
 int jd_scan_all(void) {
+#if JD_DCFG
+    if (dcfg_get_bool("noScanI2C"))
+        return 0;
+#endif
     int r = 0;
     DMESG("start I2C scan");
     r += jd_scan_accelerometers();
