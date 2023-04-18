@@ -20,6 +20,7 @@ declare module "@devicescript/srvcfg" {
         | PowerConfig
         | LightBulbConfig
         | BuzzerConfig
+        | ServoConfig
         | LightLevelConfig
         | ReflectedLightConfig
         | WaterLevelConfig
@@ -422,6 +423,53 @@ declare module "@devicescript/srvcfg" {
          * When unset, the `pin` will be set to `0` when no sound is playing.
          */
         activeLow?: boolean
+    }
+
+    interface ServoConfig extends BaseServiceConfig {
+        service: "servo"
+
+        /**
+         * The driving (PWM) pin.
+         */
+        pin: OutputPin
+
+        /**
+         * The pin to set low when servo is used. Floating otherwise.
+         */
+        powerPin?: OutputPin
+
+        /**
+         * When set, the min/maxAngle/Pulse can't be changed by the user.
+         */
+        fixed?: boolean
+
+        /**
+         * Minimum angle supported by the servo in degrees.
+         *
+         * @default -90
+         */
+        minAngle?: number
+
+        /**
+         * Pulse value to use to reach minAngle in us.
+         *
+         * @default 600
+         */
+        minPulse?: number
+
+        /**
+         * Maximum angle supported by the servo in degrees.
+         *
+         * @default 90
+         */
+        maxAngle?: number
+
+        /**
+         * Pulse value to use to reach maxAngle in us.
+         *
+         * @default 2500
+         */
+        maxPulse?: number
     }
 
     interface PowerConfig extends BaseServiceConfig {
