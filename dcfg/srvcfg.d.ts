@@ -445,6 +445,7 @@ declare module "@devicescript/srvcfg" {
 
         /**
          * Minimum angle supported by the servo in degrees.
+         * Always minAngle < maxAngle
          *
          * @default -90
          */
@@ -452,13 +453,15 @@ declare module "@devicescript/srvcfg" {
 
         /**
          * Pulse value to use to reach minAngle in us.
+         * Typically minPulse > maxPulse
          *
-         * @default 600
+         * @default 2500
          */
         minPulse?: number
 
         /**
          * Maximum angle supported by the servo in degrees.
+         * Always minAngle < maxAngle
          *
          * @default 90
          */
@@ -466,8 +469,9 @@ declare module "@devicescript/srvcfg" {
 
         /**
          * Pulse value to use to reach maxAngle in us.
+         * Typically minPulse > maxPulse
          *
-         * @default 2500
+         * @default 600
          */
         maxPulse?: number
     }

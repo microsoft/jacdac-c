@@ -124,8 +124,8 @@ void servo_config(void) {
     p->pin = jd_srvcfg_pin("pin");
     p->fixed = jd_srvcfg_has_flag("fixed");
     p->power_pin = jd_srvcfg_pin("pinPower");
-    p->min_pulse = jd_srvcfg_u32("minPulse", 600);
-    p->max_pulse = jd_srvcfg_u32("maxPulse", 2500);
+    p->min_pulse = jd_srvcfg_u32("minPulse", 2500);
+    p->max_pulse = jd_srvcfg_u32("maxPulse", 600);
     p->min_angle = jd_srvcfg_i32("minAngle", -90) << 16;
     p->max_angle = jd_srvcfg_i32("maxAngle", 90) << 16;
     servo_init(p);
