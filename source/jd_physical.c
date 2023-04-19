@@ -52,7 +52,9 @@ static uint32_t start_tx;
 static void tick(void) {
     if (phys_status & JD_STATUS_TX_ACTIVE) {
         uint32_t d = tim_get_micros() - start_tx;
-        if (d > 3000) {
+        // this can get delayed when we block interrupts for a long time (eg during flashing)
+        // but we don't want it to take forever; give it 130ms
+        if (d > 0x20000) {
             DMESG("TX fail; %u us", (unsigned)d);
             JD_PANIC();
         }
