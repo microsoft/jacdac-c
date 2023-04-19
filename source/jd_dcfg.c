@@ -15,8 +15,12 @@ STATIC_ASSERT(offsetof(dcfg_header_t, entries) == DCFG_HEADER_SIZE);
 #ifdef JD_DCFG_BASE_ADDR
 
 static bool dcfg_inited;
-static const dcfg_header_t *mfr_config;
-static const dcfg_header_t *user_config;
+
+#define NUM_CFG 2
+static const dcfg_header_t *configs[2];
+
+#define user_config configs[0]
+#define mfr_config configs[1]
 
 typedef const dcfg_entry_t entry_t;
 
@@ -138,10 +142,47 @@ static entry_t *get_entry(const dcfg_header_t *hd, const char *key) {
 
 entry_t *dcfg_get_entry(const char *key) {
     dcfg_init();
-    entry_t *e = get_entry(user_config, key);
-    if (e)
-        return e;
-    return get_entry(mfr_config, key);
+    for (unsigned i = 0; i < NUM_CFG; ++i) {
+        entry_t *e = get_entry(configs[i], key);
+        if (e)
+            return e;
+    }
+    return NULL;
+}
+
+static int entry_idx(const dcfg_header_t *hd, entry_t *e) {
+    if (!hd)
+        return -1;
+    unsigned idx = e - hd->entries;
+    if (idx < hd->num_entries)
+        return idx;
+    return -1;
+}
+
+const dcfg_entry_t *dcfg_get_next_entry(const char *prefix, const dcfg_entry_t *previous) {
+    dcfg_init();
+
+    int plen = strlen(prefix);
+    for (unsigned i = 0; i < NUM_CFG; ++i) {
+        const dcfg_header_t *hd = configs[i];
+        if (hd == NULL)
+            continue;
+        int idx = 0;
+        if (previous) {
+            idx = entry_idx(hd, previous);
+            if (idx < 0)
+                continue;
+            idx++;
+        }
+        while (idx < hd->num_entries) {
+            if (memcmp(prefix, hd->entries[idx].key, plen) == 0) {
+                return &hd->entries[idx];
+            }
+            idx++;
+        }
+        previous = NULL;
+    }
+    return NULL;
 }
 
 int32_t dcfg_get_i32(const char *key, int32_t defl) {

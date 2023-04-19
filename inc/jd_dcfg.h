@@ -57,6 +57,7 @@ typedef struct {
 int dcfg_validate(const dcfg_header_t *hd);
 int dcfg_set_user_config(const dcfg_header_t *hd);
 const dcfg_entry_t *dcfg_get_entry(const char *key);
+const dcfg_entry_t *dcfg_get_next_entry(const char *prefix, const dcfg_entry_t *previous);
 int32_t dcfg_get_i32(const char *key, int32_t defl);
 uint32_t dcfg_get_u32(const char *key, uint32_t defl);
 const char *dcfg_get_string(const char *key, unsigned *sizep);
