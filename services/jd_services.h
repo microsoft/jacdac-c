@@ -340,4 +340,6 @@ void i2cserv_init(void);
 
 void settings_init(void);
 
+void gpiosrv_config(void);
+
 #endif

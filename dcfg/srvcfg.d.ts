@@ -63,12 +63,10 @@ declare module "@devicescript/srvcfg" {
 
         pins?: PinLabels
 
-        setupPins?: SetupPin[]
-    }
-
-    interface SetupPin {
-        pin: OutputPin
-        out?: integer
+        /**
+         * Initial values for pins.
+         */
+        sPin?: Record<string, 0 | 1>
     }
 
     interface JsonComment {
@@ -171,6 +169,10 @@ declare module "@devicescript/srvcfg" {
         mult?: integer
     }
 
+    /**
+     * Typical pin labels, others are allowed.
+     * Pin labels starting with '@' are hidden to the user.
+     */
     interface PinLabels extends JsonComment {
         TX?: Pin
         RX?: Pin
