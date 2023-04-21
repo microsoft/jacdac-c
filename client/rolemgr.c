@@ -14,11 +14,13 @@ struct srv_state {
     uint8_t all_roles_allocated;
     uint8_t changed;
     uint8_t locked;
+    uint8_t force_hints;
     jd_role_t *roles;
     uint32_t next_autobind;
     uint32_t changed_timeout;
     jd_opipe_desc_t list_pipe;
     jd_role_t *list_ptr;
+    uint64_t app_device_id;
 };
 
 REG_DEFINITION(                                      //
@@ -70,6 +72,36 @@ static void rolemgr_set(srv_t *state, jd_role_t *role, jd_device_service_t *serv
     }
 }
 
+static void rolemgr_use_hint(srv_t *state, jd_role_t *r) {
+    if (r->service || !r->hint_dev)
+        return;
+
+    uint64_t dev = 0;
+
+    if (r->hint_dev == JD_ROLE_HINT_APP)
+        dev = state->app_device_id;
+    else if (r->hint_dev == JD_ROLE_HINT_INT)
+        dev = jd_device_id();
+
+    if (!dev)
+        return;
+    jd_device_t *d = jd_device_lookup(dev);
+    if (!d)
+        return;
+
+    int off = r->hint_srvo;
+    for (int i = 1; i < d->num_services; i++) {
+        jd_device_service_t *serv = &d->services[i];
+        if (serv->service_class != r->service_class)
+            continue;
+        if (off-- == 0) {
+            if (!(serv->flags & JD_DEVICE_SERVICE_FLAG_ROLE_ASSIGNED))
+                rolemgr_set(state, r, serv);
+            break;
+        }
+    }
+}
+
 static void rolemgr_autobind(srv_t *state) {
     if (!state->auto_bind_enabled)
         return;
@@ -77,7 +109,11 @@ static void rolemgr_autobind(srv_t *state) {
     // LOG("autobind");
     LOCK();
     for (jd_role_t *r = state->roles; r; r = r->_next) {
-        if (r->service)
+        rolemgr_use_hint(state, r);
+    }
+
+    for (jd_role_t *r = state->roles; r; r = r->_next) {
+        if (r->service || (r->hint_dev && state->force_hints))
             continue;
 
         for (jd_device_t *d = jd_devices; d; d = d->next) {
@@ -98,7 +134,7 @@ static void rolemgr_autobind(srv_t *state) {
 
 static jd_role_t *rolemgr_lookup(srv_t *state, const char *name, int name_len) {
     for (jd_role_t *r = state->roles; r; r = r->_next) {
-        if (memcmp(r->name, name, name_len) == 0)
+        if (memcmp(r->name, name, name_len) == 0 && r->name[name_len] == 0)
             return r;
     }
     return NULL;
@@ -239,6 +275,14 @@ static void stop_list(srv_t *state) {
     }
 }
 
+void jd_role_set_hints(bool force, uint64_t app_device_id) {
+    srv_t *state = _state;
+    if (!state)
+        JD_PANIC();
+    state->app_device_id = app_device_id;
+    state->force_hints = force;
+}
+
 jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
     srv_t *state = _state;
     if (!state)
@@ -253,6 +297,26 @@ jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
 
     r->name = name;
     r->service_class = service_class;
+
+    const char *q = strchr(name, '?');
+    while (q) {
+        q++;
+        if (memcmp(q, "bnd=", 4) == 0) {
+            q += 4;
+            if (memcmp(q, "app/", 4) == 0) {
+                q += 4;
+                r->hint_dev = JD_ROLE_HINT_APP;
+            } else if (memcmp(q, "int/", 4) == 0) {
+                q += 4;
+                r->hint_dev = JD_ROLE_HINT_INT;
+            } else {
+                break;
+            }
+            r->hint_srvo = jd_atoi(q);
+            break;
+        }
+        q = strchr(q, '&');
+    }
 
     if (!state->roles || strcmp(name, state->roles->name) < 0) {
         r->_next = state->roles;

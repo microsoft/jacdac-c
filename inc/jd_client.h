@@ -119,17 +119,32 @@ const jd_register_query_t *jd_service_query(jd_device_service_t *serv, int reg_c
                                             int refresh_ms);
 void jd_device_clear_queries(jd_device_t *d, uint8_t service_idx);
 
+#define JD_ROLE_HINT_NONE 0
+#define JD_ROLE_HINT_INT 1
+#define JD_ROLE_HINT_APP 2
+
 // role manager
 typedef struct jd_role {
     struct jd_role *_next;
     const char *name;
     uint32_t service_class;
-    uint32_t hidden : 1;
+    uint8_t hidden : 1;
+    uint8_t hint_dev;
+    uint8_t hint_srvo;
     jd_device_service_t *service;
 } jd_role_t;
 
 // name must be kept alive until jd_role_free()
+// name supports binding hints using `bnd=` query parameter; they are either `int/X`
+// for self-device, or `app/X` for device set with jd_role_set_hints().
+// `X` is service offset, that is the number of services with the same class before our service
+// (thus if there is only one instance, it's `/0`)
+// Examples:
+// "myLed?bnd=app/2&variant=3"
+// "myButton?bnd=int/0"
+// "myScreen?columns=5&rows=3&bnd=int/0"
 jd_role_t *jd_role_alloc(const char *name, uint32_t service_class);
+void jd_role_set_hints(bool force, uint64_t app_device_id);
 void jd_role_free(jd_role_t *role);
 void jd_role_free_all(void);
 void jd_role_force_autobind(void);
