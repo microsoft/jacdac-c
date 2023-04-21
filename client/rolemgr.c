@@ -298,24 +298,18 @@ jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
     r->name = name;
     r->service_class = service_class;
 
-    const char *q = strchr(name, '?');
-    while (q) {
+    const char *q = strchr(name, '[');
+    if (q) {
         q++;
-        if (memcmp(q, "bnd=", 4) == 0) {
+        if (memcmp(q, "app:", 4) == 0) {
             q += 4;
-            if (memcmp(q, "app/", 4) == 0) {
-                q += 4;
-                r->hint_dev = JD_ROLE_HINT_APP;
-            } else if (memcmp(q, "int/", 4) == 0) {
-                q += 4;
-                r->hint_dev = JD_ROLE_HINT_INT;
-            } else {
-                break;
-            }
-            r->hint_srvo = jd_atoi(q);
-            break;
+            r->hint_dev = JD_ROLE_HINT_APP;
+        } else if (memcmp(q, "int:", 4) == 0) {
+            q += 4;
+            r->hint_dev = JD_ROLE_HINT_INT;
         }
-        q = strchr(q, '&');
+        if (r->hint_dev)
+            r->hint_srvo = jd_atoi(q);
     }
 
     if (!state->roles || strcmp(name, state->roles->name) < 0) {

@@ -135,14 +135,13 @@ typedef struct jd_role {
 } jd_role_t;
 
 // name must be kept alive until jd_role_free()
-// name supports binding hints using `bnd=` query parameter; they are either `int/X`
-// for self-device, or `app/X` for device set with jd_role_set_hints().
+// name supports binding hints using `[int:X]` (for self-device) or `[app:X]` for device set with jd_role_set_hints().
 // `X` is service offset, that is the number of services with the same class before our service
-// (thus if there is only one instance, it's `/0`)
+// (thus if there is only one instance, it's `:0`)
 // Examples:
-// "myLed?bnd=app/2&variant=3"
-// "myButton?bnd=int/0"
-// "myScreen?columns=5&rows=3&bnd=int/0"
+// "myLed[app:2]?variant=3"
+// "myButton[int:0]"
+// "myScreen[int:0]?columns=5&rows=3"
 jd_role_t *jd_role_alloc(const char *name, uint32_t service_class);
 void jd_role_set_hints(bool force, uint64_t app_device_id);
 void jd_role_free(jd_role_t *role);
