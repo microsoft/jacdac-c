@@ -118,6 +118,9 @@ static int has_power(srv_t *state) {
 }
 
 void power_process(srv_t *state) {
+    if (state->cfg->en_active_high < 2)
+        jd_set_max_sleep(1000); // wakeup at 1ms not usual 10ms to get faster over-current reaction
+
     if (!has_power(state)) {
         if (state->power_status == JD_POWER_POWER_STATUS_POWERING) {
             LOG("no power");
@@ -310,9 +313,6 @@ void power_init(const power_config_t *cfg) {
         state->pulse_period = 20000;
         state->last_pulse = now - state->pulse_duration * 1000;
     }
-
-    if (cfg->en_active_high < 2)
-        tim_max_sleep = 1000; // wakeup at 1ms not usual 10ms to get faster over-current reaction
 }
 
 #if JD_DCFG

@@ -22,7 +22,7 @@ struct srv_state {
     uint16_t prevpos;
     int32_t sample, position;
     uint32_t nextSample;
-    uint32_t go_slow;
+    uint32_t go_fast;
 };
 
 #ifndef JD_ROTARY_HW
@@ -50,8 +50,7 @@ static void update(srv_t *state) {
 
     state->state = (s >> 2);
     if (posMap[s]) {
-        tim_max_sleep = PROBE_FAST;
-        state->go_slow = now + GO_SLOW;
+        state->go_fast = now + GO_SLOW;
         state->position += posMap[s];
     }
 #endif
@@ -80,15 +79,16 @@ static void maybe_init(srv_t *state) {
 void rotaryencoder_process(srv_t *state) {
     maybe_init(state);
 
-    if (jd_should_sample(&state->nextSample, 900) && state->jd_inited) {
+    if (jd_should_sample(&state->nextSample, 900) && state->jd_inited)
         update(state);
+
 #ifndef JD_ROTARY_HW
-        if (state->go_slow && in_past(state->go_slow)) {
-            tim_max_sleep = PROBE_SLOW;
-            state->go_slow = 0;
-        }
-#endif
+    if (state->jd_inited) {
+        if (state->go_fast && in_past(state->go_fast))
+            state->go_fast = 0;
+        jd_set_max_sleep(state->go_fast ? PROBE_FAST : PROBE_SLOW);
     }
+#endif
 
     sensor_process_simple(state, &state->sample, sizeof(state->sample));
 }
@@ -113,10 +113,6 @@ void rotaryencoder_init(uint8_t pin0, uint8_t pin1, uint16_t clicks_per_turn, ui
     state->pos_shift = flags & ROTARY_ENC_FLAG_DENSE ? 1 : 2;
     if (flags & ROTARY_ENC_FLAG_INVERTED)
         state->pos_shift |= 0x80;
-
-#ifndef JD_ROTARY_HW
-    tim_max_sleep = PROBE_SLOW;
-#endif
 }
 
 #if JD_DCFG

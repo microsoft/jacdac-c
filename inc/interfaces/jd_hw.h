@@ -40,7 +40,13 @@ void target_wait_us(uint32_t n);
 __attribute__((noreturn)) void target_reset(void);
 int target_in_irq(void);
 
-extern uint16_t tim_max_sleep;
+#ifndef JD_MIN_MAX_SLEEP
+#define JD_MIN_MAX_SLEEP 10000
+#endif
+
+extern uint32_t jd_max_sleep;
+void jd_set_max_sleep(uint32_t us);
+
 extern uint8_t cpu_mhz;
 void tim_init(void);
 uint64_t tim_get_micros(void);

@@ -448,6 +448,7 @@ void jd_refresh_now() {
 }
 
 void jd_process_everything() {
+    jd_max_sleep = JD_MIN_MAX_SLEEP;
     jd_refresh_now();
     jd_process_everything_core();
 }

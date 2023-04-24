@@ -10,3 +10,10 @@ void jd_power_enable(int en) {
 }
 
 #endif
+
+uint32_t jd_max_sleep;
+void jd_set_max_sleep(uint32_t us)
+{
+    if (jd_max_sleep > us)
+        jd_max_sleep = us;
+}
