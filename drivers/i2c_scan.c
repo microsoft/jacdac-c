@@ -120,7 +120,7 @@ int jd_scan_illuminance(void) {
 
 int jd_scan_all(void) {
 #if JD_DCFG
-    if (dcfg_get_bool("noScanI2C"))
+    if (!dcfg_get_bool("scanI2C"))
         return 0;
 #endif
     int r = 0;
