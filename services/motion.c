@@ -72,8 +72,8 @@ void motion_config(void) {
     p->pin = jd_srvcfg_pin("pin");
     if (jd_srvcfg_has_flag("activeLow"))
         p->inactive = true;
-    p->angle = jd_srvcfg_u32("angle");
-    p->max_distance = (jd_srvcfg_u32("maxDistance") << 12) / 25;
+    p->angle = jd_srvcfg_u32("angle", 120);
+    p->max_distance = (jd_srvcfg_u32("maxDistance", 1200) << 12) / 25;
     motion_init(p);
 }
 #endif
