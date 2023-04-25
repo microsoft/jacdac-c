@@ -18,6 +18,7 @@ declare module "@devicescript/srvcfg" {
         | FlexConfig
         | RelayConfig
         | PowerConfig
+        | MotionConfig
         | LightBulbConfig
         | BuzzerConfig
         | ServoConfig
@@ -475,6 +476,34 @@ declare module "@devicescript/srvcfg" {
          * @default 600
          */
         maxPulse?: number
+    }
+
+    interface MotionConfig extends BaseServiceConfig {
+        service: "motion"
+
+        /**
+         * The input pin.
+         */
+        pin: InputPin
+
+        /**
+         * When set, the sensor is considered 'active' when `pin` is low.
+         */
+        activeLow?: boolean
+
+        /**
+         * Sensing angle in degrees.
+         *
+         * @default 120
+         */
+        angle?: number
+
+        /**
+         * Maximum sensing distance in centimeters.
+         *
+         * @default 1200
+         */
+        minDistance?: number
     }
 
     interface PowerConfig extends BaseServiceConfig {
