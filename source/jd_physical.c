@@ -112,7 +112,7 @@ static void set_tick_timer(uint8_t statusClear) {
             tim_set_timer(jd_random_around(150) - JD_WR_OVERHEAD, flush_tx_queue);
         } else {
             phys_status &= ~JD_STATUS_TX_QUEUED;
-            tim_set_timer(10000, tick);
+            tim_set_timer(JD_MIN_MAX_SLEEP, tick);
         }
     }
     target_enable_irq();
