@@ -113,6 +113,10 @@
 #define JD_USB_BRIDGE 0
 #endif
 
+#ifndef JD_NET_BRIDGE
+#define JD_NET_BRIDGE 0
+#endif
+
 #ifndef JD_BRIDGE
 #define JD_BRIDGE JD_USB_BRIDGE
 #endif
