@@ -43,6 +43,7 @@ int jd_send_frame(jd_frame_t *f);
 // this will not forward to USB port - it is called from USB code
 int jd_send_frame_raw(jd_frame_t *f);
 
+bool jd_need_to_send(jd_frame_t *f);
 bool jd_tx_will_fit(unsigned size);
 
 // wrapper around jd_send_frame()

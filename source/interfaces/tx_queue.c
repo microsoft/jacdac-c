@@ -17,16 +17,12 @@ jd_frame_t *rawFrame;
 #endif
 
 #if JD_SEND_FRAME
-static bool jd_need_to_send(jd_frame_t *f) {
+
+#if !JD_DEVICESCRIPT
+bool jd_need_to_send(jd_frame_t *f) {
 #if JD_USB_BRIDGE || JD_NET_BRIDGE
     if ((f->flags & JD_FRAME_FLAG_COMMAND) && f->device_identifier == jd_device_id())
         return false;
-
-#if JD_DEVICESCRIPT
-    uint64_t devs_jd_server_device_id(void);
-    if ((f->flags & JD_FRAME_FLAG_COMMAND) && f->device_identifier == devs_jd_server_device_id())
-        return false;
-#endif
 
     return true;
 #else
@@ -35,6 +31,7 @@ static bool jd_need_to_send(jd_frame_t *f) {
     return true;
 #endif
 }
+#endif
 
 static jd_queue_t send_queue;
 static uint8_t q_sending;
