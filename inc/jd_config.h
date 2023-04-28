@@ -151,12 +151,28 @@ int jd_net_send_frame(void *frame);
 #define JD_SEND_FRAME (JD_CLIENT || JD_BRIDGE)
 #endif
 
-#ifndef JD_SEND_FRAME_SIZE
-#define JD_SEND_FRAME_SIZE 512
-#endif
-
 #ifndef JD_RX_QUEUE
 #define JD_RX_QUEUE JD_SEND_FRAME
+#endif
+
+#if JD_DEVICESCRIPT
+
+#ifndef JD_SEND_FRAME_SIZE
+#define JD_SEND_FRAME_SIZE 1024
+#endif
+
+#ifndef JD_RX_QUEUE_SIZE
+#define JD_RX_QUEUE_SIZE 2048
+#endif
+
+#ifndef JD_USB_QUEUE_SIZE
+#define JD_USB_QUEUE_SIZE 2048
+#endif
+
+#else
+
+#ifndef JD_SEND_FRAME_SIZE
+#define JD_SEND_FRAME_SIZE 512
 #endif
 
 #ifndef JD_RX_QUEUE_SIZE
@@ -165,6 +181,8 @@ int jd_net_send_frame(void *frame);
 
 #ifndef JD_USB_QUEUE_SIZE
 #define JD_USB_QUEUE_SIZE 1024
+#endif
+
 #endif
 
 #ifndef JD_LORA
