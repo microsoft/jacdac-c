@@ -10,9 +10,6 @@
 
 // true if any packets are pending in the queue
 bool jd_usb_is_pending(void);
-// both return 0 on success
-int jd_usb_write_serial(const void *data, unsigned len);
-unsigned jd_usb_serial_space(void);
 int jd_usb_send_frame(void *frame);
 void jd_usb_enable_serial(void);
 void jd_usb_proto_process(void);

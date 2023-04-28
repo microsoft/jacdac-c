@@ -10,64 +10,31 @@ static uint8_t usb_frame_ptr;
 static uint8_t usb_frame_gap;
 
 static uint8_t usb_panic_mode;
-static uint8_t usb_panic_ptr;
-static uint8_t usb_panic_buffer[64];
+static uint8_t serial_buf_ptr;
+static uint8_t serial_buf_len;
+static uint8_t serial_buf[64];
 
 static jd_queue_t usb_queue;
-static uint8_t usb_serial_gap;
-static jd_bqueue_t usb_serial_queue;
 
 static uint8_t usb_rx_ptr;
 static uint8_t usb_rx_state;
 static uint8_t usb_rx_was_magic;
 static jd_frame_t usb_rx_buf;
 
+static bool usb_is_connected;
+static uint32_t dmesg_timer;
+static uint32_t dmesg_ptr;
+
 #define USB_ERROR(msg, ...) ERROR("USB: " msg, ##__VA_ARGS__)
-
-JD_FAST
-unsigned jd_usb_serial_space(void) {
-    int fr = jd_bqueue_free_bytes(usb_serial_queue);
-    if (usb_serial_gap == 1)
-        fr -= 2;
-    if (fr < 0)
-        return 0;
-    return fr;
-}
-
-JD_FAST
-int jd_usb_write_serial(const void *data, unsigned len) {
-    if (len == 0 || !usb_serial_en)
-        return 0;
-    int r = -1;
-    target_disable_irq();
-    unsigned fr = jd_bqueue_free_bytes(usb_serial_queue);
-    if (fr >= 2 && usb_serial_gap == 1) {
-        uint8_t gap[2] = {JD_USB_BRIDGE_QBYTE_MAGIC, JD_USB_BRIDGE_QBYTE_SERIAL_GAP};
-        jd_bqueue_push(usb_serial_queue, gap, 2);
-        usb_serial_gap = 2;
-        fr -= 2;
-    }
-    if (fr < len) {
-        if (!usb_serial_gap)
-            usb_serial_gap = 1;
-    } else {
-        usb_serial_gap = 0;
-        jd_bqueue_push(usb_serial_queue, data, len);
-        r = 0;
-    }
-    target_enable_irq();
-    jd_usb_pull_ready();
-    return r;
-}
 
 #define SPACE() (64 - dp)
 int jd_usb_pull(uint8_t dst[64]) {
     if (usb_panic_mode) {
         if (usb_panic_mode > 1)
             return 0;
-        int len = usb_panic_ptr;
-        usb_panic_ptr = 0;
-        memcpy(dst, usb_panic_buffer, len);
+        int len = serial_buf_ptr;
+        serial_buf_ptr = 0;
+        memcpy(dst, serial_buf, len);
         return len;
     }
 
@@ -123,26 +90,23 @@ int jd_usb_pull(uint8_t dst[64]) {
         jd_queue_shift(usb_queue);
     }
 
-    if (SPACE() > 0 && jd_bqueue_occupied_bytes(usb_serial_queue)) {
-        target_disable_irq();
-        unsigned len = jd_bqueue_available_cont_data(usb_serial_queue);
-        uint8_t *ptr = jd_bqueue_cont_data_ptr(usb_serial_queue);
-        unsigned i;
-        for (i = 0; i < len; ++i) {
-            uint8_t b = ptr[i];
+    if (dmesg_timer == 1 && !usb_panic_mode) {
+        while (SPACE() >= 2) {
+            if (serial_buf_ptr >= serial_buf_len) {
+                serial_buf_len = jd_dmesg_read(serial_buf, sizeof(serial_buf), &dmesg_ptr);
+                serial_buf_ptr = 0;
+            }
+            if (serial_buf_ptr >= serial_buf_len)
+                break;
+
+            uint8_t b = serial_buf[serial_buf_ptr++];
             if (b == JD_USB_BRIDGE_QBYTE_MAGIC) {
-                if (SPACE() < 2)
-                    break;
                 dst[dp++] = JD_USB_BRIDGE_QBYTE_MAGIC;
                 dst[dp++] = JD_USB_BRIDGE_QBYTE_LITERAL_MAGIC;
             } else {
-                if (SPACE() < 1)
-                    break;
                 dst[dp++] = b;
             }
         }
-        jd_bqueue_cont_data_advance(usb_serial_queue, i);
-        target_enable_irq();
     }
 
     return dp;
@@ -152,13 +116,11 @@ static void jd_usb_init(void) {
     if (!usb_queue) {
         usb_queue = jd_queue_alloc(JD_USB_QUEUE_SIZE);
         usb_frame_ptr = 0;
-        usb_serial_queue = jd_bqueue_alloc(JD_USB_QUEUE_SIZE);
     }
 }
 
 bool jd_usb_is_pending(void) {
-    return usb_queue &&
-           (jd_queue_front(usb_queue) != NULL || jd_bqueue_occupied_bytes(usb_serial_queue) > 0);
+    return usb_queue && (jd_queue_front(usb_queue) != NULL || serial_buf_ptr < serial_buf_len);
 }
 
 static void jd_usb_serial_cb(uint8_t b) {}
@@ -337,21 +299,21 @@ void jd_usb_panic_print_char(char c) {
         usb_serial_en = 0;
 
         // just to be sure
-        usb_panic_buffer[0] = JD_USB_BRIDGE_QBYTE_MAGIC;
-        usb_panic_buffer[1] = JD_USB_BRIDGE_QBYTE_FRAME_END;
-        usb_panic_ptr = 2;
+        serial_buf[0] = JD_USB_BRIDGE_QBYTE_MAGIC;
+        serial_buf[1] = JD_USB_BRIDGE_QBYTE_FRAME_END;
+        serial_buf_ptr = 2;
         usb_panic_mode = 1;
     }
 
-    usb_panic_buffer[usb_panic_ptr++] = c;
-    if (usb_panic_ptr < sizeof(usb_panic_buffer) && c != '\n')
+    serial_buf[serial_buf_ptr++] = c;
+    if (serial_buf_ptr < sizeof(serial_buf) && c != '\n')
         return;
 
     unsigned num_pull = 0;
-    while (usb_panic_ptr > 0) {
+    while (serial_buf_ptr > 0) {
         jd_usb_pull_ready();
         if (num_pull++ > 50000) {
-            usb_panic_ptr = 0;
+            serial_buf_ptr = 0;
             usb_panic_mode = 2;
             break;
         }
@@ -369,48 +331,25 @@ void jd_usb_panic_start(void) {
     if (usb_panic_mode > 1)
         return;
     jd_usb_panic_print_char('\n');
-    if (usb_serial_queue) {
-        jd_bqueue_print(usb_serial_queue, jd_usb_panic_print_char);
-        jd_bqueue_clear(usb_serial_queue);
-    }
-    jd_usb_panic_print_char('\n');
 }
 
 #if JD_DMESG_BUFFER_SIZE > 0
-static bool usb_is_connected;
-static uint32_t dmesg_timer;
-static uint32_t dmesg_ptr;
-
 void jd_usb_proto_process(void) {
     if (!usb_is_connected && jd_usb_looks_connected()) {
         usb_is_connected = 1;
         DMESG("usb: connected");
         dmesg_timer = now + (128 << 10);
-        if (!dmesg_timer)
-            dmesg_timer = 1;
     }
 
-    if (dmesg_timer && in_past(dmesg_timer))
-        dmesg_timer = 0;
+    if (dmesg_timer != 1 && in_past(dmesg_timer))
+        dmesg_timer = 1;
 
-    if (dmesg_timer)
-        return;
-
-    while (jd_usb_serial_space() > 64) {
+    if (dmesg_timer == 1) {
         uint8_t buf[64];
-        uint32_t dmesg_ptr0 = dmesg_ptr;
+        static uint32_t dmesg_ptr;
         int n = jd_dmesg_read(buf, sizeof(buf), &dmesg_ptr);
-        if (n > 0) {
-            jd_usb_flush_stdout();
-            if ((int)jd_usb_serial_space() < n) {
-                dmesg_ptr = dmesg_ptr0; // roll back
-                break;                  // and stop
-            }
-            jd_usb_write_serial(buf, n);
+        if (n > 0)
             jd_lstore_append_frag(0, JD_LSTORE_TYPE_DMESG, buf, n);
-        } else {
-            break;
-        }
     }
 }
 #else
