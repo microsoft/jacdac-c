@@ -39,6 +39,7 @@ void target_disable_irq(void);
 void target_wait_us(uint32_t n);
 __attribute__((noreturn)) void target_reset(void);
 int target_in_irq(void);
+void target_standby(uint32_t duration_ms);
 
 #ifndef JD_MIN_MAX_SLEEP
 #define JD_MIN_MAX_SLEEP 10000

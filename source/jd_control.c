@@ -23,6 +23,8 @@ struct srv_state {
 #endif
 };
 
+__attribute__((weak)) void target_standby(uint32_t duration_ms) {}
+
 #if JD_CONFIG_CONTROL_FLOOD == 1
 static void set_flood(srv_t *state, uint32_t num) {
     if (state->flood_remaining == 0 && num != 0)
@@ -77,6 +79,10 @@ void jd_ctrl_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_CONTROL_CMD_RESET:
         target_reset();
+        break;
+
+    case JD_CONTROL_CMD_STANDBY:
+        target_standby(*(uint32_t *)pkt->data);
         break;
 
 #if JD_CONFIG_CONTROL_FLOOD == 1

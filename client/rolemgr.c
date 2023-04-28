@@ -90,7 +90,7 @@ static void rolemgr_use_hint(srv_t *state, jd_role_t *r) {
         return;
 
     int off = r->hint_srvo;
-    for (int i = 1; i < d->num_services; i++) {
+    for (int i = 0; i < d->num_services; i++) {
         jd_device_service_t *serv = &d->services[i];
         if (serv->service_class != r->service_class)
             continue;
