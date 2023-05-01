@@ -91,6 +91,7 @@ char *jd_urlencode(const char *src);
 jd_frame_t *jd_dup_frame(const jd_frame_t *frame);
 void *jd_memdup(const void *src, unsigned size);
 bool jd_ends_with(const char *s, const char *suff);
+bool jd_starts_with(const char *s, const char *pref);
 #endif
 
 #if JD_VERBOSE_ASSERT

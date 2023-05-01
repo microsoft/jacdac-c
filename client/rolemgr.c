@@ -301,10 +301,10 @@ jd_role_t *jd_role_alloc(const char *name, uint32_t service_class) {
     const char *q = strchr(name, '[');
     if (q) {
         q++;
-        if (memcmp(q, "app:", 4) == 0) {
+        if (jd_starts_with(q, "app:")) {
             q += 4;
             r->hint_dev = JD_ROLE_HINT_APP;
-        } else if (memcmp(q, "int:", 4) == 0) {
+        } else if (jd_starts_with(q, "int:")) {
             q += 4;
             r->hint_dev = JD_ROLE_HINT_INT;
         }
