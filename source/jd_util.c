@@ -806,4 +806,13 @@ void *jd_memdup(const void *src, unsigned size) {
     memcpy(r, src, size);
     return r;
 }
+
+bool jd_ends_with(const char *s, const char *suff) {
+    unsigned slen = strlen(s);
+    unsigned sufflen = strlen(suff);
+
+    if (slen >= sufflen && strcmp(s + slen - sufflen, suff) == 0)
+        return true;
+    return false;
+}
 #endif
