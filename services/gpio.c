@@ -220,10 +220,10 @@ void gpiosrv_config(void) {
         if (info->value == 0 || info->value == 1) {
             char keybuf[DCFG_KEYSIZE + 1];
             memcpy(keybuf, info->key, sizeof(keybuf));
-            keybuf[3] = 's';
+            memcpy(keybuf, "pins", 4);
             uint8_t gpio = dcfg_get_pin(keybuf);
             if (gpio != NO_PIN) {
-                DMESG("sPin: %d := %d", gpio, info->value);
+                DMESG("sPin: %s(%d) set to %d", keybuf, gpio, info->value);
                 pin_set(gpio, info->value);
                 pin_setup_output(gpio);
 
