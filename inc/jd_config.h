@@ -370,4 +370,9 @@ int jd_net_send_frame(void *frame);
 #define JD_ANALOG 1
 #endif
 
+#ifndef JD_SPI
+#define JD_SPI 0
+#endif
+
+
 #endif
