@@ -22,7 +22,7 @@ static inline bool jd_status_has_color(void) {
 #if defined(PIN_LED_R) || defined(LED_SET_RGB)
     return true;
 #else
-    return false
+    return false;
 #endif
 }
 #endif
