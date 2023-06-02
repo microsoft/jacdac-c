@@ -73,7 +73,7 @@ void dotmatrix_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(dotmatrix, JD_SERVICE_CLASS_DOT_MATRIX);
-void dotmatrix_init() {
+void dotmatrix_init(void) {
     SRV_ALLOC(dotmatrix);
     state->rows = NUM_DISPLAY_ROWS;
     state->cols = NUM_DISPLAY_COLS;

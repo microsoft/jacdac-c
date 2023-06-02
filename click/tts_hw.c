@@ -109,7 +109,7 @@ void tts_hw_init( void )
     memset( _last_rsp.payload, 0, RESP_MESSAGE_MAX );
 }
 
-void tts_tick_isr()
+void tts_tick_isr(void)
 {
     _ticker++;
 
@@ -209,7 +209,7 @@ void tts_parse_speak_req( uint16_t req,
     _write_req();
 }
 
-void tts_get_resp()
+void tts_get_resp(void)
 {
     if( tts_hal_msg_rdy() )
     {
@@ -227,7 +227,7 @@ bool tts_rsp_chk( uint16_t idx )
     return ( idx == tmp ) ? true : false;
 }
 
-uint16_t tts_rsp_idx()
+uint16_t tts_rsp_idx(void)
 {
     uint16_t tmp = 0;
 

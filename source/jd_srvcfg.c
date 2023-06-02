@@ -86,7 +86,7 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 
 uint8_t _jd_services_curr_idx(void);
 
-void jd_srvcfg_run() {
+void jd_srvcfg_run(void) {
     JD_ASSERT(jd_srvcfg_idx == 0);
     memset(jd_srvcfg_idx_map, 0xff, sizeof(jd_srvcfg_idx_map));
 

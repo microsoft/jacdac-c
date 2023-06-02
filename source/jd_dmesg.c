@@ -47,7 +47,7 @@ void jd_dmesg(const char *format, ...) {
 }
 
 JD_FAST
-uint32_t jd_dmesg_startptr() {
+uint32_t jd_dmesg_startptr(void) {
     target_disable_irq();
     // if we wrapped around already, we start at ptr+1 (buf[ptr] is always '\0')
     uint32_t curr_ptr = codalLogStore.ptr + 1;

@@ -27,7 +27,7 @@ void lorawan_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 SRV_DEF(lorawan, 0x1953440b);
 
-void lorawan_init() {
+void lorawan_init(void) {
     SRV_ALLOC(lorawan);
     jd_lora_init();
 }

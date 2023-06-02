@@ -357,7 +357,7 @@ void jd_role_free(jd_role_t *role) {
     jd_free(role);
 }
 
-void jd_role_free_all() {
+void jd_role_free_all(void) {
     srv_t *state = _state;
 
     stop_list(state);
@@ -378,7 +378,7 @@ void jd_role_free_all() {
     state->changed = 1;
 }
 
-void jd_role_force_autobind() {
+void jd_role_force_autobind(void) {
     srv_t *state = _state;
     rolemgr_autobind(state);
 }

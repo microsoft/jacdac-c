@@ -102,7 +102,7 @@ jd_queue_t jd_queue_alloc(unsigned size) {
 
 #if JD_64
 #define TEST_SIZE 512
-void jd_queue_test() {
+void jd_queue_test(void) {
     jd_queue_t q = jd_queue_alloc(TEST_SIZE);
     int push = 0;
     int shift = 0;

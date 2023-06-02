@@ -101,7 +101,7 @@ void hidkeyboard_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(hidkeyboard, JD_SERVICE_CLASS_HID_KEYBOARD);
-void hidkeyboard_init() {
+void hidkeyboard_init(void) {
     SRV_ALLOC(hidkeyboard);
     state->num_skips = 0xffff; // force send
 }

@@ -30,7 +30,7 @@ void jd_seed_random(uint32_t s) {
     seed = (seed * 0x1000193) ^ s;
 }
 
-uint32_t jd_random() {
+uint32_t jd_random(void) {
     if (seed == 0)
         jd_seed_random(13);
 

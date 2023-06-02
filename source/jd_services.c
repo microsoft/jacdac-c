@@ -188,7 +188,7 @@ uint8_t _jd_services_curr_idx(void) {
     return num_services;
 }
 
-void jd_services_init() {
+void jd_services_init(void) {
     num_services = 0;
     srv_t *tmp[JD_MAX_SERVICES];
     services = tmp;
@@ -213,7 +213,7 @@ void jd_services_init() {
     lastMax = tim_get_micros();
 }
 
-void jd_services_deinit() {
+void jd_services_deinit(void) {
     for (int i = 0; i < num_services; ++i)
         jd_free(services[i]);
     jd_free(services);
@@ -221,11 +221,11 @@ void jd_services_deinit() {
     services = NULL;
 }
 
-void jd_services_packet_queued() {
+void jd_services_packet_queued(void) {
     packets_sent++;
 }
 
-void jd_services_announce() {
+void jd_services_announce(void) {
     jd_alloc_stack_check();
 
     uint32_t dst[num_services];
@@ -348,7 +348,7 @@ void jd_services_handle_packet(jd_packet_t *pkt) {
     }
 }
 
-void jd_services_tick() {
+void jd_services_tick(void) {
     if (jd_should_sample(&nextAnnounce, 500000))
         jd_services_announce();
 
@@ -426,7 +426,7 @@ uint64_t now_ms_long;
 uint32_t now_ms;
 #endif
 
-void jd_refresh_now() {
+void jd_refresh_now(void) {
     uint64_t now_long = tim_get_micros();
     now = (uint32_t)now_long;
 
@@ -447,7 +447,7 @@ void jd_refresh_now() {
 #endif
 }
 
-void jd_process_everything() {
+void jd_process_everything(void) {
     jd_max_sleep = JD_MIN_MAX_SLEEP;
     jd_refresh_now();
     jd_process_everything_core();

@@ -7,7 +7,7 @@
 
 void _jd_phys_start(void);
 
-void jd_init() {
+void jd_init(void) {
     jd_alloc_init();
     jd_tx_init();
     jd_rx_init();

@@ -56,7 +56,7 @@ void i2cserv_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(i2cserv, JD_SERVICE_CLASS_I2C);
-void i2cserv_init() {
+void i2cserv_init(void) {
     SRV_ALLOC(i2cserv);
     if (i2c_init_() == 0)
         state->enabled = 1;

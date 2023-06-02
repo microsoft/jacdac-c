@@ -373,7 +373,7 @@ int jd_settings_write_large(void *dst, const void *src, unsigned size) {
     return 0;
 }
 
-int jd_settings_sync_large() {
+int jd_settings_sync_large(void) {
     flash_sync();
     return 0;
 }

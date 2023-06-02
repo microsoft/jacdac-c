@@ -46,22 +46,22 @@
 /******************************************************************************
 * Function Definitions
 *******************************************************************************/
-void tts_hal_cs_high()
+void tts_hal_cs_high(void)
 {
     pin_set(MIKROBUS_CS,1);
 }
 
-void tts_hal_cs_low()
+void tts_hal_cs_low(void)
 {
     pin_set(MIKROBUS_CS,0);
 }
 
-void tts_hal_mut_high()
+void tts_hal_mut_high(void)
 {
     pin_set(MIKROBUS_AN,1);
 }
 
-void tts_hal_mut_low()
+void tts_hal_mut_low(void)
 {
     pin_set(MIKROBUS_AN,0);
 }
@@ -79,7 +79,7 @@ bool tts_hal_msg_rdy( void )
     return pin_get(MIKROBUS_INT);
 }
 
-void tts_hal_init()
+void tts_hal_init(void)
 {
     tts_hal_reset();
     tts_hal_cs_low();

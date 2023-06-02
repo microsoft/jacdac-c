@@ -4,7 +4,7 @@
 
 #if JD_THR_ANY
 
-static void TODO() {
+static void TODO(void) {
     DMESG("not implemented yet");
     JD_PANIC();
 }

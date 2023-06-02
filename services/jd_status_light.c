@@ -197,7 +197,7 @@ static const struct glow_desc speeds[] = {
     GLOW(0, 250, 250),     // fast_blink
 };
 
-void jd_status_process() {
+void jd_status_process(void) {
     status_ctx_t *state = &status_ctx;
     int chg = 0;
 
@@ -324,7 +324,7 @@ static const uint8_t pins[] = {PIN_LED_R, PIN_LED_G, PIN_LED_B};
 static const uint8_t mults[] = {LED_R_MULT, LED_G_MULT, LED_B_MULT};
 #endif
 
-void jd_status_init() {
+void jd_status_init(void) {
     status_ctx_t *state = &status_ctx;
 
 #if JD_DCFG

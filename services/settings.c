@@ -71,6 +71,6 @@ void settings_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(settings, JD_SERVICE_CLASS_SETTINGS);
-void settings_init() {
+void settings_init(void) {
     SRV_ALLOC(settings);
 }

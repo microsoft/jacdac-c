@@ -147,7 +147,7 @@ static void setup_rx_timeout(void) {
     target_enable_irq();
 }
 
-void jd_line_falling() {
+void jd_line_falling(void) {
     LOG("line fall");
 
     jd_debug_signal_read(1);

@@ -85,7 +85,7 @@ void jd_thr_resume(jd_thread_t t) {
 }
 #pragma endregion
 
-void jd_thr_init() {
+void jd_thr_init(void) {
     JD_ASSERT(!thr_inited);
     thr_inited = true;
     CHK(pthread_mutexattr_init(&prio_inherit_attr));
@@ -97,7 +97,7 @@ static pthread_mutex_t process_mux = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t process_cond = PTHREAD_COND_INITIALIZER;
 static bool process_pending;
 
-void jd_thr_wake_main() {
+void jd_thr_wake_main(void) {
     jd_thr_lock(&process_mux);
     process_pending = true;
     pthread_cond_signal(&process_cond);
@@ -118,7 +118,7 @@ static void process_worker(void *userdata) {
     }
 }
 
-void jd_thr_start_process_worker() {
+void jd_thr_start_process_worker(void) {
     JD_ASSERT(process_thread == 0);
     process_thread = jd_thr_start_thread(process_worker, NULL);
 }

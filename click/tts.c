@@ -231,17 +231,17 @@ void tts_err_callback( void( *error_ptr )( uint16_t *err_ptr ) )
     _err_callback = error_ptr;
 }
 
-void tts_mute()
+void tts_mute(void)
 {
     tts_mute_cmd( true );
 }
 
-void tts_unmute()
+void tts_unmute(void)
 {
     tts_mute_cmd( false );
 }
 
-void tts_setup()
+void tts_setup(void)
 {
     tts_image_load( TTS_INIT_DATA, sizeof( TTS_INIT_DATA ) );
     tts_image_exec();
@@ -316,7 +316,7 @@ uint16_t tts_image_load( const uint8_t *image,
     return ( tmp_resp == 1 ) ? 0x0000 : tmp_resp;
 }
 
-uint16_t tts_image_exec()
+uint16_t tts_image_exec(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -341,7 +341,7 @@ uint16_t tts_image_exec()
 
 static uint8_t _test[ 8 ] = { 0x01, 0x00, 0x00, 0x00,
                               0x00, 0x00, 0x00, 0x00 };
-uint16_t tts_interface_test()
+uint16_t tts_interface_test(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -411,7 +411,7 @@ uint16_t tts_version_main( VER_t *buffer )
     return 0x0000;
 }
 
-uint16_t tts_power_default_config()
+uint16_t tts_power_default_config(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -434,7 +434,7 @@ uint16_t tts_power_default_config()
     return tmp_resp;
 }
 
-uint16_t tts_standby_enter()
+uint16_t tts_standby_enter(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -457,7 +457,7 @@ uint16_t tts_standby_enter()
     return tmp_resp;
 }
 
-uint16_t tts_standby_exit()
+uint16_t tts_standby_exit(void)
 {
     Delay_ms( STBY_MODE_ENTERY );
     tts_parse_req( ISC_PMAN_STANDBY_EXIT_IND, NULL, 0 );
@@ -473,7 +473,7 @@ uint16_t tts_standby_exit()
     return 0x0000;
 }
 
-uint16_t tts_audio_default_config()
+uint16_t tts_audio_default_config(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -559,7 +559,7 @@ uint16_t tts_volume_set( int16_t gain )
     return tmp_resp;
 }
 
-uint16_t tts_audio_mute()
+uint16_t tts_audio_mute(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -583,7 +583,7 @@ uint16_t tts_audio_mute()
     return tmp_resp;
 }
 
-uint16_t tts_audio_unmute()
+uint16_t tts_audio_unmute(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -607,7 +607,7 @@ uint16_t tts_audio_unmute()
     return tmp_resp;
 }
 
-uint16_t tts_default_config()
+uint16_t tts_default_config(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -813,7 +813,7 @@ uint16_t tts_user_dict( bool erase,
     return tmp_rsp;
 }
 
-uint16_t tts_codec_configure()
+uint16_t tts_codec_configure(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -884,7 +884,7 @@ uint16_t tts_codec_start( uint8_t *codec_data,
     return tmp_resp;
 }
 
-uint16_t tts_codec_pause()
+uint16_t tts_codec_pause(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };
@@ -908,7 +908,7 @@ uint16_t tts_codec_pause()
     return tmp_resp;
 }
 
-uint16_t tts_codec_unpause()
+uint16_t tts_codec_unpause(void)
 {
     uint16_t tmp_resp = 0;
     uint8_t raw_resp[ 2 ] = { 0 };

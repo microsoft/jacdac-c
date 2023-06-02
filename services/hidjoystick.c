@@ -80,7 +80,7 @@ void hidjoystick_handle_packet(srv_t *state, jd_packet_t *pkt) {
 }
 
 SRV_DEF(hidjoystick, JD_SERVICE_CLASS_HID_JOYSTICK);
-void hidjoystick_init() {
+void hidjoystick_init(void) {
     SRV_ALLOC(hidjoystick);
     state->button_analog = BTN_ANALOG;
     state->button_count = NUM_BUTTONS;

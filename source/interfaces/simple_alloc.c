@@ -70,7 +70,7 @@ void *jd_alloc(uint32_t size) {
     return r;
 }
 
-uint32_t jd_available_memory() {
+uint32_t jd_available_memory(void) {
     return HEAP_END - (uintptr_t)aptr;
 }
 

@@ -86,7 +86,7 @@ void jd_opipe_handle_packet(jd_packet_t *pkt) {
     UNLOCK();
 }
 
-void jd_opipe_process() {
+void jd_opipe_process(void) {
     LOCK();
     for (jd_opipe_desc_t *str = opipes; str; str = str->next) {
         if (str->curr_retry && in_past(str->retry_time)) {

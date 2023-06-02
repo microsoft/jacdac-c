@@ -68,7 +68,7 @@ bool jd_tx_will_fit(unsigned size) {
 }
 #endif
 
-int jd_tx_is_idle() {
+int jd_tx_is_idle(void) {
 #if JD_RAW_FRAME
     if (rawFrame || rawFrameSending)
         return 0;
@@ -184,7 +184,7 @@ void jd_tx_frame_sent(jd_frame_t *pkt) {
     poke_ready();
 }
 
-void jd_tx_flush() {
+void jd_tx_flush(void) {
     if (target_in_irq())
         JD_PANIC();
     jd_frame_t *f = &tx_acc_buffer;
