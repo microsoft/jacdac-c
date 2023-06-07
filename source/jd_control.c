@@ -23,7 +23,9 @@ struct srv_state {
 #endif
 };
 
-__attribute__((weak)) void target_standby(uint32_t duration_ms) {}
+__attribute__((weak)) void target_standby(uint32_t duration_ms) {
+    target_reset();
+}
 
 #if JD_CONFIG_CONTROL_FLOOD == 1
 static void set_flood(srv_t *state, uint32_t num) {
