@@ -223,7 +223,7 @@ void gpiosrv_config(void) {
             memcpy(keybuf, "pins", 4);
             uint8_t gpio = dcfg_get_pin(keybuf);
             if (gpio != NO_PIN) {
-                DMESG("sPin: %s(%d) set to %d", keybuf, gpio, info->value);
+                DMESG("sPin: %s(%d) set to %d", keybuf, gpio, (int)info->value);
                 pin_set(gpio, info->value);
                 pin_setup_output(gpio);
 
