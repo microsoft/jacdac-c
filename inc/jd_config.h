@@ -367,7 +367,7 @@ int jd_net_send_frame(void *frame);
 #endif
 
 #ifndef JD_ANALOG
-#define JD_ANALOG 1
+#define JD_ANALOG (!JD_HOSTED)
 #endif
 
 #ifndef JD_SPI
