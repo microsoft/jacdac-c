@@ -59,6 +59,7 @@ void lightbulb_config(void);
 void buzzer_config(void);
 void servo_config(void);
 void motion_config(void);
+void motor_config(void);
 
 static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 #if !JD_HOSTED
@@ -76,6 +77,7 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
     {"buzzer", buzzer_config},
     {"servo", servo_config},
     {"motion", motion_config},
+    {"motor", motor_config},
 #if JD_HID
     {"hidMouse", hidmouse_init},
     {"hidKeyboard", hidkeyboard_init},
