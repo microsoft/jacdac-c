@@ -298,7 +298,7 @@ int jd_net_send_frame(void *frame);
 
 // settings stuff
 #ifndef JD_SETTINGS_LARGE
-#define JD_SETTINGS_LARGE 0
+#define JD_SETTINGS_LARGE JD_DEVICESCRIPT
 #endif
 
 #ifndef JD_FSTOR_HEADER_PAGES
