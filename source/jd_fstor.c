@@ -40,7 +40,10 @@ static const uint8_t *fstor_base;
 static entry_t *last_entry;
 static const uint8_t *data_start;
 #if JD_SETTINGS_LARGE
-static uint32_t used_data_pages[(FSTOR_DATA_PAGES + 31) / 32];
+#ifndef JD_FSTOR_MAX_DATA_PAGES
+#define JD_FSTOR_MAX_DATA_PAGES FSTOR_DATA_PAGES
+#endif
+static uint32_t used_data_pages[(JD_FSTOR_MAX_DATA_PAGES + 31) / 32];
 #endif
 
 static void erase_pages(const void *base, unsigned num) {
@@ -149,6 +152,7 @@ static void recompute_cache(void) {
             return oops("non ff");
 
 #if JD_SETTINGS_LARGE
+    JD_ASSERT(FSTOR_DATA_PAGES <= JD_FSTOR_MAX_DATA_PAGES);
     memset(used_data_pages, 0, sizeof(used_data_pages));
     for (e = settings->entries; e <= last_entry; ++e) {
         if (is_large(e) && !has_later_copy(e))
