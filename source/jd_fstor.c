@@ -93,7 +93,7 @@ static bool key_ok(const char *key) {
 
 #if JD_SETTINGS_LARGE
 static inline bool data_page_used(unsigned off) {
-    JD_ASSERT(off < FSTOR_DATA_PAGES);
+    JD_ASSERT(off < (unsigned)(FSTOR_DATA_PAGES));
     return (used_data_pages[off / 32] & (1 << (off & 31))) != 0;
 }
 
