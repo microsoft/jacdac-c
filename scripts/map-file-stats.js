@@ -6,6 +6,7 @@ let indata = false
 let fun = ""
 let dofile = process.argv[3] == "-file" 
 let dofun = process.argv[3] == "-fun"
+let funline = ""
 for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
   if (/\*fill\*/.test(line)) continue
   if (/^r[oa]m\s/.test(line)) continue
@@ -24,6 +25,7 @@ for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
     else
       indata = false
     fun = line.slice(m[1].length + 2).replace(/\s.*/, "")
+    funline = line
   }
   if (!inprog && !inram) continue
   m = /\s+(0x00[a-f0-9]+)\s+(0x[a-f0-9]+)\s+(.*)/.exec(line)
@@ -37,7 +39,8 @@ for (let line of fs.readFileSync(process.argv[2], "utf8").split(/\r?\n/)) {
   if (/load address/.test(name)) continue
   if (name == "xr" || name == "xrw") continue
   name = name.replace(/.*\/lib/, "lib")
-  if(!dofile)
+  name = name.replace(/.*__\//, "")
+  if(!dofile && !dofun)
     name=name.replace(/\(.*/, "")
   if (dofun) name += fun
 
