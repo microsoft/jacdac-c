@@ -291,7 +291,7 @@ int jd_settings_get_bin(const char *key, void *dst, unsigned space) {
 int jd_settings_set_bin(const char *key, const void *val, unsigned size) {
     if (!key_ok(key))
         return -1;
-    if (size > FSTOR_HEADER_SIZE - 200) {
+    if (size > (unsigned)FSTOR_HEADER_SIZE - 200) {
         LOG("too large: %u", size);
         return -2;
     }
