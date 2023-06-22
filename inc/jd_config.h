@@ -302,6 +302,7 @@ int jd_net_send_frame(void *frame);
 #endif
 
 #ifndef JD_FSTOR_HEADER_PAGES
+// if JD_SETTINGS_LARGE, this is just the minimum
 #define JD_FSTOR_HEADER_PAGES 1
 #endif
 
