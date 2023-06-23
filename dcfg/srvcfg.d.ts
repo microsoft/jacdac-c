@@ -440,7 +440,7 @@ declare module "@devicescript/srvcfg" {
         /**
          * The channel 2 pin.
          */
-        pin2: OutputPin
+        pin2?: OutputPin
 
         /**
          * The enable (NSLEEP) pin if any, active high.
