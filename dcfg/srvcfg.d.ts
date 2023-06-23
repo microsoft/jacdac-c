@@ -19,6 +19,7 @@ declare module "@devicescript/srvcfg" {
         | RelayConfig
         | PowerConfig
         | MotionConfig
+        | MotorConfig
         | LightBulbConfig
         | BuzzerConfig
         | ServoConfig
@@ -426,6 +427,25 @@ declare module "@devicescript/srvcfg" {
          * When unset, the `pin` will be set to `0` when no sound is playing.
          */
         activeLow?: boolean
+    }
+
+    interface MotorConfig extends BaseServiceConfig {
+        service: "motor"
+
+        /**
+         * The channel 1 pin.
+         */
+        pin1: OutputPin
+
+        /**
+         * The channel 2 pin.
+         */
+        pin2: OutputPin
+
+        /**
+         * The enable (NSLEEP) pin if any, active high.
+         */
+        pinEnable?: OutputPin
     }
 
     interface ServoConfig extends BaseServiceConfig {
