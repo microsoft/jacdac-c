@@ -60,6 +60,7 @@ void buzzer_config(void);
 void servo_config(void);
 void motion_config(void);
 void motor_config(void);
+void gamepad_config(void);
 
 static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 #if !JD_HOSTED
@@ -70,6 +71,7 @@ static const jd_srvcfg_entry_t jd_srvcfg_entries[] = { //
 #if JD_ANALOG
     {"flex", flex_config},
     {"analog", analog_config},
+    {"gamepad", gamepad_config},
 #endif
     {"accelerometer", accelerometer_config},
     {"power", power_config},

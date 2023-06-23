@@ -32,6 +32,7 @@ declare module "@devicescript/srvcfg" {
         | HidJoystickConfig
         | HidKeyboardConfig
         | HidMouseConfig
+        | GamepadConfig
 
     interface DeviceHardwareInfo {
         /**
@@ -571,6 +572,88 @@ declare module "@devicescript/srvcfg" {
          * @default 3
          */
         trZ?: integer
+    }
+
+    interface GamepadConfig extends BaseServiceConfig {
+        service: "gamepad"
+
+        // Digital
+
+        /**
+         * Pin for button Left
+         */
+        pinLeft?: InputPin
+        /**
+         * Pin for button Up
+         */
+        pinUp?: InputPin
+        /**
+         * Pin for button Right
+         */
+        pinRight?: InputPin
+        /**
+         * Pin for button Down
+         */
+        pinDown?: InputPin
+        /**
+         * Pin for button A
+         */
+        pinA?: InputPin
+        /**
+         * Pin for button B
+         */
+        pinB?: InputPin
+        /**
+         * Pin for button Menu
+         */
+        pinMenu?: InputPin
+        /**
+         * Pin for button Select
+         */
+        pinSelect?: InputPin
+        /**
+         * Pin for button Reset
+         */
+        pinReset?: InputPin
+        /**
+         * Pin for button Exit
+         */
+        pinExit?: InputPin
+        /**
+         * Pin for button X
+         */
+        pinX?: InputPin
+        /**
+         * Pin for button Y
+         */
+        pinY?: InputPin
+
+        /**
+         * Buttons are normally active-low and pulled high.
+         * This makes them active-high and pulled low.
+         */
+        activeHigh?: boolean
+
+        // Analog
+        /**
+         * When gamepad is analog, set this to horizontal pin.
+         */
+        pinAX?: AnalogInPin
+
+        /**
+         * When gamepad is analog, set this to vertical pin.
+         */
+        pinAY?: AnalogInPin
+
+        /**
+         * Pin to pull low before analog read and release afterwards.
+         */
+        pinLow?: OutputPin
+
+        /**
+         * Pin to pull high before analog read and release afterwards.
+         */
+        pinHigh?: OutputPin
     }
 
     interface AnalogConfig extends BaseServiceConfig {

@@ -11,12 +11,18 @@
 
 #define FSTOR_PAGES (JD_FSTOR_TOTAL_SIZE / JD_FLASH_PAGE_SIZE)
 #define FSTOR_MAGIC0 0x52545346
-#define FSTOR_MAGIC1 0x5f35460a
+#define FSTOR_MAGIC1 0x6becea0a
 
-#define FSTOR_HEADER_SIZE (JD_FSTOR_HEADER_PAGES * JD_FLASH_PAGE_SIZE)
+#if JD_SETTINGS_LARGE
+#define HEADER_PAGES header_pages
+#else
+#define HEADER_PAGES JD_FSTOR_HEADER_PAGES
+#endif
+
+#define FSTOR_HEADER_SIZE (HEADER_PAGES * JD_FLASH_PAGE_SIZE)
 #define FSTOR_KEYSIZE 15
 
-#define FSTOR_DATA_PAGE_OFF (JD_FSTOR_HEADER_PAGES * 2)
+#define FSTOR_DATA_PAGE_OFF (HEADER_PAGES * 2)
 #define FSTOR_DATA_PAGES (FSTOR_PAGES - FSTOR_DATA_PAGE_OFF)
 
 typedef struct {
@@ -31,7 +37,13 @@ typedef struct {
     uint32_t magic0;
     uint32_t magic1;
     uint32_t generation;
-    uint32_t reserved;
+
+    uint32_t page_size;
+    uint16_t total_pages;
+    uint16_t header_pages;
+
+    uint32_t reserved0;
+
     jd_fstor_entry_t entries[];
 } jd_fstor_header_t;
 
@@ -39,8 +51,13 @@ static const jd_fstor_header_t *settings;
 static const uint8_t *fstor_base;
 static entry_t *last_entry;
 static const uint8_t *data_start;
+
 #if JD_SETTINGS_LARGE
-static uint32_t used_data_pages[(FSTOR_DATA_PAGES + 31) / 32];
+#ifndef JD_FSTOR_MAX_DATA_PAGES
+#define JD_FSTOR_MAX_DATA_PAGES FSTOR_DATA_PAGES
+#endif
+static uint32_t used_data_pages[(JD_FSTOR_MAX_DATA_PAGES + 31) / 32];
+static uint8_t header_pages;
 #endif
 
 static void erase_pages(const void *base, unsigned num) {
@@ -76,7 +93,7 @@ static bool key_ok(const char *key) {
 
 #if JD_SETTINGS_LARGE
 static inline bool data_page_used(unsigned off) {
-    JD_ASSERT(off < FSTOR_DATA_PAGES);
+    JD_ASSERT(off < (unsigned)(FSTOR_DATA_PAGES));
     return (used_data_pages[off / 32] & (1 << (off & 31))) != 0;
 }
 
@@ -149,6 +166,7 @@ static void recompute_cache(void) {
             return oops("non ff");
 
 #if JD_SETTINGS_LARGE
+    JD_ASSERT(FSTOR_DATA_PAGES <= JD_FSTOR_MAX_DATA_PAGES);
     memset(used_data_pages, 0, sizeof(used_data_pages));
     for (e = settings->entries; e <= last_entry; ++e) {
         if (is_large(e) && !has_later_copy(e))
@@ -162,20 +180,39 @@ static void write_header(unsigned gen) {
         .magic0 = FSTOR_MAGIC0,
         .magic1 = FSTOR_MAGIC1,
         .generation = gen,
+        .page_size = JD_FLASH_PAGE_SIZE,
+        .total_pages = FSTOR_PAGES,
+        .header_pages = HEADER_PAGES,
     };
     flash_program((void *)settings, &hd, sizeof(hd));
     flash_sync();
 }
 
+static bool is_valid_header(const jd_fstor_header_t *s) {
+    return s->magic0 == FSTOR_MAGIC0 && s->magic1 == FSTOR_MAGIC1 &&
+           s->page_size == JD_FLASH_PAGE_SIZE && s->total_pages == FSTOR_PAGES &&
+           s->header_pages == HEADER_PAGES;
+}
+
 static void jd_fstor_init(void) {
     if (settings)
         return;
+
+#if JD_SETTINGS_LARGE
+    int pages = JD_FSTOR_TOTAL_SIZE / JD_FLASH_PAGE_SIZE / 16;
+    if (pages < JD_FSTOR_HEADER_PAGES)
+        pages = JD_FSTOR_HEADER_PAGES;
+    if (pages > 0xf0)
+        pages = 0xf0;
+    header_pages = pages;
+#endif
+
     fstor_base = (const void *)(JD_FSTOR_BASE_ADDR);
     const jd_fstor_header_t *s0 = (const void *)fstor_base;
     const jd_fstor_header_t *s1 = (const void *)(fstor_base + FSTOR_HEADER_SIZE);
-    if (s0->magic0 != FSTOR_MAGIC0 || s0->magic1 != FSTOR_MAGIC1)
+    if (!is_valid_header(s0))
         s0 = NULL;
-    if (s1->magic0 != FSTOR_MAGIC0 || s1->magic1 != FSTOR_MAGIC1)
+    if (!is_valid_header(s1))
         s1 = NULL;
     if (s0 && s1) {
         settings = s0->generation > s1->generation ? s0 : s1;
@@ -191,7 +228,7 @@ static void jd_fstor_init(void) {
     if (!settings) {
         LOG("formatting now");
         settings = (const void *)fstor_base;
-        erase_pages(settings, JD_FSTOR_HEADER_PAGES);
+        erase_pages(settings, HEADER_PAGES);
         write_header(1);
         recompute_cache();
         JD_ASSERT(settings != NULL);
@@ -205,7 +242,7 @@ static void jd_fstor_gc(void) {
     const jd_fstor_header_t *alt = (const void *)fstor_base;
     if (alt == settings)
         alt = (const void *)(fstor_base + FSTOR_HEADER_SIZE);
-    erase_pages(alt, JD_FSTOR_HEADER_PAGES);
+    erase_pages(alt, HEADER_PAGES);
 
     entry_t *dst_e = alt->entries;
     const uint8_t *dst_data = (const uint8_t *)alt + FSTOR_HEADER_SIZE;
@@ -254,7 +291,7 @@ int jd_settings_get_bin(const char *key, void *dst, unsigned space) {
 int jd_settings_set_bin(const char *key, const void *val, unsigned size) {
     if (!key_ok(key))
         return -1;
-    if (size > FSTOR_HEADER_SIZE - 200) {
+    if (size > (unsigned)FSTOR_HEADER_SIZE - 200) {
         LOG("too large: %u", size);
         return -2;
     }
