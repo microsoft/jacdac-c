@@ -134,3 +134,9 @@ void motor_init(uint8_t pin1, uint8_t pin2, uint8_t pin_nsleep) {
     pin_setup_output(state->ch1.pin);
     pin_setup_output(state->ch2.pin);
 }
+
+#if JD_DCFG
+void motor_config(void) {
+    motor_init(jd_srvcfg_pin("pin1"), jd_srvcfg_pin("pin2"), jd_srvcfg_pin("pinEnable"));
+}
+#endif
