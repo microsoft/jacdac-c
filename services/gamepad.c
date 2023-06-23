@@ -36,12 +36,12 @@ static void update(srv_t *state) {
     }
 
     if (state->params.pinX == 0xff) {
-        state->direction.x = (btns & JD_GAMEPAD_BUTTONS_LEFT)
-                                 ? -0x8000
-                                 : (btns & JD_GAMEPAD_BUTTONS_RIGHT) ? 0x7fff : 0;
-        state->direction.y = (btns & JD_GAMEPAD_BUTTONS_UP)
-                                 ? -0x8000
-                                 : (btns & JD_GAMEPAD_BUTTONS_DOWN) ? 0x7fff : 0;
+        state->direction.x = (btns & JD_GAMEPAD_BUTTONS_LEFT)    ? -0x8000
+                             : (btns & JD_GAMEPAD_BUTTONS_RIGHT) ? 0x7fff
+                                                                 : 0;
+        state->direction.y = (btns & JD_GAMEPAD_BUTTONS_UP)     ? -0x8000
+                             : (btns & JD_GAMEPAD_BUTTONS_DOWN) ? 0x7fff
+                                                                : 0;
     } else {
         pin_setup_output(state->params.pinH);
         pin_set(state->params.pinH, 1);
@@ -127,3 +127,32 @@ void gamepad_init(const gamepad_params_t *params) {
         }
     }
 }
+
+#if JD_DCFG
+// these are synced with enum in gamedpad.md!
+static const char *btns[] = { //
+    "pinLeft",   "pinUp",    "pinRight", "pinDown", "pinA", "pinB", "pinMenu",
+    "pinSelect", "pinReset", "pinExit",  "pinX",    "pinY", NULL};
+void gamepad_config(void) {
+    gamepad_params_t *p = jd_alloc(sizeof(*p));
+
+    for (int i = 0; btns[i]; ++i) {
+        uint8_t pin = jd_srvcfg_pin(btns[i]);
+        if (pin != NO_PIN) {
+            p->buttons_available |= (1 << i);
+            p->pinBtns[i] = pin;
+            p->pinLeds[i] = 0xff;
+        }
+    }
+
+    p->pinX = jd_srvcfg_pin("pinAX");
+    p->pinY = jd_srvcfg_pin("pinAY");
+    p->pinL = jd_srvcfg_pin("pinLow");
+    p->pinH = jd_srvcfg_pin("pinHigh");
+
+    if (jd_srvcfg_has_flag("activeHigh"))
+        p->active_level = 1;
+
+    gamepad_init(p);
+}
+#endif
