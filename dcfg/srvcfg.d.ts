@@ -1,10 +1,10 @@
 declare module "@devicescript/srvcfg" {
     type integer = number
     /**
-     * Hardware pin number. In future we may allow labels.
+     * Hardware pin number or label.
      * Naming convention - fields with `Pin` type start with `pin*`
      */
-    type Pin = integer
+    type Pin = integer | string
     type IOPin = Pin
     type InputPin = Pin
     type OutputPin = Pin
@@ -176,123 +176,123 @@ declare module "@devicescript/srvcfg" {
      * Pin labels starting with '@' are hidden to the user.
      */
     interface PinLabels extends JsonComment {
-        TX?: Pin
-        RX?: Pin
-        VP?: Pin
-        VN?: Pin
-        BOOT?: Pin
-        LED?: Pin
-        LED0?: Pin
-        LED1?: Pin
-        LED2?: Pin
-        LED3?: Pin
+        TX?: integer
+        RX?: integer
+        VP?: integer
+        VN?: integer
+        BOOT?: integer
+        LED?: integer
+        LED0?: integer
+        LED1?: integer
+        LED2?: integer
+        LED3?: integer
 
-        SDA?: Pin
-        SCL?: Pin
+        SDA?: integer
+        SCL?: integer
 
-        MISO?: Pin
-        MOSI?: Pin
-        SCK?: Pin
-        CS?: Pin
+        MISO?: integer
+        MOSI?: integer
+        SCK?: integer
+        CS?: integer
 
-        A0?: Pin
-        A1?: Pin
-        A2?: Pin
-        A3?: Pin
-        A4?: Pin
-        A5?: Pin
-        A6?: Pin
-        A7?: Pin
-        A8?: Pin
-        A9?: Pin
-        A10?: Pin
-        A11?: Pin
-        A12?: Pin
-        A13?: Pin
-        A14?: Pin
-        A15?: Pin
+        A0?: integer
+        A1?: integer
+        A2?: integer
+        A3?: integer
+        A4?: integer
+        A5?: integer
+        A6?: integer
+        A7?: integer
+        A8?: integer
+        A9?: integer
+        A10?: integer
+        A11?: integer
+        A12?: integer
+        A13?: integer
+        A14?: integer
+        A15?: integer
 
-        D0?: Pin
-        D1?: Pin
-        D2?: Pin
-        D3?: Pin
-        D4?: Pin
-        D5?: Pin
-        D6?: Pin
-        D7?: Pin
-        D8?: Pin
-        D9?: Pin
-        D10?: Pin
-        D11?: Pin
-        D12?: Pin
-        D13?: Pin
-        D14?: Pin
-        D15?: Pin
+        D0?: integer
+        D1?: integer
+        D2?: integer
+        D3?: integer
+        D4?: integer
+        D5?: integer
+        D6?: integer
+        D7?: integer
+        D8?: integer
+        D9?: integer
+        D10?: integer
+        D11?: integer
+        D12?: integer
+        D13?: integer
+        D14?: integer
+        D15?: integer
 
-        P0?: Pin
-        P1?: Pin
-        P2?: Pin
-        P3?: Pin
-        P4?: Pin
-        P5?: Pin
-        P6?: Pin
-        P7?: Pin
-        P8?: Pin
-        P9?: Pin
-        P10?: Pin
-        P11?: Pin
-        P12?: Pin
-        P13?: Pin
-        P14?: Pin
-        P15?: Pin
-        P16?: Pin
-        P17?: Pin
-        P18?: Pin
-        P19?: Pin
-        P20?: Pin
-        P21?: Pin
-        P22?: Pin
-        P23?: Pin
-        P24?: Pin
-        P25?: Pin
-        P26?: Pin
-        P27?: Pin
-        P28?: Pin
-        P29?: Pin
-        P30?: Pin
-        P31?: Pin
-        P32?: Pin
-        P33?: Pin
-        P34?: Pin
-        P35?: Pin
-        P36?: Pin
-        P37?: Pin
-        P38?: Pin
-        P39?: Pin
-        P40?: Pin
-        P41?: Pin
-        P42?: Pin
-        P43?: Pin
-        P44?: Pin
-        P45?: Pin
-        P46?: Pin
-        P47?: Pin
-        P48?: Pin
-        P49?: Pin
-        P50?: Pin
-        P51?: Pin
-        P52?: Pin
-        P53?: Pin
-        P54?: Pin
-        P55?: Pin
-        P56?: Pin
-        P57?: Pin
-        P58?: Pin
-        P59?: Pin
-        P60?: Pin
-        P61?: Pin
-        P62?: Pin
-        P63?: Pin
+        P0?: integer
+        P1?: integer
+        P2?: integer
+        P3?: integer
+        P4?: integer
+        P5?: integer
+        P6?: integer
+        P7?: integer
+        P8?: integer
+        P9?: integer
+        P10?: integer
+        P11?: integer
+        P12?: integer
+        P13?: integer
+        P14?: integer
+        P15?: integer
+        P16?: integer
+        P17?: integer
+        P18?: integer
+        P19?: integer
+        P20?: integer
+        P21?: integer
+        P22?: integer
+        P23?: integer
+        P24?: integer
+        P25?: integer
+        P26?: integer
+        P27?: integer
+        P28?: integer
+        P29?: integer
+        P30?: integer
+        P31?: integer
+        P32?: integer
+        P33?: integer
+        P34?: integer
+        P35?: integer
+        P36?: integer
+        P37?: integer
+        P38?: integer
+        P39?: integer
+        P40?: integer
+        P41?: integer
+        P42?: integer
+        P43?: integer
+        P44?: integer
+        P45?: integer
+        P46?: integer
+        P47?: integer
+        P48?: integer
+        P49?: integer
+        P50?: integer
+        P51?: integer
+        P52?: integer
+        P53?: integer
+        P54?: integer
+        P55?: integer
+        P56?: integer
+        P57?: integer
+        P58?: integer
+        P59?: integer
+        P60?: integer
+        P61?: integer
+        P62?: integer
+        P63?: integer
     }
 
     interface BaseServiceConfig extends JsonComment {
