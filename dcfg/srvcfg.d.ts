@@ -181,18 +181,14 @@ declare module "@devicescript/srvcfg" {
         VP?: integer
         VN?: integer
         BOOT?: integer
+        PWR?: integer
+        LED_PWR?: integer
         LED?: integer
         LED0?: integer
         LED1?: integer
         LED2?: integer
         LED3?: integer
 
-        SDA?: integer
-        SCL?: integer
-
-        MISO?: integer
-        MOSI?: integer
-        SCK?: integer
         CS?: integer
 
         A0?: integer
@@ -293,6 +289,30 @@ declare module "@devicescript/srvcfg" {
         P61?: integer
         P62?: integer
         P63?: integer
+
+        // Xiao/QT-Py pinout
+        A0_D0?: integer
+        A1_D1?: integer
+        A2_D2?: integer
+        A3_D3?: integer
+        SDA_D4?: integer
+        SCL_D5?: integer
+        TX_D6?: integer
+        RX_D7?: integer
+        SCK_D8?: integer
+        MISO_D9?: integer
+        MOSI_D10?: integer
+
+        // Feather pin names (in addition to A0, A1, ..., D10, ...)
+        A4_D24?: integer
+        A5_D25?: integer
+        RX_D0?: integer
+        TX_D1?: integer
+        SDA?: integer
+        SCL?: integer
+        MISO?: integer
+        MOSI?: integer
+        SCK?: integer
     }
 
     interface BaseServiceConfig extends JsonComment {
