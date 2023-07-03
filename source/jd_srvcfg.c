@@ -25,9 +25,7 @@ char *jd_srvcfg_key(const char *key) {
 }
 
 uint8_t jd_srvcfg_pin(const char *key) {
-    // const char *lbl = dcfg_get_string(jd_srvcfg_key(key), NULL);
-    // if (lbl == NULL)
-    return dcfg_get_i32(jd_srvcfg_key(key), NO_PIN);
+    return dcfg_get_pin(jd_srvcfg_key(key));
 }
 
 int32_t jd_srvcfg_i32(const char *key, int32_t defl) {

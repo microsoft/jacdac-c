@@ -65,9 +65,7 @@ static inline const uint8_t *dcfg_get_blob(const char *key, unsigned *sizep) {
     return (const uint8_t *)dcfg_get_string(key, sizep);
 }
 char *dcfg_idx_key(const char *prefix, unsigned idx, const char *suffix);
-static inline uint8_t dcfg_get_pin(const char *key) {
-    return (uint8_t)dcfg_get_i32(key, -1);
-}
+uint8_t dcfg_get_pin(const char *key);
 static inline bool dcfg_get_bool(const char *key) {
     return !!dcfg_get_i32(key, 0);
 }

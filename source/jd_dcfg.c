@@ -197,6 +197,13 @@ int32_t dcfg_get_i32(const char *key, int32_t defl) {
     }
 }
 
+uint8_t dcfg_get_pin(const char *key) {
+    const char *lbl = dcfg_get_string(key, NULL);
+    if (lbl != NULL)
+        key = dcfg_idx_key("pins.", 0xffff, lbl);
+    return (uint8_t)dcfg_get_i32(key, -1);
+}
+
 uint32_t dcfg_get_u32(const char *key, uint32_t defl) {
     entry_t *e = dcfg_get_entry(key);
     switch (dcfg_entry_type(e)) {
@@ -212,18 +219,23 @@ uint32_t dcfg_get_u32(const char *key, uint32_t defl) {
 const char *dcfg_get_string(const char *key, unsigned *sizep) {
     dcfg_init();
 
-    const void *base = mfr_config;
-    entry_t *e = get_entry(mfr_config, key);
-    if (!e) {
-        base = user_config;
-        e = get_entry(user_config, key);
+    entry_t *e = NULL;
+    const void *base = NULL;
+    for (unsigned i = 0; i < NUM_CFG; ++i) {
+        e = get_entry(configs[i], key);
+        if (e) {
+            base = configs[i];
+            break;
+        }
     }
+
     switch (dcfg_entry_type(e)) {
     case DCFG_TYPE_BLOB:
     case DCFG_TYPE_STRING: {
         if (sizep)
             *sizep = dcfg_entry_size(e);
-        return (const char *)base + e->value;
+        const char *str = (const char *)base + e->value;
+        return str;
     }
     default:
         if (sizep)
@@ -247,10 +259,11 @@ char *dcfg_idx_key(const char *prefix, unsigned idx, const char *suffix) {
         ptr += len;
     }
 
-    if (idx > 100)
-        return NULL;
-
-    keybuf[ptr++] = 0x80 + idx;
+    if (idx != 0xffff) {
+        if (idx > 100)
+            return NULL;
+        keybuf[ptr++] = 0x80 + idx;
+    }
 
     if (suffix) {
         len = strlen(suffix);
