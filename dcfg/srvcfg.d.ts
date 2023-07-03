@@ -290,6 +290,76 @@ declare module "@devicescript/srvcfg" {
         P62?: integer
         P63?: integer
 
+        GP0?: integer
+        GP1?: integer
+        GP2?: integer
+        GP3?: integer
+        GP4?: integer
+        GP5?: integer
+        GP6?: integer
+        GP7?: integer
+        GP8?: integer
+        GP9?: integer
+        GP10?: integer
+        GP11?: integer
+        GP12?: integer
+        GP13?: integer
+        GP14?: integer
+        GP15?: integer
+        GP16?: integer
+        GP17?: integer
+        GP18?: integer
+        GP19?: integer
+        GP20?: integer
+        GP21?: integer
+        GP22?: integer
+        GP23?: integer
+        GP24?: integer
+        GP25?: integer
+        GP26?: integer
+        GP27?: integer
+        GP28?: integer
+        GP29?: integer
+        GP30?: integer
+        GP31?: integer
+        GP32?: integer
+        GP33?: integer
+        GP34?: integer
+        GP35?: integer
+        GP36?: integer
+        GP37?: integer
+        GP38?: integer
+        GP39?: integer
+        GP40?: integer
+        GP41?: integer
+        GP42?: integer
+        GP43?: integer
+        GP44?: integer
+        GP45?: integer
+        GP46?: integer
+        GP47?: integer
+        GP48?: integer
+        GP49?: integer
+        GP50?: integer
+        GP51?: integer
+        GP52?: integer
+        GP53?: integer
+        GP54?: integer
+        GP55?: integer
+        GP56?: integer
+        GP57?: integer
+        GP58?: integer
+        GP59?: integer
+        GP60?: integer
+        GP61?: integer
+        GP62?: integer
+        GP63?: integer
+
+        // RP2040
+        GP26_A0?: integer
+        GP27_A1?: integer
+        GP28_A2?: integer
+
         // Xiao/QT-Py pinout
         A0_D0?: integer
         A1_D1?: integer
