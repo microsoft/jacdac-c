@@ -108,6 +108,8 @@ declare module "@devicescript/srvcfg" {
     interface LogConfig extends JsonComment {
         /**
          * Where to send logs.
+         * On ESP32 boards this has to be the same a bootloader UART TX pin.
+         * On other boards, this has to be TX-capable pin.
          */
         pinTX: OutputPin
 
