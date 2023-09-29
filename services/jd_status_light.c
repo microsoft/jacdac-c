@@ -443,6 +443,9 @@ void jd_rgb_init(void) {
     uint8_t pin = dcfg_get_pin("led.pin");
 
     int led_type = dcfg_get_i32("led.type", 0);
+
+    DMESG("LED setup: pin=%d mono=%d type=%d", (int)pin, (int)is_mono, led_type);
+
     if (led_type) {
         for (int i = 0; i < 3; ++i) {
             channel_t *ch = &state->channels[i];
@@ -477,19 +480,22 @@ void jd_rgb_init(void) {
 
     led_active_high = dcfg_get_bool("led.activeHigh");
 
-    if (is_mono)
+    if (is_mono) {
         for (int i = 0; i < 3; ++i) {
             channel_t *ch = &state->channels[i];
             ch->pin = pin;
             ch->mult = 255;
         }
-    else
+        pin_set(pin, !led_active_high);
+        pin_setup_output(pin);
+    } else {
         for (int i = 0; i < 3; ++i) {
             channel_t *ch = &state->channels[i];
             ch->pin = dcfg_get_pin(dcfg_idx_key("led.rgb", i, "pin"));
             ch->pwm = jd_pwm_init(ch->pin, led_period, 0, 1);
             ch->mult = dcfg_get_i32(dcfg_idx_key("led.rgb", i, "mult"), 255);
         }
+    }
 }
 
 void jd_rgb_set(uint8_t r, uint8_t g, uint8_t b) {
