@@ -512,12 +512,14 @@ void ledstrip_process(srv_t *state) {
     if (state->dirty && !state->in_tx) {
         state->dirty = 0;
         state->auto_refresh = now + (64 << 10);
+#if PIN_PWR >= 0
         if (is_empty((uint32_t *)state->pxbuffer, PX_WORDS(state->numpixels))) {
             jd_power_enable(0);
             return;
         } else {
             jd_power_enable(1);
         }
+#endif
         state->in_tx = 1;
         pwr_enter_pll();
         limit_intensity(state);
