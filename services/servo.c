@@ -116,6 +116,7 @@ void servo_init(const servo_params_t *params) {
     SRV_ALLOC(servo);
     state->params = *params;
     state->params0 = params;
+    state->angle = 135 << 16;
 }
 
 #if JD_DCFG
