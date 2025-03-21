@@ -2,7 +2,7 @@
 D=`date +%Y%m%d-%H%M`
 TAG=`git describe --dirty --tags --match 'v[0-9]*' --always | sed -e 's/^v//; s/-dirty/-'"$D/"`
 if [[ "$TAG" =~ ^[0-9a-f]+-[0-9]{8}-[0-9]{4}$ ]]; then
-  echo "$TAG" # Return the hash as is
+  echo "$TAG" # use as is when based on commit i.e. v959x563-20250321-1122 (v<commit>-<date>-<time>)
 else
   SUFF=`echo $TAG | sed -e 's/[^-]*//'`
   if [ "X$SUFF" = "X" ] ; then
