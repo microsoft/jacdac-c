@@ -202,7 +202,6 @@ static void ds18b20_init(void) {
     if (ctx->inited)
         return;
     
-    startTime = now;
     ctx->probePin = (int)temperature_ds18b20.instancedata; 
 
     ctx->inited = 1;
