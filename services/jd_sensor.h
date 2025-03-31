@@ -20,6 +20,7 @@ typedef struct {
     const struct sensor_range *ranges;
     bool (*is_present)(void);
     const char *name;
+    void *instancedata; // Add instance data so target profile can pass in configuration information into driver
 } sensor_api_t;
 
 // make sure 'api' is at 8 byte boundary to avoid alignment issues on 64 bit arch

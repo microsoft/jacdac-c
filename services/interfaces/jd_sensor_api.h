@@ -33,7 +33,7 @@ extern const env_sensor_api_t humidity_shtc3;
 extern const env_sensor_api_t temperature_sht30;
 extern const env_sensor_api_t humidity_sht30;
 
-extern const env_sensor_api_t temperature_ds18b20;
+extern env_sensor_api_t temperature_ds18b20;
 
 extern const env_sensor_api_t temperature_max31855;
 extern const env_sensor_api_t temperature_max6675;
