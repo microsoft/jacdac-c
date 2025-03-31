@@ -259,7 +259,7 @@ typedef struct motion_cfg {
 } motion_cfg_t;
 void motion_init(const motion_cfg_t *cfg);
 
-void lightbulb_init(uint8_t pin);
+void lightbulb_init(uint8_t pin, const uint16_t *pbrightness_to_pwmLookupTable);
 
 typedef struct {
     void (*init)(void);
