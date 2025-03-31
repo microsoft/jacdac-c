@@ -26,12 +26,6 @@ typedef struct state {
 } ctx_t;
 static ctx_t state;
 
-#ifdef UARTDEBUG
-static uint32_t startTime;
-static uint32_t sampleCounter = 0;
-#endif
-
-
 
 void format_float_manual(char *buffer, size_t size, float value, int precision) {
     // Get the integer part of the number
@@ -179,7 +173,6 @@ uint8_t DS18B20_read_data(void) {
 
 int16_t DS18B20_read_temp_raw(void) {
     if (DS18B20_start_sensor() == 0) {
-        uartprintf("SENSOR NOT PRESENT\r\n");
         return 0; 
     }
 
@@ -211,12 +204,6 @@ static void ds18b20_init(void) {
     
     startTime = now;
     ctx->probePin = (int)temperature_ds18b20.instancedata; 
-    uartprintf("ds18b20_init on PIN %d\r\n", ctx->probePin);
-
-    if(DS18B20_start_sensor() == 1)
-        uartprintf("\tDS18B20 is PRESENT\r\n");
-    else
-        uartprintf("\tDS18B20 is NOT PRESENT\r\n");
 
     ctx->inited = 1;
     ctx->temperature.min_value = SCALE_TEMP(-55);
@@ -244,7 +231,6 @@ static void ds18b20_process(void) {
             ctx->in_temp = 1;
             ctx->nextsample = now + CONVERSION_MS * 1000;
 
-           // uartprintf("ds18b20_process: Started conversion\r\n");
         }
         // A conversion has been started (in_temp == 1)
         else {
@@ -262,10 +248,6 @@ static void ds18b20_process(void) {
             ctx->nextsample = now + SAMPLING_MS * 1000;
             ctx->inited = 2; // mark "Fully Initialized'
 
-#ifdef UARTDEBUG
-            uint32_t timeElapsedMS = (now - startTime) / 1000;
-            uartprintf("ds18b20_process: iter %d, %d, %d  -  Raw=%d => %dC\r\n", ++sampleCounter, timeElapsedMS / 60000, timeElapsedMS, raw_temp, ctx->temperature.value >> PRECISION);
-#endif
         }
     }
 }
