@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This repository has moved to https://github.com/jacdac/jacdac-c 
+
 # Jacdac firmware library
 
 
